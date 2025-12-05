@@ -1,8 +1,10 @@
 import React from 'react';
 import { format } from 'date-fns';
+import { RefreshCw } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
-export default function CriticalArticles({ articles, isLoading, theme }) {
+export default function CriticalArticles({ articles, isLoading, onRefresh, theme }) {
   const isDark = theme === 'dark';
 
   return (
@@ -11,9 +13,20 @@ export default function CriticalArticles({ articles, isLoading, theme }) {
       isDark ? "bg-neutral-900 border-amber-900/30" : "bg-amber-50/50 border-amber-200"
     )}>
       <div className="flex items-center justify-between mb-3">
-        <h3 className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-amber-500/80" : "text-amber-700")}>
-          Critical
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-amber-500/80" : "text-amber-700")}>
+            Critical
+          </h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRefresh}
+            disabled={isLoading}
+            className="h-6 w-6 p-0"
+          >
+            <RefreshCw className={cn("w-3 h-3", isLoading && "animate-spin", isDark ? "text-amber-500/50" : "text-amber-600")} />
+          </Button>
+        </div>
         <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
           AI Curated
         </span>
