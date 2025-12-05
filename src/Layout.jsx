@@ -150,8 +150,10 @@ export default function Layout({ children, currentPageName }) {
       <TopBar 
         onOpenSettings={() => { setSettingsTab('appearance'); setSettingsOpen(true); }}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        onExport={() => {}}
         showRefresh={showTopBarActions}
         currentPage={currentPageName}
+        sidebarOpen={sidebarOpen}
         theme={settings.theme}
       />
       

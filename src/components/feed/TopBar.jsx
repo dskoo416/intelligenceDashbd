@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
-export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshing, onToggleSidebar, showRefresh, currentPage, theme }) {
+export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshing, onToggleSidebar, showRefresh, currentPage, sidebarOpen, theme }) {
   const isDark = theme === 'dark';
 
   return (
@@ -13,7 +13,7 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
       "h-12 border-b flex items-center justify-between px-6",
       isDark ? "bg-neutral-950 border-neutral-800" : "bg-white border-gray-200"
     )}>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-1">
         <Button
           variant="ghost"
           size="sm"
@@ -25,7 +25,7 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
         >
           <Menu className="w-4 h-4" />
         </Button>
-        <div className="flex items-center gap-1">
+        <div className={cn("flex items-center gap-1", sidebarOpen ? "ml-[144px]" : "")}>
           <Link
             to={createPageUrl('IntelligenceFeed')}
             className={cn(
@@ -56,38 +56,24 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
       </div>
       
       <div className="flex items-center gap-1">
-        {showRefresh && (
+        {showRefresh && onExport && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={onRefresh}
-            disabled={isRefreshing}
+            onClick={onExport}
             className={cn(
               "text-xs h-8 rounded",
               isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
             )}
           >
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            Export
           </Button>
         )}
         
         {showRefresh && onExport && (
-          <>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onExport}
-              className={cn(
-                "text-xs h-8 rounded",
-                isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              )}
-            >
-              Export
-            </Button>
-            
-            <div className={cn("w-px h-5 mx-1", isDark ? "bg-neutral-800" : "bg-gray-200")} />
-          </>
+          <div className={cn("w-px h-5 mx-1", isDark ? "bg-neutral-800" : "bg-gray-200")} />
         )}
+        
         <Button
           variant="ghost"
           size="sm"
