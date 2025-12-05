@@ -8,8 +8,8 @@ import CriticalArticles from '@/components/feed/CriticalArticles';
 import NewsFeed from '@/components/feed/NewsFeed';
 import SettingsModal from '@/components/feed/SettingsModal';
 import { toast } from 'sonner';
+import { cn } from "@/lib/utils";
 
-// Helper to parse RSS
 const parseRSS = async (url) => {
   try {
     const corsProxy = 'https://api.allorigins.win/raw?url=';
@@ -49,7 +49,6 @@ export default function Home() {
   const [isLoadingCritical, setIsLoadingCritical] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Queries
   const { data: sectors = [], isLoading: sectorsLoading } = useQuery({
     queryKey: ['sectors'],
     queryFn: () => base44.entities.Sector.list('order'),
@@ -66,8 +65,8 @@ export default function Home() {
   });
 
   const settings = settingsData[0] || { theme: 'dark' };
+  const isDark = settings.theme === 'dark';
 
-  // Mutations
   const updateSettingsMutation = useMutation({
     mutationFn: async (data) => {
       if (settingsData[0]?.id) {
@@ -112,6 +111,14 @@ export default function Home() {
     },
   });
 
+  const updateRSSMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.RSSSource.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rssSources'] });
+      toast.success('RSS source updated');
+    },
+  });
+
   const deleteRSSMutation = useMutation({
     mutationFn: (id) => base44.entities.RSSSource.delete(id),
     onSuccess: () => {
@@ -120,14 +127,12 @@ export default function Home() {
     },
   });
 
-  // Set first sector as active on load
   useEffect(() => {
     if (sectors.length > 0 && !activeSector) {
       setActiveSector(sectors[0]);
     }
   }, [sectors, activeSector]);
 
-  // Fetch articles when sector changes
   const fetchArticles = useCallback(async () => {
     if (!activeSector) return;
     
@@ -150,7 +155,6 @@ export default function Home() {
       allArticles.push(...sourceArticles.map(a => ({ ...a, source: source.name })));
     }
     
-    // Sort by date
     allArticles.sort((a, b) => {
       if (!a.pubDate || !b.pubDate) return 0;
       return new Date(b.pubDate) - new Date(a.pubDate);
@@ -159,7 +163,6 @@ export default function Home() {
     setArticles(allArticles);
     setIsLoadingArticles(false);
     
-    // Generate AI content
     if (allArticles.length > 0) {
       generateGist(allArticles);
       generateCritical(allArticles);
@@ -241,7 +244,6 @@ export default function Home() {
       return;
     }
     
-    // Build CSV
     const headers = ['Title', 'Source', 'Date', 'Link', 'Is Critical'];
     const criticalLinks = new Set(criticalArticles.map(a => a.link));
     
@@ -264,45 +266,55 @@ export default function Home() {
     toast.success('Export downloaded');
   };
 
+  const handleUpdateRSSSource = async (id, data) => {
+    updateRSSMutation.mutate({ id, data });
+  };
+
   return (
-    <div className={`h-screen flex flex-col ${settings.theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={cn(
+      "h-screen flex flex-col",
+      isDark ? "bg-neutral-950 text-white" : "bg-gray-50 text-gray-900"
+    )}>
       <TopBar 
         onOpenSettings={() => setSettingsOpen(true)}
         onExport={handleExport}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
+        theme={settings.theme}
       />
       
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-56 flex-shrink-0">
+        <div className="w-48 flex-shrink-0">
           <SectorSidebar
             sectors={sectors}
             activeSector={activeSector}
             onSelectSector={setActiveSector}
             isLoading={sectorsLoading}
+            theme={settings.theme}
           />
         </div>
         
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6 space-y-5">
-          {/* Gist */}
+        <main className={cn(
+          "flex-1 overflow-y-auto p-5 space-y-4",
+          isDark ? "bg-neutral-950" : "bg-gray-50"
+        )}>
           <GistPanel 
             gist={gist} 
             isLoading={isLoadingGist} 
             sectorName={activeSector?.name}
+            theme={settings.theme}
           />
           
-          {/* Critical Articles */}
           <CriticalArticles 
             articles={criticalArticles} 
             isLoading={isLoadingCritical}
+            theme={settings.theme}
           />
           
-          {/* News Feed */}
           <NewsFeed 
             articles={articles} 
             isLoading={isLoadingArticles}
+            theme={settings.theme}
           />
         </main>
       </div>
@@ -318,6 +330,7 @@ export default function Home() {
         onDeleteSector={(id) => deleteSectorMutation.mutate(id)}
         onSaveRSSSource={(data) => rssSourceMutation.mutate(data)}
         onDeleteRSSSource={(id) => deleteRSSMutation.mutate(id)}
+        onUpdateRSSSource={handleUpdateRSSSource}
       />
     </div>
   );

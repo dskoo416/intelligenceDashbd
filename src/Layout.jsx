@@ -3,15 +3,10 @@ import { Toaster } from 'sonner';
 
 export default function Layout({ children }) {
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen">
       <style>{`
-        :root {
-          --background: 222.2 84% 4.9%;
-          --foreground: 210 40% 98%;
-        }
-        
         .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
+          width: 5px;
         }
         
         .custom-scrollbar::-webkit-scrollbar-track {
@@ -19,15 +14,15 @@ export default function Layout({ children }) {
         }
         
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(148, 163, 184, 0.2);
-          border-radius: 3px;
+          background: rgba(115, 115, 115, 0.3);
+          border-radius: 2px;
         }
         
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(148, 163, 184, 0.4);
+          background: rgba(115, 115, 115, 0.5);
         }
       `}</style>
-      <Toaster position="top-right" theme="dark" />
+      <Toaster position="top-right" />
       {children}
     </div>
   );
