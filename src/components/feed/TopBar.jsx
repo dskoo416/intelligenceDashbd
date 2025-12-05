@@ -1,8 +1,9 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Menu } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
-export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshing, theme }) {
+export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshing, onToggleSidebar, showRefresh, theme }) {
   const isDark = theme === 'dark';
 
   return (
@@ -10,38 +11,56 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
       "h-12 border-b flex items-center justify-between px-6",
       isDark ? "bg-neutral-950 border-neutral-800" : "bg-white border-gray-200"
     )}>
-      <h1 className={cn("text-sm font-semibold tracking-tight", isDark ? "text-white" : "text-gray-900")}>
-        Intelligence Feed
-      </h1>
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleSidebar}
+          className={cn(
+            "h-8 w-8 p-0",
+            isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+          )}
+        >
+          <Menu className="w-4 h-4" />
+        </Button>
+        <h1 className={cn("text-sm font-semibold tracking-tight", isDark ? "text-white" : "text-gray-900")}>
+          Intelligence Feed
+        </h1>
+      </div>
       
       <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-          className={cn(
-            "text-xs h-8 rounded",
-            isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          )}
-        >
-          {isRefreshing ? 'Refreshing...' : 'Refresh'}
-        </Button>
+        {showRefresh && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className={cn(
+              "text-xs h-8 rounded",
+              isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            )}
+          >
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        )}
         
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onExport}
-          className={cn(
-            "text-xs h-8 rounded",
-            isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          )}
-        >
-          Export
-        </Button>
-        
-        <div className={cn("w-px h-5 mx-1", isDark ? "bg-neutral-800" : "bg-gray-200")} />
-        
+        {showRefresh && onExport && (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onExport}
+              className={cn(
+                "text-xs h-8 rounded",
+                isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              )}
+            >
+              Export
+            </Button>
+            
+            <div className={cn("w-px h-5 mx-1", isDark ? "bg-neutral-800" : "bg-gray-200")} />
+          </>
+        )}
         <Button
           variant="ghost"
           size="sm"
