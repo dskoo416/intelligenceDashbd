@@ -146,7 +146,8 @@ export default function Home() {
 
   useEffect(() => {
     if (sectors.length > 0 && !activeSector) {
-      setActiveSector(sectors[0]);
+      const sortedSectors = [...sectors].sort((a, b) => (a.order || 0) - (b.order || 0));
+      setActiveSector(sortedSectors[0]);
     }
   }, [sectors, activeSector]);
 
