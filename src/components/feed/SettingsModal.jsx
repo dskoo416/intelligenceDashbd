@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X } from 'lucide-react';
+import { X, Plus, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 export default function SettingsModal({ 
@@ -22,18 +22,26 @@ export default function SettingsModal({
   onDeleteSector,
   onSaveRSSSource,
   onDeleteRSSSource,
-  onUpdateRSSSource
+  onUpdateRSSSource,
+  onReorderSectors,
+  initialTab = 'appearance'
 }) {
-  const [activeTab, setActiveTab] = useState('appearance');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [editingSector, setEditingSector] = useState(null);
-  const [newSector, setNewSector] = useState({ name: '', keywords: [] });
+  const [newSector, setNewSector] = useState({ name: '', keywords: [], subsectors: [] });
   const [newKeyword, setNewKeyword] = useState('');
+  const [newSubsector, setNewSubsector] = useState('');
+  const [newSubsubsector, setNewSubsubsector] = useState({ subsectorIdx: null, value: '' });
   const [newRSSSource, setNewRSSSource] = useState({ name: '', url: '', sector_id: '' });
   const [localSettings, setLocalSettings] = useState(settings);
 
   useEffect(() => {
     setLocalSettings(settings);
   }, [settings]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const handleAddKeyword = (e) => {
     if (e.key === 'Enter' && newKeyword.trim()) {
@@ -57,13 +65,57 @@ export default function SettingsModal({
     });
   };
 
+  const handleAddSubsector = (isEditing) => {
+    if (!newSubsector.trim()) return;
+    const target = isEditing ? editingSector : newSector;
+    const setter = isEditing ? setEditingSector : setNewSector;
+    setter({
+      ...target,
+      subsectors: [...(target.subsectors || []), { name: newSubsector.trim(), subsubsectors: [] }]
+    });
+    setNewSubsector('');
+  };
+
+  const handleRemoveSubsector = (index, isEditing) => {
+    const target = isEditing ? editingSector : newSector;
+    const setter = isEditing ? setEditingSector : setNewSector;
+    setter({
+      ...target,
+      subsectors: target.subsectors.filter((_, i) => i !== index)
+    });
+  };
+
+  const handleAddSubsubsector = (subsectorIdx, isEditing) => {
+    if (!newSubsubsector.value.trim() || newSubsubsector.subsectorIdx !== subsectorIdx) return;
+    const target = isEditing ? editingSector : newSector;
+    const setter = isEditing ? setEditingSector : setNewSector;
+    const newSubsectors = [...(target.subsectors || [])];
+    newSubsectors[subsectorIdx] = {
+      ...newSubsectors[subsectorIdx],
+      subsubsectors: [...(newSubsectors[subsectorIdx].subsubsectors || []), newSubsubsector.value.trim()]
+    };
+    setter({ ...target, subsectors: newSubsectors });
+    setNewSubsubsector({ subsectorIdx: null, value: '' });
+  };
+
+  const handleRemoveSubsubsector = (subsectorIdx, subsubIdx, isEditing) => {
+    const target = isEditing ? editingSector : newSector;
+    const setter = isEditing ? setEditingSector : setNewSector;
+    const newSubsectors = [...(target.subsectors || [])];
+    newSubsectors[subsectorIdx] = {
+      ...newSubsectors[subsectorIdx],
+      subsubsectors: newSubsectors[subsectorIdx].subsubsectors.filter((_, i) => i !== subsubIdx)
+    };
+    setter({ ...target, subsectors: newSubsectors });
+  };
+
   const handleSaveSector = async () => {
     if (editingSector) {
       await onSaveSector(editingSector);
       setEditingSector(null);
     } else if (newSector.name) {
       await onSaveSector(newSector);
-      setNewSector({ name: '', keywords: [] });
+      setNewSector({ name: '', keywords: [], subsectors: [] });
     }
   };
 
@@ -77,6 +129,18 @@ export default function SettingsModal({
   const handleRSSCategoryChange = async (sourceId, newSectorId) => {
     await onUpdateRSSSource(sourceId, { sector_id: newSectorId });
   };
+
+  const handleMoveUp = (index) => {
+    if (index === 0) return;
+    onReorderSectors(index, index - 1);
+  };
+
+  const handleMoveDown = (index) => {
+    if (index === sectors.length - 1) return;
+    onReorderSectors(index, index + 1);
+  };
+
+  const currentTarget = editingSector || newSector;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -93,7 +157,7 @@ export default function SettingsModal({
             <TabsTrigger value="ai" className="data-[state=active]:bg-neutral-700 rounded text-xs">AI Settings</TabsTrigger>
           </TabsList>
           
-          <div className="mt-4 overflow-y-auto max-h-[55vh] pr-2">
+          <div className="mt-4 overflow-y-auto max-h-[55vh] pr-2 custom-scrollbar">
             <TabsContent value="appearance" className="space-y-6 mt-0">
               <div className="flex items-center justify-between p-4 bg-neutral-800/50 rounded">
                 <div>
@@ -123,15 +187,70 @@ export default function SettingsModal({
                 <div>
                   <Label className="text-neutral-400 text-xs">Name</Label>
                   <Input
-                    value={editingSector?.name || newSector.name}
+                    value={currentTarget.name}
                     onChange={(e) => editingSector 
                       ? setEditingSector({ ...editingSector, name: e.target.value })
                       : setNewSector({ ...newSector, name: e.target.value })
                     }
-                    placeholder="e.g., Technology"
-                    className="mt-1 bg-neutral-900 border-neutral-700 rounded"
+                    placeholder="e.g., Advanced Materials"
+                    className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
                   />
                 </div>
+                
+                {/* Subsectors */}
+                <div>
+                  <Label className="text-neutral-400 text-xs">Subsectors</Label>
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      value={newSubsector}
+                      onChange={(e) => setNewSubsector(e.target.value)}
+                      placeholder="Add subsector"
+                      className="bg-neutral-900 border-neutral-700 rounded text-white"
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSubsector(!!editingSector))}
+                    />
+                    <Button size="sm" onClick={() => handleAddSubsector(!!editingSector)} className="bg-neutral-700 hover:bg-neutral-600">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="space-y-2 mt-2">
+                    {(currentTarget.subsectors || []).map((sub, idx) => (
+                      <div key={idx} className="p-2 bg-neutral-800 rounded">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-white">{sub.name}</span>
+                          <button onClick={() => handleRemoveSubsector(idx, !!editingSector)} className="text-red-400 hover:text-red-300">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                        {/* Sub-subsectors */}
+                        <div className="mt-2 ml-3">
+                          <div className="flex gap-2">
+                            <Input
+                              value={newSubsubsector.subsectorIdx === idx ? newSubsubsector.value : ''}
+                              onChange={(e) => setNewSubsubsector({ subsectorIdx: idx, value: e.target.value })}
+                              placeholder="Add sub-subsector"
+                              className="bg-neutral-900 border-neutral-700 rounded text-white text-xs h-7"
+                              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSubsubsector(idx, !!editingSector))}
+                            />
+                            <Button size="sm" className="h-7 bg-neutral-700 hover:bg-neutral-600" onClick={() => handleAddSubsubsector(idx, !!editingSector)}>
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {(sub.subsubsectors || []).map((subsub, ssIdx) => (
+                              <Badge key={ssIdx} variant="secondary" className="bg-neutral-700 text-neutral-300 rounded text-xs">
+                                {subsub}
+                                <button onClick={() => handleRemoveSubsubsector(idx, ssIdx, !!editingSector)} className="ml-1">
+                                  <X className="w-2 h-2" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div>
                   <Label className="text-neutral-400 text-xs">Keywords (for critical articles)</Label>
                   <Input
@@ -139,10 +258,10 @@ export default function SettingsModal({
                     onChange={(e) => setNewKeyword(e.target.value)}
                     onKeyDown={handleAddKeyword}
                     placeholder="Press Enter to add keyword"
-                    className="mt-1 bg-neutral-900 border-neutral-700 rounded"
+                    className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
                   />
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {(editingSector?.keywords || newSector.keywords || []).map((kw, idx) => (
+                    {(currentTarget.keywords || []).map((kw, idx) => (
                       <Badge key={idx} variant="secondary" className="bg-neutral-700 text-neutral-300 rounded">
                         {kw}
                         <button onClick={() => handleRemoveKeyword(idx, !!editingSector)} className="ml-1">
@@ -166,18 +285,36 @@ export default function SettingsModal({
               
               <div className="space-y-1">
                 <h4 className="font-medium text-xs text-neutral-400 mb-2">Existing Sectors</h4>
-                {sectors.map((sector) => (
-                  <div key={sector.id} className="flex items-center justify-between p-3 bg-neutral-800/30 rounded">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm">{sector.name}</span>
-                      {sector.keywords?.length > 0 && (
-                        <span className="text-xs text-neutral-500">
-                          ({sector.keywords.length} keywords)
-                        </span>
-                      )}
+                {sectors.map((sector, index) => (
+                  <div key={sector.id} className="flex items-center justify-between p-3 bg-neutral-800/30 rounded gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-0.5">
+                        <button 
+                          onClick={() => handleMoveUp(index)} 
+                          disabled={index === 0}
+                          className={cn("p-0.5", index === 0 ? "text-neutral-700" : "text-neutral-500 hover:text-white")}
+                        >
+                          <ChevronUp className="w-3 h-3" />
+                        </button>
+                        <button 
+                          onClick={() => handleMoveDown(index)} 
+                          disabled={index === sectors.length - 1}
+                          className={cn("p-0.5", index === sectors.length - 1 ? "text-neutral-700" : "text-neutral-500 hover:text-white")}
+                        >
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <div>
+                        <span className="text-sm text-white">{sector.name}</span>
+                        {sector.subsectors?.length > 0 && (
+                          <span className="text-xs text-neutral-500 ml-2">
+                            ({sector.subsectors.length} subsectors)
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => setEditingSector(sector)} className="text-xs h-7">
+                      <Button size="sm" variant="ghost" onClick={() => setEditingSector(sector)} className="text-xs h-7 text-neutral-300">
                         Edit
                       </Button>
                       <Button size="sm" variant="ghost" className="text-red-400 text-xs h-7" onClick={() => onDeleteSector(sector.id)}>
@@ -198,8 +335,8 @@ export default function SettingsModal({
                     <Input
                       value={newRSSSource.name}
                       onChange={(e) => setNewRSSSource({ ...newRSSSource, name: e.target.value })}
-                      placeholder="e.g., TechCrunch"
-                      className="mt-1 bg-neutral-900 border-neutral-700 rounded"
+                      placeholder="e.g., Reuters"
+                      className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
                     />
                   </div>
                   <div>
@@ -208,7 +345,7 @@ export default function SettingsModal({
                       value={newRSSSource.url}
                       onChange={(e) => setNewRSSSource({ ...newRSSSource, url: e.target.value })}
                       placeholder="https://example.com/rss"
-                      className="mt-1 bg-neutral-900 border-neutral-700 rounded"
+                      className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
                     />
                   </div>
                   <div>
@@ -217,12 +354,12 @@ export default function SettingsModal({
                       value={newRSSSource.sector_id}
                       onValueChange={(value) => setNewRSSSource({ ...newRSSSource, sector_id: value })}
                     >
-                      <SelectTrigger className="mt-1 bg-neutral-900 border-neutral-700 rounded">
+                      <SelectTrigger className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white">
                         <SelectValue placeholder="Select sector" />
                       </SelectTrigger>
                       <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
                         {sectors.map((sector) => (
-                          <SelectItem key={sector.id} value={sector.id}>
+                          <SelectItem key={sector.id} value={sector.id} className="text-white focus:bg-neutral-700 focus:text-white">
                             {sector.name}
                           </SelectItem>
                         ))}
@@ -245,19 +382,19 @@ export default function SettingsModal({
                     return (
                       <div key={source.id} className="flex items-center justify-between p-3 bg-neutral-800/30 rounded gap-3">
                         <div className="flex-1 min-w-0">
-                          <span className="text-sm">{source.name}</span>
+                          <span className="text-sm text-white">{source.name}</span>
                           <p className="text-xs text-neutral-500 truncate">{source.url}</p>
                         </div>
                         <Select
                           value={source.sector_id}
                           onValueChange={(value) => handleRSSCategoryChange(source.id, value)}
                         >
-                          <SelectTrigger className="w-32 bg-neutral-800 border-neutral-700 rounded h-8 text-xs">
+                          <SelectTrigger className="w-36 bg-neutral-800 border-neutral-700 rounded h-8 text-xs text-white">
                             <SelectValue>{sector?.name || 'Select'}</SelectValue>
                           </SelectTrigger>
                           <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
                             {sectors.map((s) => (
-                              <SelectItem key={s.id} value={s.id} className="text-xs">
+                              <SelectItem key={s.id} value={s.id} className="text-xs text-white focus:bg-neutral-700 focus:text-white">
                                 {s.name}
                               </SelectItem>
                             ))}
@@ -275,13 +412,48 @@ export default function SettingsModal({
             
             <TabsContent value="ai" className="space-y-4 mt-0">
               <div className="space-y-4">
+                <div className="p-4 bg-neutral-800/50 rounded space-y-4">
+                  <h4 className="font-medium text-xs text-neutral-300">API Configuration</h4>
+                  <div>
+                    <Label className="text-neutral-400 text-xs">AI Provider</Label>
+                    <Select
+                      value={localSettings?.api_provider || 'default'}
+                      onValueChange={(value) => setLocalSettings({ ...localSettings, api_provider: value })}
+                    >
+                      <SelectTrigger className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
+                        <SelectItem value="default" className="text-white focus:bg-neutral-700 focus:text-white">Default (Built-in)</SelectItem>
+                        <SelectItem value="openai" className="text-white focus:bg-neutral-700 focus:text-white">OpenAI</SelectItem>
+                        <SelectItem value="gemini" className="text-white focus:bg-neutral-700 focus:text-white">Google Gemini</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {localSettings?.api_provider && localSettings.api_provider !== 'default' && (
+                    <div>
+                      <Label className="text-neutral-400 text-xs">API Key</Label>
+                      <Input
+                        type="password"
+                        value={localSettings?.custom_api_key || ''}
+                        onChange={(e) => setLocalSettings({ ...localSettings, custom_api_key: e.target.value })}
+                        placeholder={`Enter your ${localSettings.api_provider === 'openai' ? 'OpenAI' : 'Gemini'} API key`}
+                        className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
+                      />
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Your API key is stored securely and used only for generating summaries.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <Label className="text-neutral-400 text-xs">Default Gist Instructions</Label>
                   <Textarea
                     value={localSettings?.default_gist_instructions || ''}
                     onChange={(e) => setLocalSettings({ ...localSettings, default_gist_instructions: e.target.value })}
                     placeholder="Instructions for AI when generating the summary..."
-                    className="mt-1 bg-neutral-900 border-neutral-700 min-h-[80px] rounded"
+                    className="mt-1 bg-neutral-900 border-neutral-700 min-h-[80px] rounded text-white"
                   />
                   <p className="text-xs text-neutral-500 mt-1">
                     These instructions guide the AI when creating the intelligence summary.
@@ -293,7 +465,7 @@ export default function SettingsModal({
                     value={localSettings?.default_critical_instructions || ''}
                     onChange={(e) => setLocalSettings({ ...localSettings, default_critical_instructions: e.target.value })}
                     placeholder="Instructions for AI when selecting critical articles..."
-                    className="mt-1 bg-neutral-900 border-neutral-700 min-h-[80px] rounded"
+                    className="mt-1 bg-neutral-900 border-neutral-700 min-h-[80px] rounded text-white"
                   />
                   <p className="text-xs text-neutral-500 mt-1">
                     These instructions guide the AI when selecting critical articles.
