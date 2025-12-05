@@ -10,7 +10,7 @@ import SavedSidebar from '@/components/saved/SavedSidebar';
 import CollectionsModal from '@/components/saved/CollectionsModal';
 import { toast } from 'sonner';
 
-export default function Saved() {
+export default function Saved({ sidebarOpen }) {
   const queryClient = useQueryClient();
   const [activeView, setActiveView] = useState('main');
   const [collectionsModalOpen, setCollectionsModalOpen] = useState(false);
@@ -111,16 +111,18 @@ export default function Saved() {
 
   return (
     <div className={cn("flex h-full", isDark ? "bg-neutral-950" : "bg-gray-50")}>
-      <div className="w-52 flex-shrink-0">
-        <SavedSidebar
-          savedArticles={savedArticles}
-          collections={collections}
-          activeView={activeView}
-          onSelectView={setActiveView}
-          onOpenCollectionsModal={() => setCollectionsModalOpen(true)}
-          theme={settings.theme}
-        />
-      </div>
+      {sidebarOpen && (
+        <div className="w-52 flex-shrink-0">
+          <SavedSidebar
+            savedArticles={savedArticles}
+            collections={collections}
+            activeView={activeView}
+            onSelectView={setActiveView}
+            onOpenCollectionsModal={() => setCollectionsModalOpen(true)}
+            theme={settings.theme}
+          />
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto p-6">
         <h1 className={cn("text-2xl font-bold mb-6", isDark ? "text-white" : "text-gray-900")}>

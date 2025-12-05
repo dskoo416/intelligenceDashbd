@@ -115,9 +115,16 @@ export default function Layout({ children, currentPageName }) {
 
   const showTopBarActions = currentPageName === 'IntelligenceFeed';
 
-  // Clone children and pass props for IntelligenceFeed page
+  const handleRefresh = () => {
+    queryClient.invalidateQueries();
+    toast.success('Refreshing data...');
+  };
+
+  // Clone children and pass props for pages
   const childrenWithProps = currentPageName === 'IntelligenceFeed' 
     ? React.cloneElement(children, { activeSector, activeSubsector })
+    : currentPageName === 'Saved'
+    ? React.cloneElement(children, { sidebarOpen })
     : children;
 
   return (
@@ -148,11 +155,9 @@ export default function Layout({ children, currentPageName }) {
       <TopBar 
         onOpenSettings={() => { setSettingsTab('appearance'); setSettingsOpen(true); }}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        onRefresh={handleRefresh}
         onExport={async () => {
-          const { data: articles } = await queryClient.fetchQuery({
-            queryKey: ['savedArticles'],
-            queryFn: () => base44.entities.SavedArticle.list('-created_date'),
-          });
+          const articles = await base44.entities.SavedArticle.list('-created_date');
           
           const csvContent = [
             ['Title', 'Link', 'Source', 'Sector', 'Date', 'Description'].join(','),
@@ -182,7 +187,7 @@ export default function Layout({ children, currentPageName }) {
       />
       
       <div className="flex-1 flex overflow-hidden">
-        {sidebarOpen && (
+        {sidebarOpen && currentPageName === 'IntelligenceFeed' && (
           <div className="w-52 flex-shrink-0">
             <NavigationSidebar
               sectors={sectors}
@@ -196,8 +201,6 @@ export default function Layout({ children, currentPageName }) {
             />
           </div>
         )}
-        
-        {!sidebarOpen && <div className="w-0" />}
         
         {childrenWithProps}
       </div>
