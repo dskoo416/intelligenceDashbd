@@ -124,7 +124,7 @@ export default function Saved() {
 
       <div className="flex-1 overflow-y-auto p-6">
         <h1 className={cn("text-2xl font-bold mb-6", isDark ? "text-white" : "text-gray-900")}>
-          {activeView === 'main' ? 'Main Collections' : 
+          {activeView === 'main' ? 'Main' : 
            activeView.startsWith('collection-') ? collections.find(c => c.id === activeView.replace('collection-', ''))?.name :
            activeView.startsWith('month-') ? savedArticles.find(a => {
              const date = new Date(a.pubDate || a.created_date);
