@@ -131,16 +131,16 @@ export default function Home() {
   });
 
   const handleReorderSectors = async (fromIndex, toIndex) => {
-    const reordered = [...sectors];
+    const sortedSectors = [...sectors].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const reordered = [...sortedSectors];
     const [moved] = reordered.splice(fromIndex, 1);
     reordered.splice(toIndex, 0, moved);
     
     // Update all orders
-    for (let i = 0; i < reordered.length; i++) {
-      if (reordered[i].order !== i + 1) {
-        await base44.entities.Sector.update(reordered[i].id, { order: i + 1 });
-      }
-    }
+    const updates = reordered.map((sector, i) => 
+      base44.entities.Sector.update(sector.id, { order: i + 1 })
+    );
+    await Promise.all(updates);
     queryClient.invalidateQueries({ queryKey: ['sectors'] });
   };
 

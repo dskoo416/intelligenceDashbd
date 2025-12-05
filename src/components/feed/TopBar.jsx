@@ -11,7 +11,7 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
       isDark ? "bg-neutral-950 border-neutral-800" : "bg-white border-gray-200"
     )}>
       <h1 className={cn("text-sm font-semibold tracking-tight", isDark ? "text-white" : "text-gray-900")}>
-        Market Feed
+        Intelligence Feed
       </h1>
       
       <div className="flex items-center gap-1">
