@@ -2,8 +2,10 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Menu } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
-export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshing, onToggleSidebar, showRefresh, theme }) {
+export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshing, onToggleSidebar, showRefresh, currentPage, theme }) {
   const isDark = theme === 'dark';
 
   return (
@@ -26,6 +28,34 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
         <h1 className={cn("text-sm font-semibold tracking-tight", isDark ? "text-white" : "text-gray-900")}>
           Intelligence Feed
         </h1>
+        <div className="flex items-center gap-1 ml-4">
+          <Link
+            to={createPageUrl('IntelligenceFeed')}
+            className={cn(
+              "px-3 py-1.5 rounded text-xs font-medium transition-colors",
+              currentPage === 'IntelligenceFeed'
+                ? "bg-orange-500/10 text-orange-500"
+                : isDark
+                  ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            )}
+          >
+            Intelligence Feed
+          </Link>
+          <Link
+            to={createPageUrl('Saved')}
+            className={cn(
+              "px-3 py-1.5 rounded text-xs font-medium transition-colors",
+              currentPage === 'Saved'
+                ? "bg-orange-500/10 text-orange-500"
+                : isDark
+                  ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            )}
+          >
+            Saved
+          </Link>
+        </div>
       </div>
       
       <div className="flex items-center gap-1">

@@ -33,9 +33,9 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
             </PopoverTrigger>
             <PopoverContent className={cn("w-auto p-0", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
               <CalendarComponent
-                mode="single"
-                selected={dateFilter ? new Date(dateFilter) : undefined}
-                onSelect={(date) => onDateFilter(date?.toISOString())}
+                mode="range"
+                selected={dateFilter}
+                onSelect={onDateFilter}
                 className={isDark ? "text-white" : ""}
               />
               {dateFilter && (

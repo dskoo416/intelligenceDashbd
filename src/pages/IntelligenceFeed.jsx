@@ -36,14 +36,33 @@ const parseRSS = async (url) => {
 
 export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   const queryClient = useQueryClient();
-  const [articles, setArticles] = useState([]);
-  const [criticalArticles, setCriticalArticles] = useState([]);
-  const [gist, setGist] = useState('');
+  const [dataCache, setDataCache] = useState({});
+  const [dateFilter, setDateFilter] = useState(null);
+  const [searchFilter, setSearchFilter] = useState('');
+  
+  const sectorKey = `${activeSector?.id || 'none'}_${activeSubsector?.name || 'none'}`;
+  const cachedData = dataCache[sectorKey] || {
+    articles: [],
+    criticalArticles: [],
+    gist: '',
+    isLoadingArticles: false,
+    isLoadingGist: false,
+    isLoadingCritical: false,
+  };
+
+  const [articles, setArticles] = useState(cachedData.articles);
+  const [criticalArticles, setCriticalArticles] = useState(cachedData.criticalArticles);
+  const [gist, setGist] = useState(cachedData.gist);
   const [isLoadingArticles, setIsLoadingArticles] = useState(false);
   const [isLoadingGist, setIsLoadingGist] = useState(false);
   const [isLoadingCritical, setIsLoadingCritical] = useState(false);
-  const [dateFilter, setDateFilter] = useState(null);
-  const [searchFilter, setSearchFilter] = useState('');
+
+  const updateCache = (key, updates) => {
+    setDataCache(prev => ({
+      ...prev,
+      [key]: { ...(prev[key] || {}), ...updates }
+    }));
+  };
 
   const { data: rssSources = [] } = useQuery({
     queryKey: ['rssSources'],
@@ -64,8 +83,18 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     },
   });
 
-  const fetchArticles = useCallback(async () => {
+  const fetchArticles = useCallback(async (forceRefresh = false) => {
     if (!activeSector) return;
+    
+    const key = `${activeSector.id}_${activeSubsector?.name || 'none'}`;
+    const cached = dataCache[key];
+    
+    if (cached?.articles?.length > 0 && !forceRefresh) {
+      setArticles(cached.articles);
+      setGist(cached.gist || '');
+      setCriticalArticles(cached.criticalArticles || []);
+      return;
+    }
     
     setIsLoadingArticles(true);
     setArticles([]);
@@ -95,12 +124,13 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     });
     
     setArticles(allArticles);
+    updateCache(key, { articles: allArticles });
     setIsLoadingArticles(false);
-  }, [activeSector, activeSubsector, rssSources]);
+  }, [activeSector, activeSubsector, rssSources, dataCache]);
 
   useEffect(() => {
-    fetchArticles();
-  }, [fetchArticles]);
+    fetchArticles(false);
+  }, [activeSector, activeSubsector]);
 
   const generateGist = async () => {
     if (articles.length === 0) return;
@@ -117,6 +147,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     });
     
     setGist(result);
+    updateCache(sectorKey, { gist: result });
     setIsLoadingGist(false);
   };
 
@@ -161,17 +192,19 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     })).filter(Boolean) || [];
     
     setCriticalArticles(critical);
+    updateCache(sectorKey, { criticalArticles: critical });
     setIsLoadingCritical(false);
   };
 
   useEffect(() => {
-    if (articles.length > 0 && !gist) {
+    const cached = dataCache[sectorKey];
+    if (articles.length > 0 && !cached?.gist) {
       generateGist();
     }
-    if (articles.length > 0 && criticalArticles.length === 0) {
+    if (articles.length > 0 && !cached?.criticalArticles?.length) {
       generateCritical();
     }
-  }, [articles]);
+  }, [articles, sectorKey]);
 
   const handleSaveArticle = (article) => {
     saveArticleMutation.mutate(article);
@@ -180,8 +213,14 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   const filteredArticles = articles.filter(a => {
     if (dateFilter && a.pubDate) {
       const articleDate = new Date(a.pubDate);
-      const filterDate = new Date(dateFilter);
-      if (articleDate.toDateString() !== filterDate.toDateString()) return false;
+      if (dateFilter.from && dateFilter.to) {
+        const fromDate = new Date(dateFilter.from);
+        const toDate = new Date(dateFilter.to);
+        if (articleDate < fromDate || articleDate > toDate) return false;
+      } else if (dateFilter.from) {
+        const fromDate = new Date(dateFilter.from);
+        if (articleDate.toDateString() !== fromDate.toDateString()) return false;
+      }
     }
     if (searchFilter && !a.title.toLowerCase().includes(searchFilter.toLowerCase())) {
       return false;

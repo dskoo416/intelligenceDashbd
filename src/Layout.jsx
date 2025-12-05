@@ -151,6 +151,7 @@ export default function Layout({ children, currentPageName }) {
         onOpenSettings={() => { setSettingsTab('appearance'); setSettingsOpen(true); }}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         showRefresh={showTopBarActions}
+        currentPage={currentPageName}
         theme={settings.theme}
       />
       
