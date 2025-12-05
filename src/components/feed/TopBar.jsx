@@ -25,10 +25,7 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
         >
           <Menu className="w-4 h-4" />
         </Button>
-        <h1 className={cn("text-sm font-semibold tracking-tight", isDark ? "text-white" : "text-gray-900")}>
-          Intelligence Feed
-        </h1>
-        <div className="flex items-center gap-1 ml-4">
+        <div className="flex items-center gap-1">
           <Link
             to={createPageUrl('IntelligenceFeed')}
             className={cn(

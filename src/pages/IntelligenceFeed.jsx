@@ -196,15 +196,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     setIsLoadingCritical(false);
   };
 
-  useEffect(() => {
-    const cached = dataCache[sectorKey];
-    if (articles.length > 0 && !cached?.gist) {
-      generateGist();
-    }
-    if (articles.length > 0 && !cached?.criticalArticles?.length) {
-      generateCritical();
-    }
-  }, [articles, sectorKey]);
+
 
   const handleSaveArticle = (article) => {
     saveArticleMutation.mutate(article);
@@ -233,31 +225,33 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
       "flex-1 overflow-y-auto p-5 space-y-4",
       settings.theme === 'dark' ? "bg-neutral-950" : "bg-gray-50"
     )}>
-      <GistPanel 
-        gist={gist} 
-        isLoading={isLoadingGist}
-        onRefresh={generateGist}
-        sectorName={activeSector?.name}
-        theme={settings.theme}
-      />
-      
-      <CriticalArticles 
-        articles={criticalArticles} 
-        isLoading={isLoadingCritical}
-        onRefresh={generateCritical}
-        theme={settings.theme}
-      />
-      
-      <NewsFeed 
-        articles={filteredArticles}
-        isLoading={isLoadingArticles}
-        onSaveArticle={handleSaveArticle}
-        onDateFilter={setDateFilter}
-        onSearchFilter={setSearchFilter}
-        dateFilter={dateFilter}
-        searchFilter={searchFilter}
-        theme={settings.theme}
-      />
+      <div className="max-w-7xl">
+        <GistPanel 
+          gist={gist} 
+          isLoading={isLoadingGist}
+          onRefresh={generateGist}
+          sectorName={activeSector?.name}
+          theme={settings.theme}
+        />
+        
+        <CriticalArticles 
+          articles={criticalArticles} 
+          isLoading={isLoadingCritical}
+          onRefresh={generateCritical}
+          theme={settings.theme}
+        />
+        
+        <NewsFeed 
+          articles={filteredArticles}
+          isLoading={isLoadingArticles}
+          onSaveArticle={handleSaveArticle}
+          onDateFilter={setDateFilter}
+          onSearchFilter={setSearchFilter}
+          dateFilter={dateFilter}
+          searchFilter={searchFilter}
+          theme={settings.theme}
+        />
+      </div>
     </main>
   );
 }

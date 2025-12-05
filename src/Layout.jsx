@@ -165,10 +165,13 @@ export default function Layout({ children, currentPageName }) {
               onSelectSector={setActiveSector}
               onSelectSubsector={setActiveSubsector}
               currentPage={currentPageName}
+              onOpenSettings={() => { setSettingsTab('sectors'); setSettingsOpen(true); }}
               theme={settings.theme}
             />
           </div>
         )}
+        
+        {!sidebarOpen && <div className="w-0" />}
         
         {childrenWithProps}
       </div>

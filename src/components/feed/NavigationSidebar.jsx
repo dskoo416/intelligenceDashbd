@@ -11,6 +11,7 @@ export default function NavigationSidebar({
   onSelectSector, 
   onSelectSubsector, 
   currentPage,
+  onOpenSettings,
   theme 
 }) {
   const isDark = theme === 'dark';
@@ -24,13 +25,7 @@ export default function NavigationSidebar({
 
   return (
     <div className={cn("h-full border-r flex flex-col", isDark ? "bg-neutral-950 border-neutral-800" : "bg-white border-gray-200")}>
-      <div className={cn("p-4 border-b", isDark ? "border-neutral-800" : "border-gray-200")}>
-        <h2 className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-500")}>
-          Navigation
-        </h2>
-      </div>
-      
-      <nav className="flex-1 overflow-y-auto p-2 space-y-0.5 custom-scrollbar">
+      <nav className="flex-1 overflow-y-auto p-2 pt-4 space-y-0.5 custom-scrollbar">
         <Link
           to={createPageUrl('Home')}
           className={cn(
@@ -114,6 +109,20 @@ export default function NavigationSidebar({
           })
         )}
       </nav>
+      
+      <div className={cn("p-2 border-t", isDark ? "border-neutral-800" : "border-gray-200")}>
+        <button
+          onClick={onOpenSettings}
+          className={cn(
+            "w-full px-3 py-2 rounded text-xs font-medium transition-colors text-left",
+            isDark
+              ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+          )}
+        >
+          Edit Sectors
+        </button>
+      </div>
     </div>
   );
 }
