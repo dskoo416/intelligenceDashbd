@@ -40,7 +40,9 @@ const parseRSS = async (url) => {
 export default function Home() {
   const queryClient = useQueryClient();
   const [activeSector, setActiveSector] = useState(null);
+  const [activeSubsector, setActiveSubsector] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState('appearance');
   const [articles, setArticles] = useState([]);
   const [criticalArticles, setCriticalArticles] = useState([]);
   const [gist, setGist] = useState('');
@@ -86,7 +88,8 @@ export default function Home() {
       if (data.id) {
         return base44.entities.Sector.update(data.id, data);
       } else {
-        return base44.entities.Sector.create(data);
+        const maxOrder = Math.max(0, ...sectors.map(s => s.order || 0));
+        return base44.entities.Sector.create({ ...data, order: maxOrder + 1 });
       }
     },
     onSuccess: () => {
@@ -127,6 +130,20 @@ export default function Home() {
     },
   });
 
+  const handleReorderSectors = async (fromIndex, toIndex) => {
+    const reordered = [...sectors];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    
+    // Update all orders
+    for (let i = 0; i < reordered.length; i++) {
+      if (reordered[i].order !== i + 1) {
+        await base44.entities.Sector.update(reordered[i].id, { order: i + 1 });
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ['sectors'] });
+  };
+
   useEffect(() => {
     if (sectors.length > 0 && !activeSector) {
       setActiveSector(sectors[0]);
@@ -152,7 +169,13 @@ export default function Home() {
     
     for (const source of sectorSources) {
       const sourceArticles = await parseRSS(source.url);
-      allArticles.push(...sourceArticles.map(a => ({ ...a, source: source.name })));
+      // Add sector/subsector info to each article
+      allArticles.push(...sourceArticles.map(a => ({ 
+        ...a, 
+        source: source.name,
+        sector: activeSector.name,
+        subsector: activeSubsector?.name || ''
+      })));
     }
     
     allArticles.sort((a, b) => {
@@ -167,7 +190,7 @@ export default function Home() {
       generateGist(allArticles);
       generateCritical(allArticles);
     }
-  }, [activeSector, rssSources]);
+  }, [activeSector, activeSubsector, rssSources]);
 
   useEffect(() => {
     fetchArticles();
@@ -244,15 +267,14 @@ export default function Home() {
       return;
     }
     
-    const headers = ['Title', 'Source', 'Date', 'Link', 'Is Critical'];
-    const criticalLinks = new Set(criticalArticles.map(a => a.link));
+    const headers = ['Sector', 'Subsector', 'Date', 'News', 'Link'];
     
     const rows = articles.map(a => [
+      `"${activeSector?.name || ''}"`,
+      `"${activeSubsector?.name || ''}"`,
+      a.pubDate ? new Date(a.pubDate).toISOString().split('T')[0] : '',
       `"${a.title?.replace(/"/g, '""') || ''}"`,
-      `"${a.source || ''}"`,
-      a.pubDate ? new Date(a.pubDate).toISOString() : '',
-      a.link || '',
-      criticalLinks.has(a.link) ? 'Yes' : 'No'
+      a.link || ''
     ]);
     
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -270,13 +292,18 @@ export default function Home() {
     updateRSSMutation.mutate({ id, data });
   };
 
+  const handleEditSectors = () => {
+    setSettingsTab('sectors');
+    setSettingsOpen(true);
+  };
+
   return (
     <div className={cn(
       "h-screen flex flex-col",
       isDark ? "bg-neutral-950 text-white" : "bg-gray-50 text-gray-900"
     )}>
       <TopBar 
-        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenSettings={() => { setSettingsTab('appearance'); setSettingsOpen(true); }}
         onExport={handleExport}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
@@ -284,13 +311,16 @@ export default function Home() {
       />
       
       <div className="flex-1 flex overflow-hidden">
-        <div className="w-48 flex-shrink-0">
+        <div className="w-52 flex-shrink-0">
           <SectorSidebar
             sectors={sectors}
             activeSector={activeSector}
+            activeSubsector={activeSubsector}
             onSelectSector={setActiveSector}
+            onSelectSubsector={setActiveSubsector}
             isLoading={sectorsLoading}
             theme={settings.theme}
+            onEditSectors={handleEditSectors}
           />
         </div>
         
@@ -331,6 +361,8 @@ export default function Home() {
         onSaveRSSSource={(data) => rssSourceMutation.mutate(data)}
         onDeleteRSSSource={(id) => deleteRSSMutation.mutate(id)}
         onUpdateRSSSource={handleUpdateRSSSource}
+        onReorderSectors={handleReorderSectors}
+        initialTab={settingsTab}
       />
     </div>
   );
