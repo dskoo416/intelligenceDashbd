@@ -91,10 +91,24 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
 
   const savedCache = cacheData[0];
 
+  const { data: savedArticles = [] } = useQuery({
+    queryKey: ['savedArticles'],
+    queryFn: () => base44.entities.SavedArticle.list(),
+  });
+
   const saveArticleMutation = useMutation({
-    mutationFn: (article) => base44.entities.SavedArticle.create(article),
-    onSuccess: () => {
-      toast.success('Article saved');
+    mutationFn: async (article) => {
+      const existing = savedArticles.find(a => a.link === article.link);
+      if (existing) {
+        await base44.entities.SavedArticle.delete(existing.id);
+        return { deleted: true };
+      } else {
+        return base44.entities.SavedArticle.create({ ...article, collection_ids: [] });
+      }
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
+      toast.success(result?.deleted ? 'Article removed' : 'Article saved');
     },
   });
 
@@ -297,6 +311,8 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
           onSearchFilter={setSearchFilter}
           dateFilter={dateFilter}
           searchFilter={searchFilter}
+          sectorName={activeSector?.name}
+          savedArticleIds={savedArticles.map(a => a.link)}
           theme={settings.theme}
         />
       </div>

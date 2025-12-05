@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import TopBar from '@/components/feed/TopBar';
 import NavigationSidebar from '@/components/feed/NavigationSidebar';
 import SettingsModal from '@/components/feed/SettingsModal';
 import { cn } from "@/lib/utils";
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 export default function Layout({ children, currentPageName }) {
   const queryClient = useQueryClient();
@@ -150,7 +148,33 @@ export default function Layout({ children, currentPageName }) {
       <TopBar 
         onOpenSettings={() => { setSettingsTab('appearance'); setSettingsOpen(true); }}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        onExport={() => {}}
+        onExport={async () => {
+          const { data: articles } = await queryClient.fetchQuery({
+            queryKey: ['savedArticles'],
+            queryFn: () => base44.entities.SavedArticle.list('-created_date'),
+          });
+          
+          const csvContent = [
+            ['Title', 'Link', 'Source', 'Sector', 'Date', 'Description'].join(','),
+            ...articles.map(a => [
+              `"${a.title?.replace(/"/g, '""') || ''}"`,
+              `"${a.link || ''}"`,
+              `"${a.source || ''}"`,
+              `"${a.sector || ''}"`,
+              `"${a.pubDate ? new Date(a.pubDate).toLocaleDateString() : ''}"`,
+              `"${a.description?.replace(/"/g, '""') || ''}"`
+            ].join(','))
+          ].join('\n');
+          
+          const blob = new Blob([csvContent], { type: 'text/csv' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `saved-articles-${new Date().toISOString().split('T')[0]}.csv`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+          toast.success('Articles exported');
+        }}
         showRefresh={showTopBarActions}
         currentPage={currentPageName}
         sidebarOpen={sidebarOpen}

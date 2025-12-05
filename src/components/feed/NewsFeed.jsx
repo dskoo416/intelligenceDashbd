@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
-export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFilter, onSearchFilter, dateFilter, searchFilter, theme }) {
+export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFilter, onSearchFilter, dateFilter, searchFilter, sectorName, savedArticleIds, theme }) {
   const isDark = theme === 'dark';
   const [showSearch, setShowSearch] = useState(false);
 
@@ -18,7 +18,7 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
     )}>
       <div className="flex items-center justify-between mb-3">
         <h3 className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-neutral-400" : "text-gray-500")}>
-          Most Recent
+          {sectorName ? `${sectorName} News` : 'Most Recent'}
         </h3>
         <div className="flex items-center gap-2">
           <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
@@ -125,11 +125,15 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
                     onSaveArticle(article);
                   }}
                   className={cn(
-                    "p-1 rounded hover:bg-orange-500/10 transition-colors",
-                    isDark ? "text-neutral-500 hover:text-orange-500" : "text-gray-400 hover:text-orange-500"
+                    "p-1 rounded hover:bg-orange-500/10 transition-all",
+                    savedArticleIds?.includes(article.link) 
+                      ? "text-orange-500 rotate-45" 
+                      : isDark 
+                        ? "text-neutral-500 hover:text-orange-500" 
+                        : "text-gray-400 hover:text-orange-500"
                   )}
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4 transition-transform" />
                 </button>
               </div>
             </a>

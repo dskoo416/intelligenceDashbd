@@ -56,6 +56,21 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
       </div>
       
       <div className="flex items-center gap-1">
+        {showRefresh && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className={cn(
+              "text-xs h-8 rounded",
+              isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            )}
+          >
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        )}
+        
         {showRefresh && onExport && (
           <Button
             variant="ghost"
@@ -70,7 +85,7 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
           </Button>
         )}
         
-        {showRefresh && onExport && (
+        {showRefresh && (
           <div className={cn("w-px h-5 mx-1", isDark ? "bg-neutral-800" : "bg-gray-200")} />
         )}
         
