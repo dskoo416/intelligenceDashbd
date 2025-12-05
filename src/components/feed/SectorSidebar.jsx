@@ -1,45 +1,34 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
-import { 
-  Building2, Cpu, HeartPulse, Landmark, ShoppingCart, 
-  Zap, Plane, Factory, Leaf, Wifi, ChevronRight
-} from 'lucide-react';
 
-const iconMap = {
-  Building2, Cpu, HeartPulse, Landmark, ShoppingCart,
-  Zap, Plane, Factory, Leaf, Wifi
-};
-
-export default function SectorSidebar({ sectors, activeSector, onSelectSector, isLoading }) {
-  const getIcon = (iconName) => {
-    const Icon = iconMap[iconName] || Building2;
-    return Icon;
-  };
+export default function SectorSidebar({ sectors, activeSector, onSelectSector, isLoading, theme }) {
+  const isDark = theme === 'dark';
 
   if (isLoading) {
     return (
-      <div className="h-full bg-slate-950 border-r border-slate-800/50 p-4 space-y-2">
+      <div className={cn("h-full border-r p-4 space-y-2", isDark ? "bg-neutral-950 border-neutral-800" : "bg-white border-gray-200")}>
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-12 bg-slate-800/50 rounded-lg animate-pulse" />
+          <div key={i} className={cn("h-10 rounded animate-pulse", isDark ? "bg-neutral-800" : "bg-gray-100")} />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="h-full bg-slate-950 border-r border-slate-800/50 flex flex-col">
-      <div className="p-4 border-b border-slate-800/50">
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sectors</h2>
+    <div className={cn("h-full border-r flex flex-col", isDark ? "bg-neutral-950 border-neutral-800" : "bg-white border-gray-200")}>
+      <div className={cn("p-4 border-b", isDark ? "border-neutral-800" : "border-gray-200")}>
+        <h2 className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-500")}>
+          Sectors
+        </h2>
       </div>
       
-      <nav className="flex-1 overflow-y-auto p-2 space-y-1">
+      <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
         {sectors.length === 0 ? (
-          <p className="text-slate-500 text-sm p-3 text-center">
+          <p className={cn("text-sm p-3 text-center", isDark ? "text-neutral-500" : "text-gray-500")}>
             No sectors yet. Add sectors in settings.
           </p>
         ) : (
           sectors.map((sector) => {
-            const Icon = getIcon(sector.icon);
             const isActive = activeSector?.id === sector.id;
             
             return (
@@ -47,27 +36,17 @@ export default function SectorSidebar({ sectors, activeSector, onSelectSector, i
                 key={sector.id}
                 onClick={() => onSelectSector(sector)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                  "w-full text-left px-3 py-2 rounded transition-all duration-150 text-sm font-medium",
                   isActive 
-                    ? "bg-gradient-to-r from-blue-600/20 to-cyan-600/10 text-white border border-blue-500/30" 
-                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                    ? isDark 
+                      ? "bg-neutral-800 text-white" 
+                      : "bg-gray-100 text-gray-900"
+                    : isDark
+                      ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 )}
               >
-                <div className={cn(
-                  "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
-                  isActive 
-                    ? "bg-blue-500/20 text-blue-400" 
-                    : "bg-slate-800 text-slate-500 group-hover:text-slate-300"
-                )}>
-                  <Icon className="w-4 h-4" />
-                </div>
-                <span className="flex-1 text-left text-sm font-medium truncate">
-                  {sector.name}
-                </span>
-                <ChevronRight className={cn(
-                  "w-4 h-4 transition-all",
-                  isActive ? "opacity-100 text-blue-400" : "opacity-0 group-hover:opacity-50"
-                )} />
+                {sector.name}
               </button>
             );
           })

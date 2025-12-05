@@ -1,50 +1,57 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Settings, Download, Newspaper, RefreshCw } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
-export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshing }) {
+export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshing, theme }) {
+  const isDark = theme === 'dark';
+
   return (
-    <header className="h-14 bg-slate-950 border-b border-slate-800/50 flex items-center justify-between px-6">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-          <Newspaper className="w-4 h-4 text-white" />
-        </div>
-        <h1 className="text-lg font-semibold text-white tracking-tight">
-          Intelligence Feed
-        </h1>
-      </div>
+    <header className={cn(
+      "h-12 border-b flex items-center justify-between px-6",
+      isDark ? "bg-neutral-950 border-neutral-800" : "bg-white border-gray-200"
+    )}>
+      <h1 className={cn("text-sm font-semibold tracking-tight", isDark ? "text-white" : "text-gray-900")}>
+        Intelligence Feed
+      </h1>
       
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <Button
           variant="ghost"
           size="sm"
           onClick={onRefresh}
           disabled={isRefreshing}
-          className="text-slate-400 hover:text-white hover:bg-slate-800"
+          className={cn(
+            "text-xs h-8 rounded",
+            isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+          )}
         >
-          <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </Button>
         
         <Button
           variant="ghost"
           size="sm"
           onClick={onExport}
-          className="text-slate-400 hover:text-white hover:bg-slate-800"
+          className={cn(
+            "text-xs h-8 rounded",
+            isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+          )}
         >
-          <Download className="w-4 h-4 mr-2" />
           Export
         </Button>
         
-        <div className="w-px h-6 bg-slate-800 mx-2" />
+        <div className={cn("w-px h-5 mx-1", isDark ? "bg-neutral-800" : "bg-gray-200")} />
         
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           onClick={onOpenSettings}
-          className="text-slate-400 hover:text-white hover:bg-slate-800"
+          className={cn(
+            "text-xs h-8 rounded",
+            isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+          )}
         >
-          <Settings className="w-5 h-5" />
+          Settings
         </Button>
       </div>
     </header>

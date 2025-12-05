@@ -1,59 +1,63 @@
 import React from 'react';
-import { ExternalLink, Clock, Rss, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { cn } from "@/lib/utils";
 
-export default function NewsFeed({ articles, isLoading }) {
+export default function NewsFeed({ articles, isLoading, theme }) {
+  const isDark = theme === 'dark';
+
   return (
-    <div className="bg-slate-900/30 rounded-xl border border-slate-800/50 p-5 flex-1 overflow-hidden flex flex-col">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-6 h-6 rounded-md bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center">
-          <Rss className="w-3.5 h-3.5 text-white" />
-        </div>
-        <h3 className="text-sm font-semibold text-slate-300">
-          Latest News
+    <div className={cn(
+      "rounded border p-4 flex-1 overflow-hidden flex flex-col",
+      isDark ? "bg-neutral-900/50 border-neutral-800" : "bg-white border-gray-200"
+    )}>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-neutral-400" : "text-gray-500")}>
+          Most Recent
         </h3>
-        <span className="ml-auto text-xs text-slate-500">
+        <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
           {articles.length} articles
         </span>
       </div>
       
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
-          <span className="ml-3 text-slate-400 text-sm">Fetching news feed...</span>
+        <div className="py-8">
+          <span className={cn("text-sm", isDark ? "text-neutral-400" : "text-gray-500")}>Fetching news...</span>
         </div>
       ) : articles.length > 0 ? (
-        <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
           {articles.map((article, idx) => (
             <a
               key={idx}
               href={article.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="group block p-3 bg-slate-800/30 rounded-lg border border-slate-800/50 hover:border-slate-700 transition-all hover:bg-slate-800/50"
+              className={cn(
+                "block p-2.5 rounded border transition-all",
+                isDark 
+                  ? "bg-neutral-800/30 border-neutral-800/50 hover:border-neutral-700 hover:bg-neutral-800/50" 
+                  : "bg-gray-50/50 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+              )}
             >
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors line-clamp-1">
+                  <h4 className={cn("text-sm font-medium line-clamp-1", isDark ? "text-neutral-200" : "text-gray-800")}>
                     {article.title}
                   </h4>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-xs text-slate-500">{article.source}</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={cn("text-xs", isDark ? "text-neutral-500" : "text-gray-500")}>{article.source}</span>
                     {article.pubDate && (
-                      <span className="flex items-center gap-1 text-xs text-slate-500">
-                        <Clock className="w-3 h-3" />
+                      <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
                         {format(new Date(article.pubDate), 'MMM d, h:mm a')}
                       </span>
                     )}
                   </div>
                 </div>
-                <ExternalLink className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors flex-shrink-0" />
               </div>
             </a>
           ))}
         </div>
       ) : (
-        <p className="text-slate-500 text-sm text-center py-12">
+        <p className={cn("text-sm py-8", isDark ? "text-neutral-500" : "text-gray-500")}>
           No articles available. Add RSS sources in settings.
         </p>
       )}
