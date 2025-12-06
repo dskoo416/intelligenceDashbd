@@ -9,7 +9,7 @@ export default function GistPanel({ gist, isLoading, onRefresh, sectorName, them
 
   return (
     <div className={cn(
-      "rounded border p-4",
+      "rounded border p-4 w-full",
       isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-200"
     )}>
       <div className="flex items-center justify-between mb-3">

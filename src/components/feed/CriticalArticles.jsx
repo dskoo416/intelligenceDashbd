@@ -9,7 +9,7 @@ export default function CriticalArticles({ articles, isLoading, onRefresh, theme
 
   return (
     <div className={cn(
-      "rounded border p-4",
+      "rounded border p-4 w-full",
       isDark ? "bg-neutral-900 border-amber-900/30" : "bg-amber-50/50 border-amber-200"
     )}>
       <div className="flex items-center justify-between mb-3">
