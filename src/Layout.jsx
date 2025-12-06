@@ -150,7 +150,7 @@ export default function Layout({ children, currentPageName }) {
           background: rgba(115, 115, 115, 0.5);
         }
       `}</style>
-      <Toaster position="top-right" />
+      <Toaster position="bottom-right" />
 
       <TopBar 
         onOpenSettings={() => { setSettingsTab('appearance'); setSettingsOpen(true); }}

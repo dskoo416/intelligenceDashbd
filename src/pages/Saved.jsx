@@ -22,7 +22,7 @@ export default function Saved({ sidebarOpen }) {
   const [dateFilter, setDateFilter] = useState(null);
   const [searchFilter, setSearchFilter] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [viewMode, setViewMode] = useState('regular');
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('savedViewMode') || 'compact');
 
   const { data: savedArticles = [], isLoading } = useQuery({
     queryKey: ['savedArticles'],
@@ -237,18 +237,24 @@ export default function Saved({ sidebarOpen }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent className={cn(isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
                 <DropdownMenuItem 
-                  onClick={() => setViewMode('regular')}
+                  onClick={() => {
+                    setViewMode('regular');
+                    localStorage.setItem('savedViewMode', 'regular');
+                  }}
                   className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
                 >
                   <LayoutList className="w-4 h-4 mr-2" />
-                  Regular View
+                  Regular
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => setViewMode('compact')}
+                  onClick={() => {
+                    setViewMode('compact');
+                    localStorage.setItem('savedViewMode', 'compact');
+                  }}
                   className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
                 >
                   <List className="w-4 h-4 mr-2" />
-                  Compact View
+                  Compact
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -295,17 +301,19 @@ export default function Saved({ sidebarOpen }) {
           <div className="space-y-3">
             {filteredArticles.map((article) => (
               viewMode === 'compact' ? (
-                <a
+                <div
                   key={article.id}
-                  href={article.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className={cn(
-                    "rounded px-4 py-2 flex items-center justify-between gap-4 transition-colors",
+                    "rounded px-4 py-2 flex items-center gap-4 transition-colors",
                     isDark ? "bg-neutral-900 border border-neutral-800 hover:border-neutral-700" : "bg-white border border-gray-200 hover:border-gray-300"
                   )}
                 >
-                  <div className="flex-1 min-w-0 flex items-center gap-2">
+                  <a 
+                    href={article.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 min-w-0 flex items-center gap-2"
+                  >
                     <h3 className={cn("font-medium text-sm truncate", isDark ? "text-white" : "text-gray-900")}>
                       {article.title}
                     </h3>
@@ -317,13 +325,12 @@ export default function Saved({ sidebarOpen }) {
                         {new Date(article.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
                     )}
-                  </div>
+                  </a>
                   <div className="flex items-center gap-2">
                     {collections.length > 0 && (
                       <Popover>
                         <PopoverTrigger asChild>
                           <button 
-                            onClick={(e) => e.preventDefault()}
                             className={cn(
                               "transition-colors",
                               article.collection_ids?.length > 0 
@@ -353,16 +360,13 @@ export default function Saved({ sidebarOpen }) {
                       </Popover>
                     )}
                     <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        deleteMutation.mutate(article.id);
-                      }}
+                      onClick={() => deleteMutation.mutate(article.id)}
                       className={cn("transition-colors", isDark ? "text-neutral-500 hover:text-red-400" : "text-gray-400 hover:text-red-500")}
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
-                </a>
+                </div>
               ) : (
                 <div key={article.id} className={cn(
                   "rounded p-4 flex items-start justify-between gap-4",

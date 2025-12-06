@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFilter, onSearchFilter, dateFilter, searchFilter, sectorName, savedArticleIds, theme, onRefresh }) {
   const isDark = theme === 'dark';
   const [showSearch, setShowSearch] = useState(false);
-  const [viewMode, setViewMode] = useState('regular');
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('newsViewMode') || 'compact');
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 20;
   
@@ -110,18 +110,24 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
             </DropdownMenuTrigger>
             <DropdownMenuContent className={cn(isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
               <DropdownMenuItem 
-                onClick={() => setViewMode('regular')}
+                onClick={() => {
+                  setViewMode('regular');
+                  localStorage.setItem('newsViewMode', 'regular');
+                }}
                 className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
               >
                 <LayoutList className="w-4 h-4 mr-2" />
-                Regular View
+                Regular
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => setViewMode('compact')}
+                onClick={() => {
+                  setViewMode('compact');
+                  localStorage.setItem('newsViewMode', 'compact');
+                }}
                 className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
               >
                 <List className="w-4 h-4 mr-2" />
-                Compact View
+                Compact
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
