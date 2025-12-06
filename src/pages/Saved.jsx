@@ -19,7 +19,7 @@ export default function Saved({ sidebarOpen }) {
   const queryClient = useQueryClient();
   const [activeView, setActiveView] = useState('main');
   const [collectionsModalOpen, setCollectionsModalOpen] = useState(false);
-  const [dateFilter, setDateFilter] = useState<any>(null);
+  const [dateFilter, setDateFilter] = useState(null);
   const [searchFilter, setSearchFilter] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [viewMode, setViewMode] = useState(
@@ -45,7 +45,7 @@ export default function Saved({ sidebarOpen }) {
   const isDark = settings.theme === 'dark';
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => base44.entities.SavedArticle.delete(id),
+    mutationFn: (id) => base44.entities.SavedArticle.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
       toast.success('Article removed');
@@ -53,7 +53,7 @@ export default function Saved({ sidebarOpen }) {
   });
 
   const updateArticleCollections = useMutation({
-    mutationFn: ({ id, collectionIds }: { id: string; collectionIds: string[] }) =>
+    mutationFn: ({ id, collectionIds }) =>
       base44.entities.SavedArticle.update(id, { collection_ids: collectionIds }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
@@ -62,11 +62,11 @@ export default function Saved({ sidebarOpen }) {
   });
 
   const collectionMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data) => {
       if (data.id) {
         return base44.entities.Collection.update(data.id, data);
       } else {
-        const maxOrder = Math.max(0, ...collections.map((c: any) => c.order || 0));
+        const maxOrder = Math.max(0, ...collections.map((c) => c.order || 0));
         return base44.entities.Collection.create({ ...data, order: maxOrder + 1 });
       }
     },
@@ -77,14 +77,14 @@ export default function Saved({ sidebarOpen }) {
   });
 
   const deleteCollectionMutation = useMutation({
-    mutationFn: (id: string) => base44.entities.Collection.delete(id),
+    mutationFn: (id) => base44.entities.Collection.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['collections'] });
       toast.success('Collection deleted');
     },
   });
 
-  const handleReorderCollections = async (fromIndex: number, toIndex: number) => {
+  const handleReorderCollections = async (fromIndex, toIndex) => {
     const sortedCollections = [...collections].sort(
       (a, b) => (a.order || 0) - (b.order || 0)
     );
@@ -99,10 +99,10 @@ export default function Saved({ sidebarOpen }) {
     queryClient.invalidateQueries({ queryKey: ['collections'] });
   };
 
-  const handleToggleCollection = (article: any, collectionId: string) => {
+  const handleToggleCollection = (article, collectionId) => {
     const currentCollections = article.collection_ids || [];
     const newCollections = currentCollections.includes(collectionId)
-      ? currentCollections.filter((id: string) => id !== collectionId)
+      ? currentCollections.filter((id) => id !== collectionId)
       : [...currentCollections, collectionId];
     updateArticleCollections.mutate({ id: article.id, collectionIds: newCollections });
   };
@@ -111,12 +111,12 @@ export default function Saved({ sidebarOpen }) {
   let filteredArticles = savedArticles;
   if (activeView.startsWith('collection-')) {
     const collectionId = activeView.replace('collection-', '');
-    filteredArticles = savedArticles.filter((a: any) =>
+    filteredArticles = savedArticles.filter((a) =>
       a.collection_ids?.includes(collectionId)
     );
   } else if (activeView.startsWith('month-')) {
     const monthKey = activeView.replace('month-', '');
-    filteredArticles = savedArticles.filter((a: any) => {
+    filteredArticles = savedArticles.filter((a) => {
       const date = new Date(a.pubDate || a.created_date);
       const articleMonthKey = `${date.getFullYear()}-${String(
         date.getMonth() + 1
@@ -126,7 +126,7 @@ export default function Saved({ sidebarOpen }) {
   }
 
   // Apply date and search filters
-  filteredArticles = filteredArticles.filter((a: any) => {
+  filteredArticles = filteredArticles.filter((a) => {
     if (dateFilter && a.pubDate) {
       const articleDate = new Date(a.pubDate);
       if (dateFilter.from && dateFilter.to) {
@@ -185,10 +185,10 @@ export default function Saved({ sidebarOpen }) {
               ? 'Main'
               : activeView.startsWith('collection-')
                 ? collections.find(
-                    (c: any) => c.id === activeView.replace('collection-', '')
+                    (c) => c.id === activeView.replace('collection-', '')
                   )?.name
                 : activeView.startsWith('month-')
-                  ? savedArticles.find((a: any) => {
+                  ? savedArticles.find((a) => {
                       const date = new Date(a.pubDate || a.created_date);
                       return (
                         `${date.getFullYear()}-${String(
@@ -198,7 +198,7 @@ export default function Saved({ sidebarOpen }) {
                       );
                     }) &&
                     new Date(
-                      (savedArticles.find((a: any) => {
+                      savedArticles.find((a) => {
                         const date = new Date(a.pubDate || a.created_date);
                         return (
                           `${date.getFullYear()}-${String(
@@ -206,7 +206,7 @@ export default function Saved({ sidebarOpen }) {
                           ).padStart(2, '0')}` ===
                           activeView.replace('month-', '')
                         );
-                      })?.pubDate as string) || savedArticles[0]?.created_date
+                      })?.pubDate || savedArticles[0]?.created_date
                     ).toLocaleDateString('en-US', {
                       month: 'long',
                       year: 'numeric',
@@ -442,7 +442,7 @@ export default function Saved({ sidebarOpen }) {
         ) : (
           // list
           <div className="-mx-6 space-y-1">
-            {filteredArticles.map((article: any) =>
+            {filteredArticles.map((article) =>
               viewMode === 'compact' ? (
                 <div
                   key={article.id}
@@ -675,7 +675,7 @@ export default function Saved({ sidebarOpen }) {
                               Add to collections:
                             </p>
 
-                            {collections.map((collection: any) => (
+                            {collections.map((collection) => (
                               <div
                                 key={collection.id}
                                 className="flex items-center gap-2"
@@ -729,8 +729,8 @@ export default function Saved({ sidebarOpen }) {
         isOpen={collectionsModalOpen}
         onClose={() => setCollectionsModalOpen(false)}
         collections={collections}
-        onSaveCollection={(data: any) => collectionMutation.mutate(data)}
-        onDeleteCollection={(id: string) => deleteCollectionMutation.mutate(id)}
+        onSaveCollection={(data) => collectionMutation.mutate(data)}
+        onDeleteCollection={(id) => deleteCollectionMutation.mutate(id)}
         onReorderCollections={handleReorderCollections}
       />
     </div>
