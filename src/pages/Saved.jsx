@@ -325,51 +325,71 @@ export default function Saved({ sidebarOpen }) {
                       : "bg-gray-50/50 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
                   )}
                 >
-                  <a 
-                    href={article.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 min-w-0 flex items-center gap-2"
-                  >
-                    <h3 className={cn("text-sm font-medium truncate", isDark ? "text-neutral-200" : "text-gray-800")}>
-                      {article.title}
-                    </h3>
-                    <span className={cn("text-xs whitespace-nowrap", isDark ? "text-neutral-600" : "text-gray-400")}>
-                      {article.source}
-                    </span>
-                    {article.pubDate && (
-                      <span className={cn("text-xs whitespace-nowrap", isDark ? "text-neutral-700" : "text-gray-400")}>
-                        {format(new Date(article.pubDate), 'MMM d')}
+                  <div className="flex-1 min-w-0 flex items-center gap-2">
+                    <a 
+                      href={article.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 min-w-0 flex items-center gap-2"
+                    >
+                      <h3 className={cn("text-sm font-medium truncate", isDark ? "text-neutral-200" : "text-gray-800")}>
+                        {article.title}
+                      </h3>
+                      <span className={cn("text-xs whitespace-nowrap", isDark ? "text-neutral-600" : "text-gray-400")}>
+                        {article.source}
                       </span>
+                      {article.pubDate && (
+                        <span className={cn("text-xs whitespace-nowrap", isDark ? "text-neutral-700" : "text-gray-400")}>
+                          {format(new Date(article.pubDate), 'MMM d')}
+                        </span>
+                      )}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {collections.length > 0 && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            className={cn(
+                              "p-1 rounded hover:bg-orange-500/10 transition-all",
+                              article.collection_ids?.length > 0 
+                                ? "text-orange-500" 
+                                : isDark 
+                                  ? "text-neutral-500 hover:text-orange-500" 
+                                  : "text-gray-400 hover:text-orange-500"
+                            )}
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className={cn("w-56", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
+                          <div className="space-y-2">
+                            <p className={cn("text-xs font-medium", isDark ? "text-neutral-300" : "text-gray-700")}>Add to collections:</p>
+                            {collections.map(collection => (
+                              <div key={collection.id} className="flex items-center gap-2">
+                                <Checkbox
+                                  checked={article.collection_ids?.includes(collection.id)}
+                                  onCheckedChange={() => handleToggleCollection(article, collection.id)}
+                                />
+                                <span className={cn("text-xs", isDark ? "text-white" : "text-gray-900")}>{collection.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     )}
-                  </a>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleToggleCollection(article, collections[0]?.id);
-                    }}
-                    className={cn(
-                      "p-1 rounded hover:bg-orange-500/10 transition-all",
-                      article.collection_ids?.length > 0 
-                        ? "text-orange-500 rotate-45" 
-                        : isDark 
+                    <button
+                      onClick={() => deleteMutation.mutate(article.id)}
+                      className={cn(
+                        "p-1 rounded hover:bg-orange-500/10 transition-all",
+                        isDark 
                           ? "text-neutral-500 hover:text-orange-500" 
                           : "text-gray-400 hover:text-orange-500"
-                    )}
-                  >
-                    <ChevronDown className="w-4 h-4 transition-transform" />
-                  </button>
-                  <button
-                    onClick={() => deleteMutation.mutate(article.id)}
-                    className={cn(
-                      "p-1 rounded hover:bg-orange-500/10 transition-all",
-                      isDark 
-                        ? "text-neutral-500 hover:text-orange-500" 
-                        : "text-gray-400 hover:text-orange-500"
-                    )}
-                  >
-                    <X className="w-4 h-4 transition-transform" />
-                  </button>
+                      )}
+                    >
+                      <X className="w-4 h-4 transition-transform" />
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div key={article.id} className={cn(
