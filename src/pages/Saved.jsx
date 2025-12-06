@@ -178,7 +178,6 @@ export default function Saved({ sidebarOpen }) {
         </div>
       )}
 
-      {/* match IntelligenceFeed: scroll area + max-w-7xl */}
       <main className="flex-1 overflow-y-auto p-5">
         <div className={cn(sidebarOpen ? "max-w-7xl" : "w-full")}>
           <div className="flex items-center justify-between mb-6">
@@ -460,18 +459,20 @@ export default function Saved({ sidebarOpen }) {
                       rel="noopener noreferrer"
                       className="flex-1 min-w-0 flex items-center gap-2"
                     >
+                      {/* title gets full remaining width */}
                       <h3
                         className={cn(
-                          "text-sm font-medium truncate",
+                          "flex-1 text-sm font-medium truncate",
                           isDark ? "text-neutral-200" : "text-gray-800"
                         )}
                       >
                         {article.title}
                       </h3>
 
+                      {/* meta does not shrink, stays on right */}
                       <span
                         className={cn(
-                          "text-xs whitespace-nowrap",
+                          "text-xs whitespace-nowrap flex-shrink-0",
                           isDark ? "text-neutral-600" : "text-gray-400"
                         )}
                       >
@@ -481,7 +482,7 @@ export default function Saved({ sidebarOpen }) {
                       {article.pubDate && (
                         <span
                           className={cn(
-                            "text-xs whitespace-nowrap",
+                            "text-xs whitespace-nowrap flex-shrink-0",
                             isDark ? "text-neutral-700" : "text-gray-400"
                           )}
                         >
