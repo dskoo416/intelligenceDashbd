@@ -114,9 +114,8 @@ export default function Saved({ sidebarOpen }) {
       const articleMonthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       return articleMonthKey === monthKey;
     });
-  } else if (activeView === 'main') {
-    filteredArticles = savedArticles.filter(a => !a.collection_ids || a.collection_ids.length === 0);
   }
+  // Main view shows all articles
 
   // Apply date and search filters
   filteredArticles = filteredArticles.filter(a => {
@@ -131,8 +130,24 @@ export default function Saved({ sidebarOpen }) {
         if (articleDate.toDateString() !== fromDate.toDateString()) return false;
       }
     }
-    if (searchFilter && !a.title.toLowerCase().includes(searchFilter.toLowerCase())) {
-      return false;
+    if (searchFilter) {
+      const searchLower = searchFilter.toLowerCase();
+      // Check if comma-separated (multi-keyword search)
+      if (searchFilter.includes(',')) {
+        const keywords = searchFilter.split(',').map(k => k.trim().toLowerCase()).filter(k => k.length > 0);
+        // Article must match ALL keywords
+        const matchesAll = keywords.every(keyword => 
+          a.title.toLowerCase().includes(keyword) || 
+          a.description?.toLowerCase().includes(keyword)
+        );
+        if (!matchesAll) return false;
+      } else {
+        // Single keyword search
+        if (!a.title.toLowerCase().includes(searchLower) && 
+            !a.description?.toLowerCase().includes(searchLower)) {
+          return false;
+        }
+      }
     }
     return true;
   });
@@ -274,7 +289,7 @@ export default function Saved({ sidebarOpen }) {
           <div className="mb-4">
             <div className="relative">
               <Input
-                placeholder="Search articles..."
+                placeholder="Search articles... (use commas for multiple keywords: battery, tesla, oil)"
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
                 className={cn("pr-8 text-sm h-8", isDark ? "bg-neutral-800 border-neutral-700" : "bg-gray-50")}
@@ -304,8 +319,8 @@ export default function Saved({ sidebarOpen }) {
                 <div
                   key={article.id}
                   className={cn(
-                    "rounded px-4 py-2 flex items-center gap-4 transition-colors",
-                    isDark ? "bg-neutral-900 border border-neutral-800 hover:border-neutral-700" : "bg-white border border-gray-200 hover:border-gray-300"
+                    "rounded p-2.5 flex items-center gap-3 transition-colors border",
+                    isDark ? "bg-neutral-800/30 border-neutral-800/50 hover:border-neutral-700 hover:bg-neutral-800/50" : "bg-gray-50/50 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
                   )}
                 >
                   <a 
@@ -314,7 +329,7 @@ export default function Saved({ sidebarOpen }) {
                     rel="noopener noreferrer"
                     className="flex-1 min-w-0 flex items-center gap-2"
                   >
-                    <h3 className={cn("font-medium text-sm truncate", isDark ? "text-white" : "text-gray-900")}>
+                    <h3 className={cn("font-medium text-sm truncate", isDark ? "text-neutral-200" : "text-gray-800")}>
                       {article.title}
                     </h3>
                     <span className={cn("text-xs whitespace-nowrap", isDark ? "text-neutral-600" : "text-gray-400")}>
@@ -326,18 +341,18 @@ export default function Saved({ sidebarOpen }) {
                       </span>
                     )}
                   </a>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     {collections.length > 0 && (
                       <Popover>
                         <PopoverTrigger asChild>
                           <button 
                             className={cn(
-                              "transition-colors",
+                              "p-1 rounded hover:bg-orange-500/10 transition-all",
                               article.collection_ids?.length > 0 
                                 ? "text-orange-500" 
                                 : isDark 
-                                  ? "text-neutral-500 hover:text-white" 
-                                  : "text-gray-400 hover:text-gray-700"
+                                  ? "text-neutral-500 hover:text-orange-500" 
+                                  : "text-gray-400 hover:text-orange-500"
                             )}
                           >
                             <ChevronDown className="w-4 h-4" />
@@ -361,9 +376,12 @@ export default function Saved({ sidebarOpen }) {
                     )}
                     <button
                       onClick={() => deleteMutation.mutate(article.id)}
-                      className={cn("transition-colors", isDark ? "text-neutral-500 hover:text-red-400" : "text-gray-400 hover:text-red-500")}
+                      className={cn(
+                        "p-1 rounded hover:bg-orange-500/10 transition-all",
+                        isDark ? "text-neutral-500 hover:text-orange-500" : "text-gray-400 hover:text-orange-500"
+                      )}
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-4 h-4 transition-transform" />
                     </button>
                   </div>
                 </div>
