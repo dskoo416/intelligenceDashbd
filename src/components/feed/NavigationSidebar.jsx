@@ -109,19 +109,7 @@ export default function NavigationSidebar({
         )}
       </nav>
       
-      <div className={cn("p-2 border-t", isDark ? "border-neutral-800" : "border-gray-200")}>
-        <button
-          onClick={onOpenSettings}
-          className={cn(
-            "w-full px-3 py-2 rounded text-xs font-medium transition-colors text-left",
-            isDark
-              ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          )}
-        >
-          Edit Sectors
-        </button>
-      </div>
+
     </div>
   );
 }

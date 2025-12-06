@@ -22,6 +22,8 @@ export default function Layout({ children, currentPageName }) {
   const [settingsTab, setSettingsTab] = useState('appearance');
   const [activeView, setActiveView] = useState('main');
   const [collectionsModalOpen, setCollectionsModalOpen] = useState(false);
+  const [textSize, setTextSize] = useState(() => localStorage.getItem('textSize') || 'medium');
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -188,8 +190,13 @@ export default function Layout({ children, currentPageName }) {
       "h-screen flex flex-col",
       settings.theme === 'dark' ? "bg-neutral-950 text-white" : "bg-gray-50 text-gray-900"
       )}>
-      <MenuBar
-        theme={settings.theme}
+        <style>{`
+          .text-content.text-small { font-size: 0.875rem; }
+          .text-content.text-medium { font-size: 1rem; }
+          .text-content.text-large { font-size: 1.125rem; }
+        `}</style>
+        <MenuBar
+          theme={settings.theme}
         onRefresh={handleRefresh}
         onExport={async () => {
           const articles = await base44.entities.SavedArticle.list('-created_date');
@@ -278,8 +285,15 @@ export default function Layout({ children, currentPageName }) {
         }}
         onNavigateToIntelligence={() => navigate(createPageUrl('IntelligenceFeed'))}
         onNavigateToSaved={() => navigate(createPageUrl('Saved'))}
-      />
-      <style>{`
+        textSize={textSize}
+        onChangeTextSize={(size) => {
+          setTextSize(size);
+          localStorage.setItem('textSize', size);
+        }}
+        sidebarVisible={sidebarVisible}
+        onToggleSidebarVisibility={() => setSidebarVisible(!sidebarVisible)}
+        />
+        <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 5px;
         }
@@ -308,11 +322,11 @@ export default function Layout({ children, currentPageName }) {
       
       <div className={cn(
         "flex-1 overflow-hidden",
-        currentPageName === 'Saved' && sidebarOpen 
+        currentPageName === 'Saved' && sidebarOpen && sidebarVisible
           ? "grid grid-cols-[208px_minmax(0,1fr)]"
           : "flex"
       )}>
-        {sidebarOpen && currentPageName === 'Saved' && (
+        {sidebarOpen && sidebarVisible && currentPageName === 'Saved' && (
           <SavedSidebar
             savedArticles={savedArticles}
             collections={collections}
@@ -323,7 +337,7 @@ export default function Layout({ children, currentPageName }) {
           />
         )}
         
-        {sidebarOpen && (currentPageName === 'IntelligenceFeed' || currentPageName === 'Home') && (
+        {sidebarOpen && sidebarVisible && (currentPageName === 'IntelligenceFeed' || currentPageName === 'Home') && (
           <div className="w-52 flex-shrink-0">
             <NavigationSidebar
               sectors={sectors}

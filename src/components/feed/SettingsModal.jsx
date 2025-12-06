@@ -241,7 +241,53 @@ export default function SettingsModal({
                     className="data-[state=unchecked]:bg-gray-300"
                   />
                 </div>
-              </div>
+
+                <div className={cn("p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
+                  <p className={cn("font-medium text-sm mb-2", isDark ? "text-white" : "text-gray-900")}>Text Size</p>
+                  <p className={cn("text-xs mb-3", isDark ? "text-neutral-400" : "text-gray-500")}>Adjust content text size (excludes menu and navigation bars)</p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        localStorage.setItem('textSize', 'small');
+                        window.location.reload();
+                      }}
+                      className={cn("px-3 py-1.5 text-xs rounded", 
+                        localStorage.getItem('textSize') === 'small' 
+                          ? "bg-orange-500 text-white" 
+                          : isDark ? "bg-neutral-700 text-neutral-300 hover:bg-neutral-600" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      )}
+                    >
+                      Small
+                    </button>
+                    <button
+                      onClick={() => {
+                        localStorage.setItem('textSize', 'medium');
+                        window.location.reload();
+                      }}
+                      className={cn("px-3 py-1.5 text-xs rounded", 
+                        (localStorage.getItem('textSize') || 'medium') === 'medium' 
+                          ? "bg-orange-500 text-white" 
+                          : isDark ? "bg-neutral-700 text-neutral-300 hover:bg-neutral-600" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      )}
+                    >
+                      Medium
+                    </button>
+                    <button
+                      onClick={() => {
+                        localStorage.setItem('textSize', 'large');
+                        window.location.reload();
+                      }}
+                      className={cn("px-3 py-1.5 text-xs rounded", 
+                        localStorage.getItem('textSize') === 'large' 
+                          ? "bg-orange-500 text-white" 
+                          : isDark ? "bg-neutral-700 text-neutral-300 hover:bg-neutral-600" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      )}
+                    >
+                      Large
+                    </button>
+                  </div>
+                </div>
+                </div>
 
               <div className={cn("p-4 rounded space-y-4", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
                 <h4 className={cn("font-medium text-xs", isDark ? "text-neutral-300" : "text-gray-700")}>Keyword Filters</h4>

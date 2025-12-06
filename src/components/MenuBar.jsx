@@ -27,7 +27,11 @@ export default function MenuBar({
   onToggleViewMode,
   onToggleTheme,
   onNavigateToIntelligence,
-  onNavigateToSaved
+  onNavigateToSaved,
+  textSize,
+  onChangeTextSize,
+  sidebarVisible,
+  onToggleSidebarVisibility
 }) {
   const isDark = theme === 'dark';
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -42,7 +46,7 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium rounded hover:bg-opacity-10 transition-colors",
+              "px-2 py-0.5 text-[11px] font-medium rounded-sm hover:bg-opacity-10 transition-colors",
               isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
             )}>
               Actions
@@ -87,7 +91,7 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium rounded hover:bg-opacity-10 transition-colors",
+              "px-2 py-0.5 text-[11px] font-medium rounded-sm hover:bg-opacity-10 transition-colors",
               isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
             )}>
               Edit
@@ -136,7 +140,7 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium rounded hover:bg-opacity-10 transition-colors",
+              "px-2 py-0.5 text-[11px] font-medium rounded-sm hover:bg-opacity-10 transition-colors",
               isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
             )}>
               View
@@ -147,14 +151,40 @@ export default function MenuBar({
               onClick={onToggleViewMode}
               className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              {viewMode === 'compact' ? 'Regular' : 'Compact'}
+              {viewMode === 'compact' ? 'Expanded' : 'Compact'}
             </DropdownMenuItem>
+            <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
+            <div className={cn("px-2 py-1.5 text-xs flex items-center justify-between gap-4", isDark ? "text-white" : "text-gray-900")}>
+              <button onClick={() => onChangeTextSize('small')} className={cn("hover:text-orange-500", textSize === 'small' ? "text-orange-500" : "")}>−</button>
+              <span className="font-medium">[{textSize === 'small' ? 'Small' : textSize === 'large' ? 'Large' : 'Medium'}]</span>
+              <button onClick={() => onChangeTextSize('large')} className={cn("hover:text-orange-500", textSize === 'large' ? "text-orange-500" : "")}>+</button>
+            </div>
+            <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
             <DropdownMenuItem 
-              onClick={onToggleTheme}
+              onClick={onToggleSidebarVisibility}
               className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              {isDark ? 'Light' : 'Dark'}
+              {sidebarVisible ? 'Hide Navigation' : 'Show Navigation'}
             </DropdownMenuItem>
+            <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
+            <div className={cn("px-2 py-1 space-y-0.5")}>
+              <div 
+                onClick={onToggleTheme}
+                className={cn("px-2 py-1 text-xs cursor-pointer rounded hover:bg-opacity-10", 
+                  isDark ? "font-bold text-white hover:bg-white" : "text-neutral-500 hover:bg-gray-900"
+                )}
+              >
+                Dark
+              </div>
+              <div 
+                onClick={onToggleTheme}
+                className={cn("px-2 py-1 text-xs cursor-pointer rounded hover:bg-opacity-10", 
+                  !isDark ? "font-bold text-gray-900 hover:bg-gray-900" : "text-neutral-500 hover:bg-white"
+                )}
+              >
+                Light
+              </div>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -162,7 +192,7 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium rounded hover:bg-opacity-10 transition-colors",
+              "px-2 py-0.5 text-[11px] font-medium rounded-sm hover:bg-opacity-10 transition-colors",
               isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
             )}>
               Help
