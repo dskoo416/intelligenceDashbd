@@ -37,7 +37,6 @@ export default function NavigationSidebar({
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
           )}
         >
-          <HomeIcon className="w-4 h-4" />
           Home
         </Link>
 
