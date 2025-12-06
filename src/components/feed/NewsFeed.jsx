@@ -4,6 +4,7 @@ import { Plus, Calendar, Search, X, RefreshCw, LayoutList, List, ChevronLeft, Ch
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -49,15 +50,41 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
                 <Calendar className={cn("w-3.5 h-3.5", dateFilter ? "text-orange-500" : isDark ? "text-neutral-500" : "text-gray-500")} />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className={cn("w-auto p-0", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
-              <CalendarComponent
-                mode="range"
-                selected={dateFilter}
-                onSelect={onDateFilter}
-                className={isDark ? "text-white" : ""}
-              />
-              {dateFilter && (
-                <div className="p-2 border-t border-neutral-700">
+            <PopoverContent className={cn("w-auto p-3", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className={cn("text-xs mb-1", isDark ? "text-neutral-400" : "text-gray-600")}>From</Label>
+                    <Input
+                      type="date"
+                      value={dateFilter?.from ? format(dateFilter.from, 'yyyy-MM-dd') : ''}
+                      onChange={(e) => {
+                        const newDate = e.target.value ? new Date(e.target.value) : null;
+                        onDateFilter(newDate ? { ...dateFilter, from: newDate } : null);
+                      }}
+                      className={cn("text-xs h-8", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white")}
+                    />
+                  </div>
+                  <div>
+                    <Label className={cn("text-xs mb-1", isDark ? "text-neutral-400" : "text-gray-600")}>To</Label>
+                    <Input
+                      type="date"
+                      value={dateFilter?.to ? format(dateFilter.to, 'yyyy-MM-dd') : ''}
+                      onChange={(e) => {
+                        const newDate = e.target.value ? new Date(e.target.value) : null;
+                        onDateFilter(newDate ? { ...dateFilter, to: newDate } : null);
+                      }}
+                      className={cn("text-xs h-8", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white")}
+                    />
+                  </div>
+                </div>
+                <CalendarComponent
+                  mode="range"
+                  selected={dateFilter}
+                  onSelect={onDateFilter}
+                  className={isDark ? "text-white" : ""}
+                />
+                {dateFilter && (
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -66,8 +93,8 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
                   >
                     Clear Filter
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </PopoverContent>
           </Popover>
 

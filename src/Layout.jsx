@@ -221,7 +221,7 @@ export default function Layout({ children, currentPageName }) {
       />
       
       <div className="flex-1 flex overflow-hidden">
-        {sidebarOpen && currentPageName === 'IntelligenceFeed' && (
+        {sidebarOpen && (currentPageName === 'IntelligenceFeed' || currentPageName === 'Home') && (
           <div className="w-52 flex-shrink-0">
             <NavigationSidebar
               sectors={sectors}

@@ -163,6 +163,18 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   }, [activeSector, activeSubsector, rssSources, dataCache]);
 
   useEffect(() => {
+    const key = `${activeSector?.id || 'none'}_${activeSubsector?.name || 'none'}`;
+    const cached = dataCache[key];
+    
+    if (cached) {
+      setArticles(cached.articles || []);
+      setGist(cached.gist || '');
+      setCriticalArticles(cached.criticalArticles || []);
+    } else {
+      setGist('');
+      setCriticalArticles([]);
+    }
+    
     fetchArticles(false);
   }, [activeSector, activeSubsector]);
 
