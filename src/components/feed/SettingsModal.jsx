@@ -17,6 +17,7 @@ export default function SettingsModal({
   settings, 
   sectors, 
   rssSources,
+  collections,
   onUpdateSettings,
   onSaveSector,
   onDeleteSector,
@@ -24,6 +25,9 @@ export default function SettingsModal({
   onDeleteRSSSource,
   onUpdateRSSSource,
   onReorderSectors,
+  onSaveCollection,
+  onDeleteCollection,
+  onReorderCollections,
   initialTab = 'appearance'
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -35,6 +39,8 @@ export default function SettingsModal({
   const [newRSSSource, setNewRSSSource] = useState({ name: '', url: '', sector_id: '', subsector: '', subsubsector: '' });
   const [localSettings, setLocalSettings] = useState(settings);
   const [selectedSectorForRSS, setSelectedSectorForRSS] = useState(null);
+  const [editingCollection, setEditingCollection] = useState(null);
+  const [newCollection, setNewCollection] = useState({ name: '' });
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -156,10 +162,11 @@ export default function SettingsModal({
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
-          <TabsList className={cn("grid grid-cols-6 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-100")}>
+          <TabsList className={cn("grid grid-cols-7 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-100")}>
             <TabsTrigger value="general" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>General</TabsTrigger>
             <TabsTrigger value="appearance" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Appearance</TabsTrigger>
             <TabsTrigger value="sectors" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Sectors</TabsTrigger>
+            <TabsTrigger value="collections" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Collections</TabsTrigger>
             <TabsTrigger value="rss" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>RSS Sources</TabsTrigger>
             <TabsTrigger value="ai" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>AI Settings</TabsTrigger>
             <TabsTrigger value="export" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Export</TabsTrigger>
@@ -494,7 +501,88 @@ export default function SettingsModal({
                 ))}
               </div>
             </TabsContent>
-            
+
+            <TabsContent value="collections" className="space-y-4 mt-0">
+              <div className="p-4 bg-neutral-800/50 rounded space-y-4">
+                <h4 className="font-medium text-xs text-neutral-300">
+                  {editingCollection ? 'Edit Collection' : 'Add New Collection'}
+                </h4>
+                <div>
+                  <Label className="text-neutral-400 text-xs">Name</Label>
+                  <Input
+                    value={editingCollection ? editingCollection.name : newCollection.name}
+                    onChange={(e) => editingCollection 
+                      ? setEditingCollection({ ...editingCollection, name: e.target.value })
+                      : setNewCollection({ name: e.target.value })
+                    }
+                    placeholder="e.g., Important Articles"
+                    className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => {
+                      if (editingCollection) {
+                        onSaveCollection(editingCollection);
+                        setEditingCollection(null);
+                      } else if (newCollection.name) {
+                        onSaveCollection(newCollection);
+                        setNewCollection({ name: '' });
+                      }
+                    }} 
+                    size="sm" 
+                    className="bg-neutral-700 hover:bg-neutral-600 rounded text-xs"
+                  >
+                    {editingCollection ? 'Update' : 'Add'} Collection
+                  </Button>
+                  {editingCollection && (
+                    <Button variant="ghost" size="sm" onClick={() => setEditingCollection(null)} className="text-xs">
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <h4 className="font-medium text-xs text-neutral-400 mb-2">Existing Collections</h4>
+                {collections?.length === 0 ? (
+                  <p className="text-neutral-500 text-sm p-4 text-center">No collections created yet.</p>
+                ) : (
+                  collections?.map((collection, index) => (
+                    <div key={collection.id} className="flex items-center justify-between p-3 bg-neutral-800/30 rounded gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-0.5">
+                          <button 
+                            onClick={() => onReorderCollections(index, Math.max(0, index - 1))} 
+                            disabled={index === 0}
+                            className={cn("p-0.5", index === 0 ? "text-neutral-700" : "text-neutral-500 hover:text-white")}
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </button>
+                          <button 
+                            onClick={() => onReorderCollections(index, Math.min(collections.length - 1, index + 1))} 
+                            disabled={index === collections.length - 1}
+                            className={cn("p-0.5", index === collections.length - 1 ? "text-neutral-700" : "text-neutral-500 hover:text-white")}
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <span className="text-sm text-white">{collection.name}</span>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => setEditingCollection(collection)} className="text-xs h-7 text-neutral-300">
+                          Edit
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-red-400 text-xs h-7" onClick={() => onDeleteCollection(collection.id)}>
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </TabsContent>
+
             <TabsContent value="rss" className="space-y-4 mt-0">
               <div className="p-4 bg-neutral-800/50 rounded space-y-4">
                 <h4 className="font-medium text-xs text-neutral-300">Add RSS Source</h4>

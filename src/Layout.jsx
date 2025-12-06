@@ -25,6 +25,11 @@ export default function Layout({ children, currentPageName }) {
     queryFn: () => base44.entities.RSSSource.list(),
   });
 
+  const { data: collections = [] } = useQuery({
+    queryKey: ['collections'],
+    queryFn: () => base44.entities.Collection.list('order'),
+  });
+
   const { data: settingsData = [] } = useQuery({
     queryKey: ['appSettings'],
     queryFn: () => base44.entities.AppSettings.list(),
@@ -92,6 +97,42 @@ export default function Layout({ children, currentPageName }) {
       toast.success('RSS source removed');
     },
   });
+
+  const collectionMutation = useMutation({
+    mutationFn: async (data) => {
+      if (data.id) {
+        return base44.entities.Collection.update(data.id, data);
+      } else {
+        const maxOrder = Math.max(0, ...collections.map(c => c.order || 0));
+        return base44.entities.Collection.create({ ...data, order: maxOrder + 1 });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
+      toast.success('Collection saved');
+    },
+  });
+
+  const deleteCollectionMutation = useMutation({
+    mutationFn: (id) => base44.entities.Collection.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
+      toast.success('Collection deleted');
+    },
+  });
+
+  const handleReorderCollections = async (fromIndex, toIndex) => {
+    const sortedCollections = [...collections].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const reordered = [...sortedCollections];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    
+    const updates = reordered.map((collection, i) => 
+      base44.entities.Collection.update(collection.id, { order: i + 1 })
+    );
+    await Promise.all(updates);
+    queryClient.invalidateQueries({ queryKey: ['collections'] });
+  };
 
   const handleReorderSectors = async (fromIndex, toIndex) => {
     const sortedSectors = [...sectors].sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -245,6 +286,7 @@ export default function Layout({ children, currentPageName }) {
         settings={settings}
         sectors={sectors}
         rssSources={rssSources}
+        collections={collections}
         onUpdateSettings={(data) => updateSettingsMutation.mutate(data)}
         onSaveSector={(data) => sectorMutation.mutate(data)}
         onDeleteSector={(id) => deleteSectorMutation.mutate(id)}
@@ -252,6 +294,9 @@ export default function Layout({ children, currentPageName }) {
         onDeleteRSSSource={(id) => deleteRSSMutation.mutate(id)}
         onUpdateRSSSource={(id, data) => updateRSSMutation.mutate({ id, data })}
         onReorderSectors={handleReorderSectors}
+        onSaveCollection={(data) => collectionMutation.mutate(data)}
+        onDeleteCollection={(id) => deleteCollectionMutation.mutate(id)}
+        onReorderCollections={handleReorderCollections}
         initialTab={settingsTab}
       />
     </div>
