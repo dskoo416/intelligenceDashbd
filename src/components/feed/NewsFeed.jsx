@@ -99,40 +99,6 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
             </PopoverContent>
           </Popover>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                {viewMode === 'regular' ? (
-                  <LayoutList className={cn("w-3.5 h-3.5", isDark ? "text-neutral-500" : "text-gray-500")} />
-                ) : (
-                  <List className={cn("w-3.5 h-3.5", isDark ? "text-neutral-500" : "text-gray-500")} />
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className={cn(isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
-              <DropdownMenuItem 
-                onClick={() => {
-                  setViewMode('regular');
-                  localStorage.setItem('newsViewMode', 'regular');
-                }}
-                className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
-              >
-                <LayoutList className="w-4 h-4 mr-2" />
-                Regular
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => {
-                  setViewMode('compact');
-                  localStorage.setItem('newsViewMode', 'compact');
-                }}
-                className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
-              >
-                <List className="w-4 h-4 mr-2" />
-                Compact
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
           <Button 
             variant="ghost" 
             size="sm" 
