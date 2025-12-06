@@ -46,7 +46,7 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium rounded-sm hover:bg-opacity-10 transition-colors",
+              "px-2 py-0.5 text-[11px] font-medium hover:bg-opacity-10 transition-colors",
               isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
             )}>
               Actions
@@ -91,7 +91,7 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium rounded-sm hover:bg-opacity-10 transition-colors",
+              "px-2 py-0.5 text-[11px] font-medium hover:bg-opacity-10 transition-colors",
               isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
             )}>
               Edit
@@ -140,24 +140,43 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium rounded-sm hover:bg-opacity-10 transition-colors",
+              "px-2 py-0.5 text-[11px] font-medium hover:bg-opacity-10 transition-colors",
               isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
             )}>
               View
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className={cn(isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
-            <DropdownMenuItem 
-              onClick={onToggleViewMode}
-              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
-            >
-              {viewMode === 'compact' ? 'Expanded' : 'Compact'}
-            </DropdownMenuItem>
+            <div className={cn("px-3 py-2 text-xs cursor-pointer hover:bg-opacity-5", isDark ? "hover:bg-white" : "hover:bg-gray-900")}>
+              <span 
+                onClick={onToggleViewMode}
+                className={cn(viewMode === 'expanded' ? "font-bold text-black" : "text-gray-400")}
+              >
+                Expanded
+              </span>
+              <span className="mx-1">/</span>
+              <span 
+                onClick={onToggleViewMode}
+                className={cn(viewMode === 'compact' ? "font-bold text-black" : "text-gray-400")}
+              >
+                Compact
+              </span>
+            </div>
             <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
-            <div className={cn("px-2 py-1.5 text-xs flex items-center justify-between gap-4", isDark ? "text-white" : "text-gray-900")}>
-              <button onClick={() => onChangeTextSize('small')} className={cn("hover:text-orange-500", textSize === 'small' ? "text-orange-500" : "")}>−</button>
-              <span className="font-medium">[{textSize === 'small' ? 'Small' : textSize === 'large' ? 'Large' : 'Medium'}]</span>
-              <button onClick={() => onChangeTextSize('large')} className={cn("hover:text-orange-500", textSize === 'large' ? "text-orange-500" : "")}>+</button>
+            <div className={cn("px-3 py-2 text-xs cursor-pointer hover:bg-opacity-5", isDark ? "hover:bg-white" : "hover:bg-gray-900")}>
+              <span 
+                onClick={onToggleTheme}
+                className={cn(isDark ? "font-bold text-black" : "text-gray-400")}
+              >
+                Dark
+              </span>
+              <span className="mx-1">/</span>
+              <span 
+                onClick={onToggleTheme}
+                className={cn(!isDark ? "font-bold text-black" : "text-gray-400")}
+              >
+                Light
+              </span>
             </div>
             <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
             <DropdownMenuItem 
@@ -167,23 +186,33 @@ export default function MenuBar({
               {sidebarVisible ? 'Hide Navigation' : 'Show Navigation'}
             </DropdownMenuItem>
             <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
-            <div className={cn("px-2 py-1 space-y-0.5")}>
-              <div 
-                onClick={onToggleTheme}
-                className={cn("px-2 py-1 text-xs cursor-pointer rounded hover:bg-opacity-10", 
-                  isDark ? "font-bold text-white hover:bg-white" : "text-neutral-500 hover:bg-gray-900"
-                )}
-              >
-                Dark
+            <div className={cn("px-2 py-1.5 text-xs flex items-center justify-between gap-3", isDark ? "text-white" : "text-gray-900")}>
+              <button onClick={() => onChangeTextSize('small')} className={cn("hover:text-orange-500")}>−</button>
+              <div className="flex items-center gap-1">
+                <span className="font-medium">[</span>
+                <span 
+                  onClick={() => onChangeTextSize('small')}
+                  className={cn("cursor-pointer", textSize === 'small' ? "font-bold text-black" : "text-gray-400")}
+                >
+                  Small
+                </span>
+                <span className="mx-0.5">/</span>
+                <span 
+                  onClick={() => onChangeTextSize('medium')}
+                  className={cn("cursor-pointer", textSize === 'medium' ? "font-bold text-black" : "text-gray-400")}
+                >
+                  Medium
+                </span>
+                <span className="mx-0.5">/</span>
+                <span 
+                  onClick={() => onChangeTextSize('large')}
+                  className={cn("cursor-pointer", textSize === 'large' ? "font-bold text-black" : "text-gray-400")}
+                >
+                  Large
+                </span>
+                <span className="font-medium">]</span>
               </div>
-              <div 
-                onClick={onToggleTheme}
-                className={cn("px-2 py-1 text-xs cursor-pointer rounded hover:bg-opacity-10", 
-                  !isDark ? "font-bold text-gray-900 hover:bg-gray-900" : "text-neutral-500 hover:bg-white"
-                )}
-              >
-                Light
-              </div>
+              <button onClick={() => onChangeTextSize('large')} className={cn("hover:text-orange-500")}>+</button>
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -192,7 +221,7 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium rounded-sm hover:bg-opacity-10 transition-colors",
+              "px-2 py-0.5 text-[11px] font-medium hover:bg-opacity-10 transition-colors",
               isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
             )}>
               Help

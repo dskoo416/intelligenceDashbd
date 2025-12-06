@@ -191,9 +191,21 @@ export default function Layout({ children, currentPageName }) {
       settings.theme === 'dark' ? "bg-neutral-950 text-white" : "bg-gray-50 text-gray-900"
       )}>
         <style>{`
-          .text-content.text-small { font-size: 0.875rem; }
-          .text-content.text-medium { font-size: 1rem; }
-          .text-content.text-large { font-size: 1.125rem; }
+          .text-content.text-small,
+          .text-content.text-small * { 
+            font-size: 0.8125rem !important; 
+            line-height: 1.4 !important;
+          }
+          .text-content.text-medium,
+          .text-content.text-medium * { 
+            font-size: 0.875rem !important; 
+            line-height: 1.5 !important;
+          }
+          .text-content.text-large,
+          .text-content.text-large * { 
+            font-size: 1rem !important; 
+            line-height: 1.6 !important;
+          }
         `}</style>
         <MenuBar
           theme={settings.theme}
@@ -287,8 +299,16 @@ export default function Layout({ children, currentPageName }) {
         onNavigateToSaved={() => navigate(createPageUrl('Saved'))}
         textSize={textSize}
         onChangeTextSize={(size) => {
-          setTextSize(size);
-          localStorage.setItem('textSize', size);
+          if (size === 'small' && textSize !== 'small') {
+            setTextSize('small');
+            localStorage.setItem('textSize', 'small');
+          } else if (size === 'medium' && textSize !== 'medium') {
+            setTextSize('medium');
+            localStorage.setItem('textSize', 'medium');
+          } else if (size === 'large' && textSize !== 'large') {
+            setTextSize('large');
+            localStorage.setItem('textSize', 'large');
+          }
         }}
         sidebarVisible={sidebarVisible}
         onToggleSidebarVisibility={() => setSidebarVisible(!sidebarVisible)}
