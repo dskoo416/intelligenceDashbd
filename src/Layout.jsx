@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Toaster, toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import MenuBar from '@/components/MenuBar';
 import TopBar from '@/components/feed/TopBar';
 import NavigationSidebar from '@/components/feed/NavigationSidebar';
 import SavedSidebar from '@/components/saved/SavedSidebar';
@@ -11,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 export default function Layout({ children, currentPageName }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSector, setActiveSector] = useState(null);
   const [activeSubsector, setActiveSubsector] = useState(null);
@@ -183,37 +187,16 @@ export default function Layout({ children, currentPageName }) {
     <div className={cn(
       "h-screen flex flex-col",
       settings.theme === 'dark' ? "bg-neutral-950 text-white" : "bg-gray-50 text-gray-900"
-    )}>
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 5px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(115, 115, 115, 0.3);
-          border-radius: 2px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(115, 115, 115, 0.5);
-        }
-      `}</style>
-      <Toaster position="bottom-right" />
-
-      <TopBar 
-        onOpenSettings={() => { setSettingsTab('appearance'); setSettingsOpen(true); }}
-        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+      )}>
+      <MenuBar
+        theme={settings.theme}
         onRefresh={handleRefresh}
         onExport={async () => {
           const articles = await base44.entities.SavedArticle.list('-created_date');
           const collections = await base44.entities.Collection.list();
           const exportColumns = settings?.export_columns || ['title', 'link', 'source', 'sector', 'date', 'description'];
           const exportFormat = settings?.export_format || 'csv';
-          
+
           const columnMap = {
             title: 'Title',
             link: 'Link',
@@ -224,9 +207,9 @@ export default function Layout({ children, currentPageName }) {
             description: 'Description',
             collections: 'Collections'
           };
-          
+
           const headers = exportColumns.map(col => columnMap[col]);
-          
+
           const rows = articles.map(a => {
             const row = {};
             if (exportColumns.includes('title')) row.title = a.title?.replace(/"/g, '""') || '';
@@ -242,7 +225,7 @@ export default function Layout({ children, currentPageName }) {
             }
             return exportColumns.map(col => `"${row[col] || ''}"`);
           });
-          
+
           if (exportFormat === 'email') {
             const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
             const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -266,7 +249,57 @@ export default function Layout({ children, currentPageName }) {
             toast.success('Articles exported');
           }
         }}
-        showRefresh={showTopBarActions}
+        currentPage={currentPageName}
+        onOpenSettings={() => { setSettingsTab('appearance'); setSettingsOpen(true); }}
+        onOpenSectorsSettings={() => { setSettingsTab('sectors'); setSettingsOpen(true); }}
+        onOpenCollectionsSettings={() => { setSettingsTab('collections'); setSettingsOpen(true); }}
+        onOpenRSSSettings={() => { setSettingsTab('rss'); setSettingsOpen(true); }}
+        autoLoadGist={settings?.auto_reload_gist || false}
+        autoLoadCritical={settings?.auto_reload_critical || false}
+        onToggleAutoLoadGist={() => {
+          const newSettings = { ...settings, auto_reload_gist: !settings?.auto_reload_gist };
+          updateSettingsMutation.mutate(newSettings);
+        }}
+        onToggleAutoLoadCritical={() => {
+          const newSettings = { ...settings, auto_reload_critical: !settings?.auto_reload_critical };
+          updateSettingsMutation.mutate(newSettings);
+        }}
+        viewMode={localStorage.getItem('newsViewMode') || 'compact'}
+        onToggleViewMode={() => {
+          const current = localStorage.getItem('newsViewMode') || 'compact';
+          const newMode = current === 'compact' ? 'regular' : 'compact';
+          localStorage.setItem('newsViewMode', newMode);
+          window.location.reload();
+        }}
+        onToggleTheme={() => {
+          const newSettings = { ...settings, theme: settings.theme === 'dark' ? 'light' : 'dark' };
+          updateSettingsMutation.mutate(newSettings);
+        }}
+        onNavigateToIntelligence={() => navigate(createPageUrl('IntelligenceFeed'))}
+        onNavigateToSaved={() => navigate(createPageUrl('Saved'))}
+      />
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(115, 115, 115, 0.3);
+          border-radius: 2px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(115, 115, 115, 0.5);
+        }
+      `}</style>
+      <Toaster position="bottom-right" />
+
+      <TopBar 
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         currentPage={currentPageName}
         sidebarOpen={sidebarOpen}
         theme={settings.theme}
