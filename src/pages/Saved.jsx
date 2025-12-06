@@ -526,7 +526,7 @@ export default function Saved({ sidebarOpen }) {
                               Add to collections:
                             </p>
 
-                            {collections.map((collection: any) => (
+                            {collections.map((collection) => (
                               <div
                                 key={collection.id}
                                 className="flex items-center gap-2"
