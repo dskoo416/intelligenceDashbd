@@ -47,7 +47,7 @@ export default function SavedSidebar({
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
           )}
         >
-          <Folder className="w-4 h-4" />
+          <ChevronDown className="w-4 h-4" />
           Main
         </button>
 
