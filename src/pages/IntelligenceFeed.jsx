@@ -299,7 +299,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
       "flex-1 overflow-y-auto p-5 space-y-4",
       settings.theme === 'dark' ? "bg-neutral-950" : "bg-gray-50"
     )}>
-      <div className="max-w-7xl">
+      <div className="w-full">
         <GistPanel 
           gist={gist} 
           isLoading={isLoadingGist}
