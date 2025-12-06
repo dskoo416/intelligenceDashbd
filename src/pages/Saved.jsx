@@ -15,9 +15,10 @@ import CollectionsModal from '@/components/saved/CollectionsModal';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-export default function Saved({ sidebarOpen }) {
+export default function Saved({ sidebarOpen, activeView: propActiveView, onSelectView: propOnSelectView }) {
   const queryClient = useQueryClient();
-  const [activeView, setActiveView] = useState('main');
+  const activeView = propActiveView || 'main';
+  const setActiveView = propOnSelectView || (() => {});
   const [collectionsModalOpen, setCollectionsModalOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState(null);
   const [searchFilter, setSearchFilter] = useState('');

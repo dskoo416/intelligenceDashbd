@@ -180,7 +180,7 @@ export default function Layout({ children, currentPageName }) {
   const childrenWithProps = currentPageName === 'IntelligenceFeed' 
     ? React.cloneElement(children, { activeSector, activeSubsector })
     : currentPageName === 'Saved'
-    ? React.cloneElement(children, { sidebarOpen: false })
+    ? React.cloneElement(children, { sidebarOpen: false, activeView, onSelectView: setActiveView })
     : currentPageName === 'Home'
     ? React.cloneElement(children, { sidebarOpen })
     : children;
