@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, ChevronUp, ChevronDown } from 'lucide-react';
+import { X, Plus, ChevronUp, ChevronDown, Mail } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 export default function SettingsModal({ 
@@ -32,8 +32,9 @@ export default function SettingsModal({
   const [newKeyword, setNewKeyword] = useState('');
   const [newSubsector, setNewSubsector] = useState('');
   const [newSubsubsector, setNewSubsubsector] = useState({ subsectorIdx: null, value: '' });
-  const [newRSSSource, setNewRSSSource] = useState({ name: '', url: '', sector_id: '' });
+  const [newRSSSource, setNewRSSSource] = useState({ name: '', url: '', sector_id: '', subsector: '', subsubsector: '' });
   const [localSettings, setLocalSettings] = useState(settings);
+  const [selectedSectorForRSS, setSelectedSectorForRSS] = useState(null);
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -122,7 +123,8 @@ export default function SettingsModal({
   const handleSaveRSSSource = async () => {
     if (newRSSSource.name && newRSSSource.url && newRSSSource.sector_id) {
       await onSaveRSSSource(newRSSSource);
-      setNewRSSSource({ name: '', url: '', sector_id: '' });
+      setNewRSSSource({ name: '', url: '', sector_id: '', subsector: '', subsubsector: '' });
+      setSelectedSectorForRSS(null);
     }
   };
 
@@ -150,31 +152,79 @@ export default function SettingsModal({
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
-          <TabsList className="grid grid-cols-4 bg-neutral-800/50 rounded">
+          <TabsList className="grid grid-cols-5 bg-neutral-800/50 rounded">
             <TabsTrigger value="appearance" className="data-[state=active]:bg-neutral-700 rounded text-xs">Appearance</TabsTrigger>
             <TabsTrigger value="sectors" className="data-[state=active]:bg-neutral-700 rounded text-xs">Sectors</TabsTrigger>
             <TabsTrigger value="rss" className="data-[state=active]:bg-neutral-700 rounded text-xs">RSS Sources</TabsTrigger>
             <TabsTrigger value="ai" className="data-[state=active]:bg-neutral-700 rounded text-xs">AI Settings</TabsTrigger>
+            <TabsTrigger value="export" className="data-[state=active]:bg-neutral-700 rounded text-xs">Export</TabsTrigger>
           </TabsList>
           
           <div className="mt-4 overflow-y-auto max-h-[55vh] pr-2 custom-scrollbar">
             <TabsContent value="appearance" className="space-y-6 mt-0">
-              <div className="flex items-center justify-between p-4 bg-neutral-800/50 rounded">
-                <div>
-                  <p className="font-medium text-sm">Theme</p>
-                  <p className="text-xs text-neutral-400 mt-0.5">Toggle dark/light mode</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-neutral-800/50 rounded">
+                  <div>
+                    <p className="font-medium text-sm">Theme</p>
+                    <p className="text-xs text-neutral-400 mt-0.5">Toggle dark/light mode</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={cn("text-xs", localSettings?.theme === 'light' ? "text-white" : "text-neutral-500")}>Light</span>
+                    <Switch
+                      checked={localSettings?.theme === 'dark'}
+                      onCheckedChange={(checked) => {
+                        const newSettings = { ...localSettings, theme: checked ? 'dark' : 'light' };
+                        setLocalSettings(newSettings);
+                        onUpdateSettings(newSettings);
+                      }}
+                    />
+                    <span className={cn("text-xs", localSettings?.theme === 'dark' ? "text-white" : "text-neutral-500")}>Dark</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={cn("text-xs", localSettings?.theme === 'light' ? "text-white" : "text-neutral-500")}>Light</span>
+
+                <div className="flex items-center justify-between p-4 bg-neutral-800/50 rounded">
+                  <div>
+                    <p className="font-medium text-sm">Auto-reload Gist</p>
+                    <p className="text-xs text-neutral-400 mt-0.5">Automatically generate gist on sector change</p>
+                  </div>
                   <Switch
-                    checked={localSettings?.theme === 'dark'}
+                    checked={localSettings?.auto_reload_gist || false}
                     onCheckedChange={(checked) => {
-                      const newSettings = { ...localSettings, theme: checked ? 'dark' : 'light' };
+                      const newSettings = { ...localSettings, auto_reload_gist: checked };
                       setLocalSettings(newSettings);
                       onUpdateSettings(newSettings);
                     }}
                   />
-                  <span className={cn("text-xs", localSettings?.theme === 'dark' ? "text-white" : "text-neutral-500")}>Dark</span>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-neutral-800/50 rounded">
+                  <div>
+                    <p className="font-medium text-sm">Auto-reload Critical Articles</p>
+                    <p className="text-xs text-neutral-400 mt-0.5">Automatically generate critical articles on sector change</p>
+                  </div>
+                  <Switch
+                    checked={localSettings?.auto_reload_critical || false}
+                    onCheckedChange={(checked) => {
+                      const newSettings = { ...localSettings, auto_reload_critical: checked };
+                      setLocalSettings(newSettings);
+                      onUpdateSettings(newSettings);
+                    }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-neutral-800/50 rounded">
+                  <div>
+                    <p className="font-medium text-sm">Cache AI Content</p>
+                    <p className="text-xs text-neutral-400 mt-0.5">Save AI-generated content for quick access</p>
+                  </div>
+                  <Switch
+                    checked={localSettings?.cache_ai_content !== false}
+                    onCheckedChange={(checked) => {
+                      const newSettings = { ...localSettings, cache_ai_content: checked };
+                      setLocalSettings(newSettings);
+                      onUpdateSettings(newSettings);
+                    }}
+                  />
                 </div>
               </div>
             </TabsContent>
@@ -352,7 +402,10 @@ export default function SettingsModal({
                     <Label className="text-neutral-400 text-xs">Sector</Label>
                     <Select
                       value={newRSSSource.sector_id}
-                      onValueChange={(value) => setNewRSSSource({ ...newRSSSource, sector_id: value })}
+                      onValueChange={(value) => {
+                        setNewRSSSource({ ...newRSSSource, sector_id: value, subsector: '', subsubsector: '' });
+                        setSelectedSectorForRSS(sectors.find(s => s.id === value));
+                      }}
                     >
                       <SelectTrigger className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white">
                         <SelectValue placeholder="Select sector" />
@@ -366,6 +419,48 @@ export default function SettingsModal({
                       </SelectContent>
                     </Select>
                   </div>
+                  {selectedSectorForRSS?.subsectors?.length > 0 && (
+                    <div>
+                      <Label className="text-neutral-400 text-xs">Subsector (optional)</Label>
+                      <Select
+                        value={newRSSSource.subsector}
+                        onValueChange={(value) => setNewRSSSource({ ...newRSSSource, subsector: value, subsubsector: '' })}
+                      >
+                        <SelectTrigger className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white">
+                          <SelectValue placeholder="Select subsector" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
+                          <SelectItem value={null} className="text-white focus:bg-neutral-700 focus:text-white">None</SelectItem>
+                          {selectedSectorForRSS.subsectors.map((sub, idx) => (
+                            <SelectItem key={idx} value={sub.name} className="text-white focus:bg-neutral-700 focus:text-white">
+                              {sub.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {newRSSSource.subsector && selectedSectorForRSS?.subsectors?.find(s => s.name === newRSSSource.subsector)?.subsubsectors?.length > 0 && (
+                    <div>
+                      <Label className="text-neutral-400 text-xs">Sub-subsector (optional)</Label>
+                      <Select
+                        value={newRSSSource.subsubsector}
+                        onValueChange={(value) => setNewRSSSource({ ...newRSSSource, subsubsector: value })}
+                      >
+                        <SelectTrigger className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white">
+                          <SelectValue placeholder="Select sub-subsector" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
+                          <SelectItem value={null} className="text-white focus:bg-neutral-700 focus:text-white">None</SelectItem>
+                          {selectedSectorForRSS.subsectors.find(s => s.name === newRSSSource.subsector).subsubsectors.map((subsub, idx) => (
+                            <SelectItem key={idx} value={subsub} className="text-white focus:bg-neutral-700 focus:text-white">
+                              {subsub}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
                 <Button onClick={handleSaveRSSSource} size="sm" className="bg-neutral-700 hover:bg-neutral-600 rounded text-xs">
                   Add RSS Source
@@ -384,6 +479,11 @@ export default function SettingsModal({
                         <div className="flex-1 min-w-0">
                           <span className="text-sm text-white">{source.name}</span>
                           <p className="text-xs text-neutral-500 truncate">{source.url}</p>
+                          {(source.subsector || source.subsubsector) && (
+                            <p className="text-xs text-neutral-600 mt-0.5">
+                              {sector?.name}{source.subsector ? ` → ${source.subsector}` : ''}{source.subsubsector ? ` → ${source.subsubsector}` : ''}
+                            </p>
+                          )}
                         </div>
                         <Select
                           value={source.sector_id}
@@ -477,6 +577,85 @@ export default function SettingsModal({
                   className="bg-neutral-700 hover:bg-neutral-600 rounded text-xs"
                 >
                   Save AI Settings
+                </Button>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="export" className="space-y-4 mt-0">
+              <div className="space-y-4">
+                <div className="p-4 bg-neutral-800/50 rounded space-y-4">
+                  <h4 className="font-medium text-xs text-neutral-300">Export Format</h4>
+                  <div>
+                    <Label className="text-neutral-400 text-xs">Default Format</Label>
+                    <Select
+                      value={localSettings?.export_format || 'csv'}
+                      onValueChange={(value) => setLocalSettings({ ...localSettings, export_format: value })}
+                    >
+                      <SelectTrigger className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
+                        <SelectItem value="csv" className="text-white focus:bg-neutral-700 focus:text-white">CSV</SelectItem>
+                        <SelectItem value="excel" className="text-white focus:bg-neutral-700 focus:text-white">Excel</SelectItem>
+                        <SelectItem value="email" className="text-white focus:bg-neutral-700 focus:text-white">Email Attachment</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {localSettings?.export_format === 'email' && (
+                    <div>
+                      <Label className="text-neutral-400 text-xs">Email Address</Label>
+                      <Input
+                        type="email"
+                        value={localSettings?.export_email || ''}
+                        onChange={(e) => setLocalSettings({ ...localSettings, export_email: e.target.value })}
+                        placeholder="your@email.com"
+                        className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
+                      />
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Export will be sent to this email address
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4 bg-neutral-800/50 rounded space-y-4">
+                  <h4 className="font-medium text-xs text-neutral-300">Export Columns</h4>
+                  <p className="text-xs text-neutral-400">Select which columns to include in exports</p>
+                  <div className="space-y-2">
+                    {[
+                      { value: 'title', label: 'Title' },
+                      { value: 'link', label: 'Link' },
+                      { value: 'source', label: 'Source' },
+                      { value: 'sector', label: 'Sector' },
+                      { value: 'subsector', label: 'Subsector' },
+                      { value: 'date', label: 'Date' },
+                      { value: 'description', label: 'Description' },
+                      { value: 'collections', label: 'Collections' }
+                    ].map((col) => (
+                      <div key={col.value} className="flex items-center justify-between p-2 bg-neutral-800/30 rounded">
+                        <span className="text-sm text-white">{col.label}</span>
+                        <Switch
+                          checked={(localSettings?.export_columns || ['title', 'link', 'source', 'sector', 'date', 'description']).includes(col.value)}
+                          onCheckedChange={(checked) => {
+                            const currentColumns = localSettings?.export_columns || ['title', 'link', 'source', 'sector', 'date', 'description'];
+                            const newColumns = checked
+                              ? [...currentColumns, col.value]
+                              : currentColumns.filter(c => c !== col.value);
+                            setLocalSettings({ ...localSettings, export_columns: newColumns });
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => onUpdateSettings(localSettings)}
+                  size="sm"
+                  className="bg-neutral-700 hover:bg-neutral-600 rounded text-xs"
+                >
+                  Save Export Settings
                 </Button>
               </div>
             </TabsContent>

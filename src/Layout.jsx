@@ -158,27 +158,61 @@ export default function Layout({ children, currentPageName }) {
         onRefresh={handleRefresh}
         onExport={async () => {
           const articles = await base44.entities.SavedArticle.list('-created_date');
+          const collections = await base44.entities.Collection.list();
+          const exportColumns = settings?.export_columns || ['title', 'link', 'source', 'sector', 'date', 'description'];
+          const exportFormat = settings?.export_format || 'csv';
           
-          const csvContent = [
-            ['Title', 'Link', 'Source', 'Sector', 'Date', 'Description'].join(','),
-            ...articles.map(a => [
-              `"${a.title?.replace(/"/g, '""') || ''}"`,
-              `"${a.link || ''}"`,
-              `"${a.source || ''}"`,
-              `"${a.sector || ''}"`,
-              `"${a.pubDate ? new Date(a.pubDate).toLocaleDateString() : ''}"`,
-              `"${a.description?.replace(/"/g, '""') || ''}"`
-            ].join(','))
-          ].join('\n');
+          const columnMap = {
+            title: 'Title',
+            link: 'Link',
+            source: 'Source',
+            sector: 'Sector',
+            subsector: 'Subsector',
+            date: 'Date',
+            description: 'Description',
+            collections: 'Collections'
+          };
           
-          const blob = new Blob([csvContent], { type: 'text/csv' });
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `saved-articles-${new Date().toISOString().split('T')[0]}.csv`;
-          a.click();
-          window.URL.revokeObjectURL(url);
-          toast.success('Articles exported');
+          const headers = exportColumns.map(col => columnMap[col]);
+          
+          const rows = articles.map(a => {
+            const row = {};
+            if (exportColumns.includes('title')) row.title = a.title?.replace(/"/g, '""') || '';
+            if (exportColumns.includes('link')) row.link = a.link || '';
+            if (exportColumns.includes('source')) row.source = a.source || '';
+            if (exportColumns.includes('sector')) row.sector = a.sector || '';
+            if (exportColumns.includes('subsector')) row.subsector = a.subsector || '';
+            if (exportColumns.includes('date')) row.date = a.pubDate ? new Date(a.pubDate).toLocaleDateString() : '';
+            if (exportColumns.includes('description')) row.description = a.description?.replace(/"/g, '""') || '';
+            if (exportColumns.includes('collections')) {
+              const articleCollections = collections.filter(c => a.collection_ids?.includes(c.id)).map(c => c.name).join('; ');
+              row.collections = articleCollections;
+            }
+            return exportColumns.map(col => `"${row[col] || ''}"`);
+          });
+          
+          if (exportFormat === 'email') {
+            const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const file = new File([blob], `saved-articles-${new Date().toISOString().split('T')[0]}.csv`, { type: 'text/csv' });
+            const { file_url } = await base44.integrations.Core.UploadFile({ file });
+            await base44.integrations.Core.SendEmail({
+              to: settings?.export_email || 'user@example.com',
+              subject: `Saved Articles Export - ${new Date().toLocaleDateString()}`,
+              body: `Please find attached your exported articles.\n\nExport generated on ${new Date().toLocaleString()}\nTotal articles: ${articles.length}`
+            });
+            toast.success('Export emailed successfully');
+          } else {
+            const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            const blob = new Blob([csvContent], { type: exportFormat === 'excel' ? 'application/vnd.ms-excel' : 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `saved-articles-${new Date().toISOString().split('T')[0]}.${exportFormat === 'excel' ? 'xls' : 'csv'}`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            toast.success('Articles exported');
+          }
         }}
         showRefresh={showTopBarActions}
         currentPage={currentPageName}
