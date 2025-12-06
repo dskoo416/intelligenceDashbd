@@ -180,7 +180,8 @@ export default function Saved({ sidebarOpen }) {
 
       {/* match IntelligenceFeed: scroll area + max-w-7xl */}
       <main className="flex-1 overflow-y-auto p-5">
-        <div className="max-w-7xl">
+        <div className={cn(sidebarOpen ? "max-w-7xl" : "w-full")}>
+
           <div className="flex items-center justify-between mb-6">
             <h1 className={cn("text-2xl font-bold", isDark ? "text-white" : "text-gray-900")}>
               {activeView === 'main'
