@@ -314,6 +314,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
           sectorName={activeSector?.name}
           savedArticleIds={savedArticles.map(a => a.link)}
           theme={settings.theme}
+          onRefresh={() => fetchArticles(true)}
         />
       </div>
     </main>

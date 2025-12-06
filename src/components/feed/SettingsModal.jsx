@@ -129,8 +129,10 @@ export default function SettingsModal({
   };
 
   const handleRSSCategoryChange = async (sourceId, newSectorId) => {
-    await onUpdateRSSSource(sourceId, { sector_id: newSectorId });
+    await onUpdateRSSSource(sourceId, { sector_id: newSectorId, subsector: '', subsubsector: '' });
   };
+
+  const [editingRSS, setEditingRSS] = useState(null);
 
   const handleMoveUp = (index) => {
     if (index === 0) return;
@@ -144,32 +146,145 @@ export default function SettingsModal({
 
   const currentTarget = editingSector || newSector;
 
+  const isDark = settings?.theme === 'dark';
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden bg-neutral-900 border-neutral-800 text-white rounded">
+      <DialogContent className={cn("max-w-2xl max-h-[85vh] overflow-hidden rounded", isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-white border-gray-200 text-gray-900")}>
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">Settings</DialogTitle>
+          <DialogTitle className={cn("text-lg font-semibold", isDark ? "text-white" : "text-gray-900")}>Settings</DialogTitle>
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
-          <TabsList className="grid grid-cols-5 bg-neutral-800/50 rounded">
-            <TabsTrigger value="appearance" className="data-[state=active]:bg-neutral-700 rounded text-xs">Appearance</TabsTrigger>
-            <TabsTrigger value="sectors" className="data-[state=active]:bg-neutral-700 rounded text-xs">Sectors</TabsTrigger>
-            <TabsTrigger value="rss" className="data-[state=active]:bg-neutral-700 rounded text-xs">RSS Sources</TabsTrigger>
-            <TabsTrigger value="ai" className="data-[state=active]:bg-neutral-700 rounded text-xs">AI Settings</TabsTrigger>
-            <TabsTrigger value="export" className="data-[state=active]:bg-neutral-700 rounded text-xs">Export</TabsTrigger>
+          <TabsList className={cn("grid grid-cols-6 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-100")}>
+            <TabsTrigger value="general" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>General</TabsTrigger>
+            <TabsTrigger value="appearance" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Appearance</TabsTrigger>
+            <TabsTrigger value="sectors" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Sectors</TabsTrigger>
+            <TabsTrigger value="rss" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>RSS Sources</TabsTrigger>
+            <TabsTrigger value="ai" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>AI Settings</TabsTrigger>
+            <TabsTrigger value="export" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Export</TabsTrigger>
           </TabsList>
           
           <div className="mt-4 overflow-y-auto max-h-[55vh] pr-2 custom-scrollbar">
+            <TabsContent value="general" className="space-y-4 mt-0">
+              <div className={cn("p-4 rounded space-y-4", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
+                <h4 className={cn("font-medium text-xs", isDark ? "text-neutral-300" : "text-gray-700")}>Keyword Filters</h4>
+                <p className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-500")}>Control how articles with specific keywords are displayed</p>
+                
+                <div>
+                  <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Show More (prioritize articles with these keywords)</Label>
+                  <Input
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newKeyword.trim()) {
+                        e.preventDefault();
+                        setLocalSettings({
+                          ...localSettings,
+                          keywords_show_more: [...(localSettings?.keywords_show_more || []), newKeyword.trim()]
+                        });
+                        setNewKeyword('');
+                      }
+                    }}
+                    placeholder="Press Enter to add keyword"
+                    className={cn("mt-1 rounded", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300")}
+                  />
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {(localSettings?.keywords_show_more || []).map((kw, idx) => (
+                      <Badge key={idx} className={cn("rounded", isDark ? "bg-green-900 text-green-300" : "bg-green-100 text-green-800")}>
+                        {kw}
+                        <button onClick={() => setLocalSettings({
+                          ...localSettings,
+                          keywords_show_more: localSettings.keywords_show_more.filter((_, i) => i !== idx)
+                        })} className="ml-1">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Show Less (de-prioritize articles with these keywords)</Label>
+                  <Input
+                    placeholder="Press Enter to add keyword"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.target.value.trim()) {
+                        e.preventDefault();
+                        setLocalSettings({
+                          ...localSettings,
+                          keywords_show_less: [...(localSettings?.keywords_show_less || []), e.target.value.trim()]
+                        });
+                        e.target.value = '';
+                      }
+                    }}
+                    className={cn("mt-1 rounded", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300")}
+                  />
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {(localSettings?.keywords_show_less || []).map((kw, idx) => (
+                      <Badge key={idx} className={cn("rounded", isDark ? "bg-yellow-900 text-yellow-300" : "bg-yellow-100 text-yellow-800")}>
+                        {kw}
+                        <button onClick={() => setLocalSettings({
+                          ...localSettings,
+                          keywords_show_less: localSettings.keywords_show_less.filter((_, i) => i !== idx)
+                        })} className="ml-1">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Hide (completely hide articles with these keywords)</Label>
+                  <Input
+                    placeholder="Press Enter to add keyword"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.target.value.trim()) {
+                        e.preventDefault();
+                        setLocalSettings({
+                          ...localSettings,
+                          keywords_hide: [...(localSettings?.keywords_hide || []), e.target.value.trim()]
+                        });
+                        e.target.value = '';
+                      }
+                    }}
+                    className={cn("mt-1 rounded", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300")}
+                  />
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {(localSettings?.keywords_hide || []).map((kw, idx) => (
+                      <Badge key={idx} className={cn("rounded", isDark ? "bg-red-900 text-red-300" : "bg-red-100 text-red-800")}>
+                        {kw}
+                        <button onClick={() => setLocalSettings({
+                          ...localSettings,
+                          keywords_hide: localSettings.keywords_hide.filter((_, i) => i !== idx)
+                        })} className="ml-1">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={() => onUpdateSettings(localSettings)}
+                  size="sm"
+                  className={cn("rounded text-xs", isDark ? "bg-neutral-700 hover:bg-neutral-600" : "bg-gray-800 hover:bg-gray-700 text-white")}
+                >
+                  Save General Settings
+                </Button>
+              </div>
+            </TabsContent>
+
             <TabsContent value="appearance" className="space-y-6 mt-0">
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-neutral-800/50 rounded">
+                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
                   <div>
-                    <p className="font-medium text-sm">Theme</p>
-                    <p className="text-xs text-neutral-400 mt-0.5">Toggle dark/light mode</p>
+                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Theme</p>
+                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Toggle dark/light mode</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={cn("text-xs", localSettings?.theme === 'light' ? "text-white" : "text-neutral-500")}>Light</span>
+                    <span className={cn("text-xs", localSettings?.theme === 'light' ? (isDark ? "text-white" : "text-gray-900") : (isDark ? "text-neutral-500" : "text-gray-400"))}>Light</span>
                     <Switch
                       checked={localSettings?.theme === 'dark'}
                       onCheckedChange={(checked) => {
@@ -177,15 +292,16 @@ export default function SettingsModal({
                         setLocalSettings(newSettings);
                         onUpdateSettings(newSettings);
                       }}
+                      className="data-[state=unchecked]:bg-gray-300"
                     />
-                    <span className={cn("text-xs", localSettings?.theme === 'dark' ? "text-white" : "text-neutral-500")}>Dark</span>
+                    <span className={cn("text-xs", localSettings?.theme === 'dark' ? (isDark ? "text-white" : "text-gray-900") : (isDark ? "text-neutral-500" : "text-gray-400"))}>Dark</span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-neutral-800/50 rounded">
+                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
                   <div>
-                    <p className="font-medium text-sm">Auto-reload Gist</p>
-                    <p className="text-xs text-neutral-400 mt-0.5">Automatically generate gist on sector change</p>
+                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Auto-reload Gist</p>
+                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Automatically generate gist on sector change</p>
                   </div>
                   <Switch
                     checked={localSettings?.auto_reload_gist || false}
@@ -194,13 +310,14 @@ export default function SettingsModal({
                       setLocalSettings(newSettings);
                       onUpdateSettings(newSettings);
                     }}
+                    className="data-[state=unchecked]:bg-gray-300"
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-neutral-800/50 rounded">
+                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
                   <div>
-                    <p className="font-medium text-sm">Auto-reload Critical Articles</p>
-                    <p className="text-xs text-neutral-400 mt-0.5">Automatically generate critical articles on sector change</p>
+                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Auto-reload Critical Articles</p>
+                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Automatically generate critical articles on sector change</p>
                   </div>
                   <Switch
                     checked={localSettings?.auto_reload_critical || false}
@@ -209,13 +326,14 @@ export default function SettingsModal({
                       setLocalSettings(newSettings);
                       onUpdateSettings(newSettings);
                     }}
+                    className="data-[state=unchecked]:bg-gray-300"
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-neutral-800/50 rounded">
+                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
                   <div>
-                    <p className="font-medium text-sm">Cache AI Content</p>
-                    <p className="text-xs text-neutral-400 mt-0.5">Save AI-generated content for quick access</p>
+                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Cache AI Content</p>
+                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Save AI-generated content for quick access</p>
                   </div>
                   <Switch
                     checked={localSettings?.cache_ai_content !== false}
@@ -224,6 +342,7 @@ export default function SettingsModal({
                       setLocalSettings(newSettings);
                       onUpdateSettings(newSettings);
                     }}
+                    className="data-[state=unchecked]:bg-gray-300"
                   />
                 </div>
               </div>
@@ -474,35 +593,97 @@ export default function SettingsModal({
                 ) : (
                   rssSources.map((source) => {
                     const sector = sectors.find(s => s.id === source.sector_id);
+                    const isEditing = editingRSS?.id === source.id;
                     return (
-                      <div key={source.id} className="flex items-center justify-between p-3 bg-neutral-800/30 rounded gap-3">
-                        <div className="flex-1 min-w-0">
-                          <span className="text-sm text-white">{source.name}</span>
-                          <p className="text-xs text-neutral-500 truncate">{source.url}</p>
-                          {(source.subsector || source.subsubsector) && (
-                            <p className="text-xs text-neutral-600 mt-0.5">
-                              {sector?.name}{source.subsector ? ` → ${source.subsector}` : ''}{source.subsubsector ? ` → ${source.subsubsector}` : ''}
-                            </p>
-                          )}
+                      <div key={source.id} className="p-3 bg-neutral-800/30 rounded space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm text-white">{source.name}</span>
+                            <p className="text-xs text-neutral-500 truncate">{source.url}</p>
+                            {!isEditing && (source.subsector || source.subsubsector) && (
+                              <p className="text-xs text-neutral-600 mt-0.5">
+                                {sector?.name}{source.subsector ? ` → ${source.subsector}` : ''}{source.subsubsector ? ` → ${source.subsubsector}` : ''}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => setEditingRSS(isEditing ? null : source)}>
+                              {isEditing ? 'Cancel' : 'Edit'}
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-red-400 text-xs h-7" onClick={() => onDeleteRSSSource(source.id)}>
+                              Delete
+                            </Button>
+                          </div>
                         </div>
-                        <Select
-                          value={source.sector_id}
-                          onValueChange={(value) => handleRSSCategoryChange(source.id, value)}
-                        >
-                          <SelectTrigger className="w-36 bg-neutral-800 border-neutral-700 rounded h-8 text-xs text-white">
-                            <SelectValue>{sector?.name || 'Select'}</SelectValue>
-                          </SelectTrigger>
-                          <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
-                            {sectors.map((s) => (
-                              <SelectItem key={s.id} value={s.id} className="text-xs text-white focus:bg-neutral-700 focus:text-white">
-                                {s.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button size="sm" variant="ghost" className="text-red-400 text-xs h-7" onClick={() => onDeleteRSSSource(source.id)}>
-                          Delete
-                        </Button>
+                        {isEditing && (
+                          <div className="space-y-2 pt-2 border-t border-neutral-700">
+                            <Select
+                              value={editingRSS.sector_id}
+                              onValueChange={(value) => setEditingRSS({ ...editingRSS, sector_id: value, subsector: '', subsubsector: '' })}
+                            >
+                              <SelectTrigger className="bg-neutral-900 border-neutral-700 rounded text-white text-xs">
+                                <SelectValue>{sectors.find(s => s.id === editingRSS.sector_id)?.name || 'Select sector'}</SelectValue>
+                              </SelectTrigger>
+                              <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
+                                {sectors.map((s) => (
+                                  <SelectItem key={s.id} value={s.id} className="text-xs text-white focus:bg-neutral-700 focus:text-white">
+                                    {s.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {sectors.find(s => s.id === editingRSS.sector_id)?.subsectors?.length > 0 && (
+                              <Select
+                                value={editingRSS.subsector || ''}
+                                onValueChange={(value) => setEditingRSS({ ...editingRSS, subsector: value, subsubsector: '' })}
+                              >
+                                <SelectTrigger className="bg-neutral-900 border-neutral-700 rounded text-white text-xs">
+                                  <SelectValue placeholder="Select subsector" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
+                                  <SelectItem value={null} className="text-xs text-white focus:bg-neutral-700 focus:text-white">None</SelectItem>
+                                  {sectors.find(s => s.id === editingRSS.sector_id).subsectors.map((sub, idx) => (
+                                    <SelectItem key={idx} value={sub.name} className="text-xs text-white focus:bg-neutral-700 focus:text-white">
+                                      {sub.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                            {editingRSS.subsector && sectors.find(s => s.id === editingRSS.sector_id)?.subsectors?.find(s => s.name === editingRSS.subsector)?.subsubsectors?.length > 0 && (
+                              <Select
+                                value={editingRSS.subsubsector || ''}
+                                onValueChange={(value) => setEditingRSS({ ...editingRSS, subsubsector: value })}
+                              >
+                                <SelectTrigger className="bg-neutral-900 border-neutral-700 rounded text-white text-xs">
+                                  <SelectValue placeholder="Select sub-subsector" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
+                                  <SelectItem value={null} className="text-xs text-white focus:bg-neutral-700 focus:text-white">None</SelectItem>
+                                  {sectors.find(s => s.id === editingRSS.sector_id).subsectors.find(s => s.name === editingRSS.subsector).subsubsectors.map((subsub, idx) => (
+                                    <SelectItem key={idx} value={subsub} className="text-xs text-white focus:bg-neutral-700 focus:text-white">
+                                      {subsub}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                            <Button 
+                              size="sm" 
+                              onClick={() => {
+                                onUpdateRSSSource(source.id, { 
+                                  sector_id: editingRSS.sector_id, 
+                                  subsector: editingRSS.subsector || '', 
+                                  subsubsector: editingRSS.subsubsector || '' 
+                                });
+                                setEditingRSS(null);
+                              }}
+                              className="bg-neutral-700 hover:bg-neutral-600 text-xs"
+                            >
+                              Save Changes
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     );
                   })

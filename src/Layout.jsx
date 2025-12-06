@@ -123,7 +123,7 @@ export default function Layout({ children, currentPageName }) {
   // Clone children and pass props for pages
   const childrenWithProps = currentPageName === 'IntelligenceFeed' 
     ? React.cloneElement(children, { activeSector, activeSubsector })
-    : currentPageName === 'Saved'
+    : currentPageName === 'Saved' || currentPageName === 'Home'
     ? React.cloneElement(children, { sidebarOpen })
     : children;
 
