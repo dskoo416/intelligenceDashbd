@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { Plus, Calendar, Search, X, RefreshCw, LayoutList, List, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Calendar, Search, X, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 
 export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFilter, onSearchFilter, dateFilter, searchFilter, sectorName, savedArticleIds, theme, onRefresh }) {
   const isDark = theme === 'dark';
@@ -27,24 +27,25 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
       isDark ? "bg-neutral-900/50 border-neutral-800" : "bg-white border-gray-200"
     )}>
       <div className="flex items-center justify-between mb-3">
-        <h3 className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-neutral-400" : "text-gray-500")}>
-          {sectorName ? `${sectorName} News` : 'Most Recent'}
-        </h3>
         <div className="flex items-center gap-2">
-          <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
-            {articles.length} articles
-          </span>
-
+          <h3 className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-neutral-400" : "text-gray-500")}>
+            {sectorName ? `${sectorName} News` : 'Most Recent'}
+          </h3>
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={onRefresh}
-            className="h-7 w-7 p-0"
+            className="h-5 w-5 p-0"
           >
-            <RefreshCw className={cn("w-3.5 h-3.5", isDark ? "text-neutral-500" : "text-gray-500")} />
+            <RefreshCw className={cn("w-3 h-3", isDark ? "text-neutral-500" : "text-gray-500")} />
           </Button>
+        </div>
+        <div className="flex items-center gap-2">
+            <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
+              {articles.length} articles
+            </span>
 
-          <Popover>
+            <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                 <Calendar className={cn("w-3.5 h-3.5", dateFilter ? "text-orange-500" : isDark ? "text-neutral-500" : "text-gray-500")} />

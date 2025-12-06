@@ -117,17 +117,24 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     
     const key = `${activeSector.id}_${activeSubsector?.name || 'none'}`;
     const cached = dataCache[key];
-    
+
     if (cached?.articles?.length > 0 && !forceRefresh) {
       setArticles(cached.articles);
       setGist(cached.gist || savedCache?.gist || '');
       setCriticalArticles(cached.criticalArticles || savedCache?.critical_articles || []);
+      setIsLoadingArticles(false);
       return;
     }
-    
+
     if (savedCache && !forceRefresh) {
       setGist(savedCache.gist || '');
       setCriticalArticles(savedCache.critical_articles || []);
+    }
+
+    if (!settings?.auto_reload_news && cached?.articles && !forceRefresh) {
+      setArticles(cached.articles);
+      setIsLoadingArticles(false);
+      return;
     }
     
     setIsLoadingArticles(true);
@@ -165,17 +172,20 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   useEffect(() => {
     const key = `${activeSector?.id || 'none'}_${activeSubsector?.name || 'none'}`;
     const cached = dataCache[key];
-    
+
     if (cached) {
       setArticles(cached.articles || []);
       setGist(cached.gist || '');
       setCriticalArticles(cached.criticalArticles || []);
+      setIsLoadingArticles(false);
     } else {
       setGist('');
       setCriticalArticles([]);
     }
-    
-    fetchArticles(false);
+
+    if (settings?.auto_reload_news || !cached?.articles) {
+      fetchArticles(false);
+    }
   }, [activeSector, activeSubsector]);
 
   const generateGist = async () => {

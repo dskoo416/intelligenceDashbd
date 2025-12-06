@@ -275,12 +275,17 @@ export default function Layout({ children, currentPageName }) {
         onOpenRSSSettings={() => { setSettingsTab('rss'); setSettingsOpen(true); }}
         autoLoadGist={settings?.auto_reload_gist || false}
         autoLoadCritical={settings?.auto_reload_critical || false}
+        autoLoadNews={settings?.auto_reload_news || false}
         onToggleAutoLoadGist={() => {
           const newSettings = { ...settings, auto_reload_gist: !settings?.auto_reload_gist };
           updateSettingsMutation.mutate(newSettings);
         }}
         onToggleAutoLoadCritical={() => {
           const newSettings = { ...settings, auto_reload_critical: !settings?.auto_reload_critical };
+          updateSettingsMutation.mutate(newSettings);
+        }}
+        onToggleAutoLoadNews={() => {
+          const newSettings = { ...settings, auto_reload_news: !settings?.auto_reload_news };
           updateSettingsMutation.mutate(newSettings);
         }}
         viewMode={localStorage.getItem('newsViewMode') || 'compact'}

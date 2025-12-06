@@ -228,6 +228,22 @@ export default function SettingsModal({
 
                 <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
                   <div>
+                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Auto-reload News</p>
+                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Automatically fetch news feed on sector change</p>
+                  </div>
+                  <Switch
+                    checked={localSettings?.auto_reload_news || false}
+                    onCheckedChange={(checked) => {
+                      const newSettings = { ...localSettings, auto_reload_news: checked };
+                      setLocalSettings(newSettings);
+                      onUpdateSettings(newSettings);
+                    }}
+                    className="data-[state=unchecked]:bg-gray-300"
+                  />
+                </div>
+
+                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
+                  <div>
                     <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Cache AI Content</p>
                     <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Save AI-generated content for quick access</p>
                   </div>

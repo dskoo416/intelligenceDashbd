@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, ChevronDown, Calendar, Search, LayoutList, List } from 'lucide-react';
+import { X, ChevronDown, Calendar, Search } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 import SavedSidebar from '@/components/saved/SavedSidebar';
 import CollectionsModal from '@/components/saved/CollectionsModal';
 import { toast } from 'sonner';
@@ -313,59 +313,6 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                   </div>
                 </PopoverContent>
               </Popover>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                    {viewMode === 'regular' ? (
-                      <LayoutList
-                        className={cn(
-                          "w-3.5 h-3.5",
-                          isDark ? "text-neutral-500" : "text-gray-500"
-                        )}
-                      />
-                    ) : (
-                      <List
-                        className={cn(
-                          "w-3.5 h-3.5",
-                          isDark ? "text-neutral-500" : "text-gray-500"
-                        )}
-                      />
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className={cn(
-                    isDark ? "bg-neutral-800 border-neutral-700" : "bg-white"
-                  )}
-                  align="end"
-                >
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setViewMode('regular');
-                      localStorage.setItem('savedViewMode', 'regular');
-                    }}
-                    className={cn(
-                      isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100"
-                    )}
-                  >
-                    <LayoutList className="w-4 h-4 mr-2" />
-                    Regular
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setViewMode('compact');
-                      localStorage.setItem('savedViewMode', 'compact');
-                    }}
-                    className={cn(
-                      isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100"
-                    )}
-                  >
-                    <List className="w-4 h-4 mr-2" />
-                    Compact
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
 
               <Button
                 variant="ghost"
