@@ -70,9 +70,12 @@ export default function SavedSidebar({
                 return (
                   <button
                     key={monthKey}
-                    onClick={() => onSelectView(`month-${monthKey}`)}
+                    onClick={() => {
+                      console.log('Clicking month:', monthKey);
+                      onSelectView(`month-${monthKey}`);
+                    }}
                     className={cn(
-                      "w-full text-left px-3 py-1.5 rounded transition-all duration-150 text-xs flex items-center justify-between",
+                      "w-full text-left px-3 py-1.5 rounded transition-all duration-150 text-xs flex items-center justify-between cursor-pointer",
                       activeView === `month-${monthKey}`
                         ? "bg-orange-500/10 text-orange-500"
                         : isDark

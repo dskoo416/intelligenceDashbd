@@ -338,6 +338,7 @@ export default function Layout({ children, currentPageName }) {
         currentPage={currentPageName}
         sidebarOpen={sidebarOpen}
         theme={settings.theme}
+        onOpenSettings={() => { setSettingsTab('appearance'); setSettingsOpen(true); }}
       />
       
       <div className={cn(
