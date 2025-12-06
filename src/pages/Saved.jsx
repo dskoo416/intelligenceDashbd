@@ -314,170 +314,192 @@ export default function Saved({ sidebarOpen }) {
           </div>
         ) : (
           <div className="space-y-1">
-            {filteredArticles.map((article) => (
-              viewMode === 'compact' ? (
-                <div
-                  key={article.id}
+  {filteredArticles.map((article) => (
+    viewMode === 'compact' ? (
+      <div
+        key={article.id}
+        className={cn(
+          "w-full rounded border p-2.5 flex items-center gap-3 transition-all",
+          isDark
+            ? "bg-neutral-800/30 border-neutral-800/50 hover:border-neutral-700 hover:bg-neutral-800/50"
+            : "bg-gray-50/50 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+        )}
+      >
+        <a
+          href={article.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 min-w-0 flex items-center gap-2"
+        >
+          <h3 className={cn("text-sm font-medium truncate", isDark ? "text-neutral-200" : "text-gray-800")}>
+            {article.title}
+          </h3>
+
+          <span className={cn("text-xs whitespace-nowrap", isDark ? "text-neutral-600" : "text-gray-400")}>
+            {article.source}
+          </span>
+
+          {article.pubDate && (
+            <span className={cn("text-xs whitespace-nowrap", isDark ? "text-neutral-700" : "text-gray-400")}>
+              {format(new Date(article.pubDate), "MMM d")}
+            </span>
+          )}
+        </a>
+
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {collections.length > 0 && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
                   className={cn(
-                    "rounded border p-2.5 flex items-center gap-3 transition-all",
-                    isDark 
-                      ? "bg-neutral-800/30 border-neutral-800/50 hover:border-neutral-700 hover:bg-neutral-800/50" 
-                      : "bg-gray-50/50 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                    "p-1 rounded hover:bg-orange-500/10 transition-all",
+                    article.collection_ids?.length > 0
+                      ? "text-orange-500"
+                      : isDark
+                        ? "text-neutral-500 hover:text-orange-500"
+                        : "text-gray-400 hover:text-orange-500"
                   )}
                 >
-                  <div className="flex-1 min-w-0 flex items-center gap-2">
-                    <a 
-                      href={article.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 min-w-0 flex items-center gap-2"
-                    >
-                      <h3 className={cn("text-sm font-medium truncate", isDark ? "text-neutral-200" : "text-gray-800")}>
-                        {article.title}
-                      </h3>
-                      <span className={cn("text-xs whitespace-nowrap", isDark ? "text-neutral-600" : "text-gray-400")}>
-                        {article.source}
-                      </span>
-                      {article.pubDate && (
-                        <span className={cn("text-xs whitespace-nowrap", isDark ? "text-neutral-700" : "text-gray-400")}>
-                          {format(new Date(article.pubDate), 'MMM d')}
-                        </span>
-                      )}
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {collections.length > 0 && (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button
-                            className={cn(
-                              "p-1 rounded hover:bg-orange-500/10 transition-all",
-                              article.collection_ids?.length > 0 
-                                ? "text-orange-500" 
-                                : isDark 
-                                  ? "text-neutral-500 hover:text-orange-500" 
-                                  : "text-gray-400 hover:text-orange-500"
-                            )}
-                          >
-                            <ChevronDown className="w-4 h-4" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className={cn("w-56", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
-                          <div className="space-y-2">
-                            <p className={cn("text-xs font-medium", isDark ? "text-neutral-300" : "text-gray-700")}>Add to collections:</p>
-                            {collections.map(collection => (
-                              <div key={collection.id} className="flex items-center gap-2">
-                                <Checkbox
-                                  checked={article.collection_ids?.includes(collection.id)}
-                                  onCheckedChange={() => handleToggleCollection(article, collection.id)}
-                                />
-                                <span className={cn("text-xs", isDark ? "text-white" : "text-gray-900")}>{collection.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                    <button
-                      onClick={() => deleteMutation.mutate(article.id)}
-                      className={cn(
-                        "p-1 rounded hover:bg-orange-500/10 transition-all",
-                        isDark 
-                          ? "text-neutral-500 hover:text-orange-500" 
-                          : "text-gray-400 hover:text-orange-500"
-                      )}
-                    >
-                      <X className="w-4 h-4 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div key={article.id} className={cn(
-                  "rounded p-4 flex items-start justify-between gap-4",
-                  isDark ? "bg-neutral-900 border border-neutral-800" : "bg-white border border-gray-200"
-                )}>
-                  <div className="flex-1 min-w-0">
-                    <a 
-                      href={article.link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className={cn(
-                        "font-medium text-sm transition-colors",
-                        isDark ? "text-white hover:text-orange-400" : "text-gray-900 hover:text-orange-500"
-                      )}
-                    >
-                      {article.title}
-                    </a>
-                    {article.description && (
-                      <p className={cn("text-xs mt-1 line-clamp-2", isDark ? "text-neutral-400" : "text-gray-600")}>
-                        {article.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-3 mt-2">
-                      <span className={cn("text-xs", isDark ? "text-neutral-500" : "text-gray-500")}>{article.source}</span>
-                      {article.sector && (
-                        <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>• {article.sector}</span>
-                      )}
-                      {article.pubDate && (
-                        <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
-                          • {new Date(article.pubDate).toLocaleDateString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {collections.length > 0 && (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button className={cn(
-                            "transition-colors",
-                            article.collection_ids?.length > 0 
-                              ? "text-orange-500" 
-                              : isDark 
-                                ? "text-neutral-500 hover:text-white" 
-                                : "text-gray-400 hover:text-gray-700"
-                          )}>
-                            <ChevronDown className="w-4 h-4" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className={cn("w-56", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
-                          <div className="space-y-2">
-                            <p className={cn("text-xs font-medium", isDark ? "text-neutral-300" : "text-gray-700")}>Add to collections:</p>
-                            {collections.map(collection => (
-                              <div key={collection.id} className="flex items-center gap-2">
-                                <Checkbox
-                                  checked={article.collection_ids?.includes(collection.id)}
-                                  onCheckedChange={() => handleToggleCollection(article, collection.id)}
-                                />
-                                <span className={cn("text-xs", isDark ? "text-white" : "text-gray-900")}>{collection.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                    <button
-                      onClick={() => deleteMutation.mutate(article.id)}
-                      className={cn("transition-colors", isDark ? "text-neutral-500 hover:text-red-400" : "text-gray-400 hover:text-red-500")}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )
-            ))}
-          </div>
-        )}
-      </div>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              </PopoverTrigger>
 
-      <CollectionsModal
-        isOpen={collectionsModalOpen}
-        onClose={() => setCollectionsModalOpen(false)}
-        collections={collections}
-        onSaveCollection={(data) => collectionMutation.mutate(data)}
-        onDeleteCollection={(id) => deleteCollectionMutation.mutate(id)}
-        onReorderCollections={handleReorderCollections}
-      />
-    </div>
-  );
-}
+              <PopoverContent
+                className={cn(
+                  "w-56",
+                  isDark ? "bg-neutral-800 border-neutral-700" : "bg-white"
+                )}
+                align="end"
+              >
+                <div className="space-y-2">
+                  <p className={cn("text-xs font-medium", isDark ? "text-neutral-300" : "text-gray-700")}>
+                    Add to collections:
+                  </p>
+
+                  {collections.map(collection => (
+                    <div key={collection.id} className="flex items-center gap-2">
+                      <Checkbox
+                        checked={article.collection_ids?.includes(collection.id)}
+                        onCheckedChange={() => handleToggleCollection(article, collection.id)}
+                      />
+                      <span className={cn("text-xs", isDark ? "text-white" : "text-gray-900")}>
+                        {collection.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+
+          <button
+            onClick={() => deleteMutation.mutate(article.id)}
+            className={cn(
+              "p-1 rounded hover:bg-orange-500/10 transition-all",
+              isDark
+                ? "text-neutral-500 hover:text-orange-500"
+                : "text-gray-400 hover:text-orange-500"
+            )}
+          >
+            <X className="w-4 h-4 transition-transform" />
+          </button>
+        </div>
+      </div>
+    ) : (
+      <div
+        key={article.id}
+        className={cn(
+          "rounded p-4 flex items-start justify-between gap-4",
+          isDark ? "bg-neutral-900 border border-neutral-800" : "bg-white border border-gray-200"
+        )}
+      >
+        <div className="flex-1 min-w-0">
+          <a
+            href={article.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              "font-medium text-sm transition-colors",
+              isDark ? "text-white hover:text-orange-400" : "text-gray-900 hover:text-orange-500"
+            )}
+          >
+            {article.title}
+          </a>
+
+          {article.description && (
+            <p className={cn("text-xs mt-1 line-clamp-2", isDark ? "text-neutral-400" : "text-gray-600")}>
+              {article.description}
+            </p>
+          )}
+
+          <div className="flex items-center gap-3 mt-2">
+            <span className={cn("text-xs", isDark ? "text-neutral-500" : "text-gray-500")}>
+              {article.source}
+            </span>
+            {article.sector && (
+              <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
+                • {article.sector}
+              </span>
+            )}
+            {article.pubDate && (
+              <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
+                • {new Date(article.pubDate).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {collections.length > 0 && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className={cn(
+                    "transition-colors",
+                    article.collection_ids?.length > 0
+                      ? "text-orange-500"
+                      : isDark
+                        ? "text-neutral-500 hover:text-white"
+                        : "text-gray-400 hover:text-gray-700"
+                  )}
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              </PopoverTrigger>
+
+              <PopoverContent
+                className={cn("w-56", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}
+                align="end"
+              >
+                <div className="space-y-2">
+                  <p className={cn("text-xs font-medium", isDark ? "text-neutral-300" : "text-gray-700")}>
+                    Add to collections:
+                  </p>
+
+                  {collections.map(collection => (
+                    <div key={collection.id} className="flex items-center gap-2">
+                      <Checkbox
+                        checked={article.collection_ids?.includes(collection.id)}
+                        onCheckedChange={() => handleToggleCollection(article, collection.id)}
+                      />
+                      <span className={cn("text-xs", isDark ? "text-white" : "text-gray-900")}>
+                        {collection.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+
+          <button
+            onClick={() => deleteMutation.mutate(article.id)}
+            className={cn("transition-colors", isDark ? "text-neutral-500 hover:text-red-400" : "text-gray-400 hover:text-red-500")}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    )
+  ))}
+</div>
