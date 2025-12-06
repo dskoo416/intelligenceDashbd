@@ -146,74 +146,26 @@ export default function MenuBar({
               View
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className={cn(isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
-            <div className={cn("px-3 py-2 text-xs cursor-pointer hover:bg-opacity-5", isDark ? "hover:bg-white" : "hover:bg-gray-900")}>
-              <span 
-                onClick={onToggleViewMode}
-                className={cn(viewMode === 'expanded' ? "font-bold text-black" : "text-gray-400")}
-              >
-                Expanded
-              </span>
-              <span className="mx-1">/</span>
-              <span 
-                onClick={onToggleViewMode}
-                className={cn(viewMode === 'compact' ? "font-bold text-black" : "text-gray-400")}
-              >
-                Compact
-              </span>
-            </div>
-            <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
-            <div className={cn("px-3 py-2 text-xs cursor-pointer hover:bg-opacity-5", isDark ? "hover:bg-white" : "hover:bg-gray-900")}>
-              <span 
-                onClick={onToggleTheme}
-                className={cn(isDark ? "font-bold text-black" : "text-gray-400")}
-              >
-                Dark
-              </span>
-              <span className="mx-1">/</span>
-              <span 
-                onClick={onToggleTheme}
-                className={cn(!isDark ? "font-bold text-black" : "text-gray-400")}
-              >
-                Light
-              </span>
-            </div>
+          <DropdownMenuContent align="start" className={cn("rounded-none", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
+            <DropdownMenuItem 
+              onClick={onToggleViewMode}
+              className={cn("text-xs rounded-none", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+            >
+              Density: {viewMode === 'compact' ? 'Expanded' : 'Compact'}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={onToggleTheme}
+              className={cn("text-xs rounded-none", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+            >
+              View as {isDark ? 'Light' : 'Dark'}
+            </DropdownMenuItem>
             <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
             <DropdownMenuItem 
               onClick={onToggleSidebarVisibility}
-              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs rounded-none", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
               {sidebarVisible ? 'Hide Navigation' : 'Show Navigation'}
             </DropdownMenuItem>
-            <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
-            <div className={cn("px-2 py-1.5 text-xs flex items-center justify-between gap-3", isDark ? "text-white" : "text-gray-900")}>
-              <button onClick={() => onChangeTextSize('small')} className={cn("hover:text-orange-500")}>−</button>
-              <div className="flex items-center gap-1">
-                <span className="font-medium">[</span>
-                <span 
-                  onClick={() => onChangeTextSize('small')}
-                  className={cn("cursor-pointer", textSize === 'small' ? "font-bold text-black" : "text-gray-400")}
-                >
-                  Small
-                </span>
-                <span className="mx-0.5">/</span>
-                <span 
-                  onClick={() => onChangeTextSize('medium')}
-                  className={cn("cursor-pointer", textSize === 'medium' ? "font-bold text-black" : "text-gray-400")}
-                >
-                  Medium
-                </span>
-                <span className="mx-0.5">/</span>
-                <span 
-                  onClick={() => onChangeTextSize('large')}
-                  className={cn("cursor-pointer", textSize === 'large' ? "font-bold text-black" : "text-gray-400")}
-                >
-                  Large
-                </span>
-                <span className="font-medium">]</span>
-              </div>
-              <button onClick={() => onChangeTextSize('large')} className={cn("hover:text-orange-500")}>+</button>
-            </div>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -227,16 +179,16 @@ export default function MenuBar({
               Help
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className={cn(isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
+          <DropdownMenuContent align="start" className={cn("rounded-none", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
             <DropdownMenuItem 
               onClick={() => setAboutOpen(true)}
-              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs rounded-none", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
               About
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onOpenSettings}
-              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs rounded-none", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
               Settings
             </DropdownMenuItem>
