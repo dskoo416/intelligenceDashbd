@@ -68,7 +68,7 @@ export default function NavigationSidebar({
                     className={cn(
                       "flex-1 text-left px-2 py-1.5 rounded transition-all duration-150 text-xs font-medium",
                       !hasSubsectors && "ml-4",
-                      isActive 
+                      isActive && currentPage === 'IntelligenceFeed'
                         ? "bg-orange-500/10 text-orange-500"
                         : isDark
                           ? "text-neutral-500 hover:text-white hover:bg-neutral-800/50"
@@ -91,7 +91,7 @@ export default function NavigationSidebar({
                           onClick={() => { onSelectSector(sector); onSelectSubsector && onSelectSubsector(sub); }}
                           className={cn(
                             "block w-full text-left px-2 py-1 rounded transition-all duration-150 text-xs",
-                            isSubActive 
+                            isSubActive && currentPage === 'IntelligenceFeed'
                               ? "bg-orange-500/10 text-orange-500"
                               : isDark
                                 ? "text-neutral-600 hover:text-white hover:bg-neutral-800/50"
