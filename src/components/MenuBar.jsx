@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, RefreshCw, Download, Zap, BookmarkIcon, Grid3x3, Plus, CheckCircle2, Eye, Sun, Moon, HelpCircle, Settings } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -42,7 +42,7 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-1 text-xs font-medium rounded hover:bg-opacity-10 transition-colors",
+              "px-2 py-0.5 text-[11px] font-medium rounded hover:bg-opacity-10 transition-colors",
               isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
             )}>
               Actions
@@ -51,38 +51,33 @@ export default function MenuBar({
           <DropdownMenuContent align="start" className={cn(isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
             <DropdownMenuItem 
               onClick={() => window.history.back()}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onRefresh}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onExport}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              <Download className="w-4 h-4 mr-2" />
               Export
             </DropdownMenuItem>
             <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
             <DropdownMenuItem 
               onClick={onNavigateToIntelligence}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              <Zap className="w-4 h-4 mr-2" />
               Intelligence
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onNavigateToSaved}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              <BookmarkIcon className="w-4 h-4 mr-2" />
               Saved
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -92,7 +87,7 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-1 text-xs font-medium rounded hover:bg-opacity-10 transition-colors",
+              "px-2 py-0.5 text-[11px] font-medium rounded hover:bg-opacity-10 transition-colors",
               isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
             )}>
               Edit
@@ -101,41 +96,38 @@ export default function MenuBar({
           <DropdownMenuContent align="start" className={cn(isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
             <DropdownMenuItem 
               onClick={onOpenSectorsSettings}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              <Grid3x3 className="w-4 h-4 mr-2" />
               Sectors
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onOpenCollectionsSettings}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              <BookmarkIcon className="w-4 h-4 mr-2" />
               Collections
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onOpenRSSSettings}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              <Plus className="w-4 h-4 mr-2" />
               Add Source
             </DropdownMenuItem>
             <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
             <DropdownMenuItem 
               onClick={onToggleAutoLoadGist}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              {autoLoadGist && <CheckCircle2 className="w-4 h-4 mr-2" />}
-              {!autoLoadGist && <div className="w-4 h-4 mr-2" />}
+              {autoLoadGist && <CheckCircle2 className="w-3 h-3 mr-2" />}
+              {!autoLoadGist && <div className="w-3 h-3 mr-2" />}
               Auto Load Gist
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onToggleAutoLoadCritical}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              {autoLoadCritical && <CheckCircle2 className="w-4 h-4 mr-2" />}
-              {!autoLoadCritical && <div className="w-4 h-4 mr-2" />}
-              Auto Load Critical Articles
+              {autoLoadCritical && <CheckCircle2 className="w-3 h-3 mr-2" />}
+              {!autoLoadCritical && <div className="w-3 h-3 mr-2" />}
+              Auto Load Featured
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -144,7 +136,7 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-1 text-xs font-medium rounded hover:bg-opacity-10 transition-colors",
+              "px-2 py-0.5 text-[11px] font-medium rounded hover:bg-opacity-10 transition-colors",
               isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
             )}>
               View
@@ -153,16 +145,14 @@ export default function MenuBar({
           <DropdownMenuContent align="start" className={cn(isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
             <DropdownMenuItem 
               onClick={onToggleViewMode}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              <Eye className="w-4 h-4 mr-2" />
               {viewMode === 'compact' ? 'Regular' : 'Compact'}
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onToggleTheme}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              {isDark ? <Sun className="w-4 h-4 mr-2" /> : <Moon className="w-4 h-4 mr-2" />}
               {isDark ? 'Light' : 'Dark'}
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -172,7 +162,7 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-1 text-xs font-medium rounded hover:bg-opacity-10 transition-colors",
+              "px-2 py-0.5 text-[11px] font-medium rounded hover:bg-opacity-10 transition-colors",
               isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
             )}>
               Help
@@ -181,16 +171,14 @@ export default function MenuBar({
           <DropdownMenuContent align="start" className={cn(isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
             <DropdownMenuItem 
               onClick={() => setAboutOpen(true)}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              <HelpCircle className="w-4 h-4 mr-2" />
               About
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onOpenSettings}
-              className={cn(isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
+              className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "focus:bg-gray-100")}
             >
-              <Settings className="w-4 h-4 mr-2" />
               Settings
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -269,6 +269,7 @@ export default function Layout({ children, currentPageName }) {
           const current = localStorage.getItem('newsViewMode') || 'compact';
           const newMode = current === 'compact' ? 'regular' : 'compact';
           localStorage.setItem('newsViewMode', newMode);
+          localStorage.setItem('savedViewMode', newMode);
           window.location.reload();
         }}
         onToggleTheme={() => {

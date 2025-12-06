@@ -162,9 +162,8 @@ export default function SettingsModal({
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
-          <TabsList className={cn("grid grid-cols-7 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-100")}>
+          <TabsList className={cn("grid grid-cols-6 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-100")}>
             <TabsTrigger value="general" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>General</TabsTrigger>
-            <TabsTrigger value="appearance" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Appearance</TabsTrigger>
             <TabsTrigger value="sectors" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Sectors</TabsTrigger>
             <TabsTrigger value="collections" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Collections</TabsTrigger>
             <TabsTrigger value="rss" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>RSS Sources</TabsTrigger>
@@ -174,6 +173,76 @@ export default function SettingsModal({
           
           <div className="mt-4 overflow-y-auto max-h-[55vh] pr-2 custom-scrollbar">
             <TabsContent value="general" className="space-y-4 mt-0">
+              <div className="space-y-4">
+                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
+                  <div>
+                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Theme</p>
+                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Toggle dark/light mode</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={cn("text-xs", localSettings?.theme === 'light' ? (isDark ? "text-white" : "text-gray-900") : (isDark ? "text-neutral-500" : "text-gray-400"))}>Light</span>
+                    <Switch
+                      checked={localSettings?.theme === 'dark'}
+                      onCheckedChange={(checked) => {
+                        const newSettings = { ...localSettings, theme: checked ? 'dark' : 'light' };
+                        setLocalSettings(newSettings);
+                        onUpdateSettings(newSettings);
+                      }}
+                      className="data-[state=unchecked]:bg-gray-300"
+                    />
+                    <span className={cn("text-xs", localSettings?.theme === 'dark' ? (isDark ? "text-white" : "text-gray-900") : (isDark ? "text-neutral-500" : "text-gray-400"))}>Dark</span>
+                  </div>
+                </div>
+
+                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
+                  <div>
+                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Auto-reload Gist</p>
+                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Automatically generate gist on sector change</p>
+                  </div>
+                  <Switch
+                    checked={localSettings?.auto_reload_gist || false}
+                    onCheckedChange={(checked) => {
+                      const newSettings = { ...localSettings, auto_reload_gist: checked };
+                      setLocalSettings(newSettings);
+                      onUpdateSettings(newSettings);
+                    }}
+                    className="data-[state=unchecked]:bg-gray-300"
+                  />
+                </div>
+
+                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
+                  <div>
+                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Auto-reload Featured</p>
+                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Automatically generate featured articles on sector change</p>
+                  </div>
+                  <Switch
+                    checked={localSettings?.auto_reload_critical || false}
+                    onCheckedChange={(checked) => {
+                      const newSettings = { ...localSettings, auto_reload_critical: checked };
+                      setLocalSettings(newSettings);
+                      onUpdateSettings(newSettings);
+                    }}
+                    className="data-[state=unchecked]:bg-gray-300"
+                  />
+                </div>
+
+                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
+                  <div>
+                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Cache AI Content</p>
+                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Save AI-generated content for quick access</p>
+                  </div>
+                  <Switch
+                    checked={localSettings?.cache_ai_content !== false}
+                    onCheckedChange={(checked) => {
+                      const newSettings = { ...localSettings, cache_ai_content: checked };
+                      setLocalSettings(newSettings);
+                      onUpdateSettings(newSettings);
+                    }}
+                    className="data-[state=unchecked]:bg-gray-300"
+                  />
+                </div>
+              </div>
+
               <div className={cn("p-4 rounded space-y-4", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
                 <h4 className={cn("font-medium text-xs", isDark ? "text-neutral-300" : "text-gray-700")}>Keyword Filters</h4>
                 <p className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-500")}>Control how articles with specific keywords are displayed</p>
@@ -283,78 +352,6 @@ export default function SettingsModal({
               </div>
             </TabsContent>
 
-            <TabsContent value="appearance" className="space-y-6 mt-0">
-              <div className="space-y-4">
-                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
-                  <div>
-                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Theme</p>
-                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Toggle dark/light mode</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={cn("text-xs", localSettings?.theme === 'light' ? (isDark ? "text-white" : "text-gray-900") : (isDark ? "text-neutral-500" : "text-gray-400"))}>Light</span>
-                    <Switch
-                      checked={localSettings?.theme === 'dark'}
-                      onCheckedChange={(checked) => {
-                        const newSettings = { ...localSettings, theme: checked ? 'dark' : 'light' };
-                        setLocalSettings(newSettings);
-                        onUpdateSettings(newSettings);
-                      }}
-                      className="data-[state=unchecked]:bg-gray-300"
-                    />
-                    <span className={cn("text-xs", localSettings?.theme === 'dark' ? (isDark ? "text-white" : "text-gray-900") : (isDark ? "text-neutral-500" : "text-gray-400"))}>Dark</span>
-                  </div>
-                </div>
-
-                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
-                  <div>
-                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Auto-reload Gist</p>
-                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Automatically generate gist on sector change</p>
-                  </div>
-                  <Switch
-                    checked={localSettings?.auto_reload_gist || false}
-                    onCheckedChange={(checked) => {
-                      const newSettings = { ...localSettings, auto_reload_gist: checked };
-                      setLocalSettings(newSettings);
-                      onUpdateSettings(newSettings);
-                    }}
-                    className="data-[state=unchecked]:bg-gray-300"
-                  />
-                </div>
-
-                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
-                  <div>
-                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Auto-reload Critical Articles</p>
-                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Automatically generate critical articles on sector change</p>
-                  </div>
-                  <Switch
-                    checked={localSettings?.auto_reload_critical || false}
-                    onCheckedChange={(checked) => {
-                      const newSettings = { ...localSettings, auto_reload_critical: checked };
-                      setLocalSettings(newSettings);
-                      onUpdateSettings(newSettings);
-                    }}
-                    className="data-[state=unchecked]:bg-gray-300"
-                  />
-                </div>
-
-                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
-                  <div>
-                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Cache AI Content</p>
-                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Save AI-generated content for quick access</p>
-                  </div>
-                  <Switch
-                    checked={localSettings?.cache_ai_content !== false}
-                    onCheckedChange={(checked) => {
-                      const newSettings = { ...localSettings, cache_ai_content: checked };
-                      setLocalSettings(newSettings);
-                      onUpdateSettings(newSettings);
-                    }}
-                    className="data-[state=unchecked]:bg-gray-300"
-                  />
-                </div>
-              </div>
-            </TabsContent>
-            
             <TabsContent value="sectors" className="space-y-4 mt-0">
               <div className="p-4 bg-neutral-800/50 rounded space-y-4">
                 <h4 className="font-medium text-xs text-neutral-300">
@@ -829,15 +826,15 @@ export default function SettingsModal({
                   </p>
                 </div>
                 <div>
-                  <Label className="text-neutral-400 text-xs">Default Critical Article Instructions</Label>
+                  <Label className="text-neutral-400 text-xs">Default Featured Article Instructions</Label>
                   <Textarea
                     value={localSettings?.default_critical_instructions || ''}
                     onChange={(e) => setLocalSettings({ ...localSettings, default_critical_instructions: e.target.value })}
-                    placeholder="Instructions for AI when selecting critical articles..."
+                    placeholder="Instructions for AI when selecting featured articles..."
                     className="mt-1 bg-neutral-900 border-neutral-700 min-h-[80px] rounded text-white"
                   />
                   <p className="text-xs text-neutral-500 mt-1">
-                    These instructions guide the AI when selecting critical articles.
+                    These instructions guide the AI when selecting featured articles.
                   </p>
                 </div>
                 <Button 

@@ -15,7 +15,7 @@ export default function CriticalArticles({ articles, isLoading, onRefresh, theme
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <h3 className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-amber-500/80" : "text-amber-700")}>
-            Critical
+            Featured
           </h3>
           <Button
             variant="ghost"
@@ -67,7 +67,7 @@ export default function CriticalArticles({ articles, isLoading, onRefresh, theme
         </div>
       ) : (
         <p className={cn("text-sm", isDark ? "text-neutral-500" : "text-gray-500")}>
-          No critical articles identified yet.
+          No featured articles identified yet.
         </p>
       )}
     </div>
