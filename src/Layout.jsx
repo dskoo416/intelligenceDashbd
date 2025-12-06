@@ -4,6 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import TopBar from '@/components/feed/TopBar';
 import NavigationSidebar from '@/components/feed/NavigationSidebar';
+import SavedSidebar from '@/components/saved/SavedSidebar';
+import CollectionsModal from '@/components/saved/CollectionsModal';
 import SettingsModal from '@/components/feed/SettingsModal';
 import { cn } from "@/lib/utils";
 
@@ -14,6 +16,8 @@ export default function Layout({ children, currentPageName }) {
   const [activeSubsector, setActiveSubsector] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState('appearance');
+  const [activeView, setActiveView] = useState('main');
+  const [collectionsModalOpen, setCollectionsModalOpen] = useState(false);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -28,6 +32,11 @@ export default function Layout({ children, currentPageName }) {
   const { data: collections = [] } = useQuery({
     queryKey: ['collections'],
     queryFn: () => base44.entities.Collection.list('order'),
+  });
+
+  const { data: savedArticles = [] } = useQuery({
+    queryKey: ['savedArticles'],
+    queryFn: () => base44.entities.SavedArticle.list('-created_date'),
   });
 
   const { data: settingsData = [] } = useQuery({
@@ -164,7 +173,9 @@ export default function Layout({ children, currentPageName }) {
   // Clone children and pass props for pages
   const childrenWithProps = currentPageName === 'IntelligenceFeed' 
     ? React.cloneElement(children, { activeSector, activeSubsector })
-    : currentPageName === 'Saved' || currentPageName === 'Home'
+    : currentPageName === 'Saved'
+    ? React.cloneElement(children, { sidebarOpen: false })
+    : currentPageName === 'Home'
     ? React.cloneElement(children, { sidebarOpen })
     : children;
 
@@ -261,7 +272,23 @@ export default function Layout({ children, currentPageName }) {
         theme={settings.theme}
       />
       
-      <div className="flex-1 flex overflow-hidden">
+      <div className={cn(
+        "flex-1 overflow-hidden",
+        currentPageName === 'Saved' && sidebarOpen 
+          ? "grid grid-cols-[208px_minmax(0,1fr)]"
+          : "flex"
+      )}>
+        {sidebarOpen && currentPageName === 'Saved' && (
+          <SavedSidebar
+            savedArticles={savedArticles}
+            collections={collections}
+            activeView={activeView}
+            onSelectView={setActiveView}
+            onOpenCollectionsModal={() => setCollectionsModalOpen(true)}
+            theme={settings.theme}
+          />
+        )}
+        
         {sidebarOpen && (currentPageName === 'IntelligenceFeed' || currentPageName === 'Home') && (
           <div className="w-52 flex-shrink-0">
             <NavigationSidebar
@@ -298,6 +325,15 @@ export default function Layout({ children, currentPageName }) {
         onDeleteCollection={(id) => deleteCollectionMutation.mutate(id)}
         onReorderCollections={handleReorderCollections}
         initialTab={settingsTab}
+      />
+
+      <CollectionsModal
+        isOpen={collectionsModalOpen}
+        onClose={() => setCollectionsModalOpen(false)}
+        collections={collections}
+        onSaveCollection={(data) => collectionMutation.mutate(data)}
+        onDeleteCollection={(id) => deleteCollectionMutation.mutate(id)}
+        onReorderCollections={handleReorderCollections}
       />
     </div>
   );

@@ -164,21 +164,7 @@ export default function Saved({ sidebarOpen }) {
   });
 
   return (
-    <div className={cn("flex h-full", isDark ? "bg-neutral-950" : "bg-gray-50")}>
-      {sidebarOpen && (
-        <div className="w-52 flex-shrink-0">
-          <SavedSidebar
-            savedArticles={savedArticles}
-            collections={collections}
-            activeView={activeView}
-            onSelectView={setActiveView}
-            onOpenCollectionsModal={() => setCollectionsModalOpen(true)}
-            theme={settings.theme}
-          />
-        </div>
-      )}
-
-      <main className="flex-1 overflow-y-auto p-5">
+    <main className={cn("flex-1 overflow-y-auto p-5", isDark ? "bg-neutral-950" : "bg-gray-50")}>
         <div className="w-full">
           <div className="flex items-center justify-between mb-6">
             <h1 className={cn("text-2xl font-bold", isDark ? "text-white" : "text-gray-900")}>
@@ -727,15 +713,5 @@ export default function Saved({ sidebarOpen }) {
           )}
         </div>
       </main>
-
-      <CollectionsModal
-        isOpen={collectionsModalOpen}
-        onClose={() => setCollectionsModalOpen(false)}
-        collections={collections}
-        onSaveCollection={(data) => collectionMutation.mutate(data)}
-        onDeleteCollection={(id) => deleteCollectionMutation.mutate(id)}
-        onReorderCollections={handleReorderCollections}
-      />
-    </div>
   );
 }
