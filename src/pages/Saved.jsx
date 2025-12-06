@@ -178,8 +178,9 @@ export default function Saved({ sidebarOpen }) {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="flex items-center justify-between mb-6">
+      {/* main content: left padding only so rows can hit right edge */}
+      <div className="flex-1 overflow-y-auto pl-6 pr-0 py-6">
+        <div className="flex items-center justify-between mb-6 pr-6">
           <h1 className={cn("text-2xl font-bold", isDark ? "text-white" : "text-gray-900")}>
             {activeView === 'main'
               ? 'Main'
@@ -398,7 +399,7 @@ export default function Saved({ sidebarOpen }) {
         </div>
 
         {showSearch && (
-          <div className="mb-4">
+          <div className="mb-4 pr-6">
             <div className="relative">
               <Input
                 placeholder="Search articles... (use commas for multiple keywords: battery, tesla, oil)"
@@ -427,27 +428,26 @@ export default function Saved({ sidebarOpen }) {
         )}
 
         {isLoading ? (
-          <div className={cn("text-sm", isDark ? "text-neutral-400" : "text-gray-500")}>
+          <div className={cn("text-sm pr-6", isDark ? "text-neutral-400" : "text-gray-500")}>
             Loading...
           </div>
         ) : filteredArticles.length === 0 ? (
           <div
             className={cn(
-              "text-center py-12 text-sm",
+              "text-center py-12 text-sm pr-6",
               isDark ? "text-neutral-500" : "text-gray-500"
             )}
           >
             No saved articles in this view yet.
           </div>
         ) : (
-          // list
-          <div className="-mx-6 space-y-1">
+          <div className="space-y-1">
             {filteredArticles.map((article) =>
               viewMode === 'compact' ? (
                 <div
                   key={article.id}
                   className={cn(
-                    "flex items-center gap-3 px-6 py-2.5 w-full rounded border transition-all",
+                    "flex items-center gap-3 w-full rounded border transition-all pr-6 pl-0",
                     isDark
                       ? "bg-neutral-800/30 border-neutral-800/50 hover:border-neutral-700 hover:bg-neutral-800/50"
                       : "bg-gray-50/50 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
@@ -457,7 +457,7 @@ export default function Saved({ sidebarOpen }) {
                     href={article.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 min-w-0 flex items-center gap-2"
+                    className="flex-1 min-w-0 flex items-center gap-2 pl-6 py-2.5"
                   >
                     <h3
                       className={cn(
@@ -574,7 +574,7 @@ export default function Saved({ sidebarOpen }) {
                 <div
                   key={article.id}
                   className={cn(
-                    "rounded p-4 flex items-start justify-between gap-4 mx-6",
+                    "rounded p-4 flex items-start justify-between gap-4 pr-6",
                     isDark
                       ? "bg-neutral-900 border border-neutral-800"
                       : "bg-white border border-gray-200"
