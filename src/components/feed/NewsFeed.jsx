@@ -23,7 +23,7 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
 
   return (
     <div className={cn(
-      "rounded border p-4 flex-1 overflow-hidden flex flex-col",
+      "rounded border p-4 w-full overflow-hidden flex flex-col",
       isDark ? "bg-neutral-900/50 border-neutral-800" : "bg-white border-gray-200"
     )}>
       <div className="flex items-center justify-between mb-3">
