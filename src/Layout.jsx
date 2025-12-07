@@ -288,6 +288,7 @@ export default function Layout({ children, currentPageName }) {
           const newSettings = { ...settings, auto_reload_news: !settings?.auto_reload_news };
           updateSettingsMutation.mutate(newSettings);
         }}
+        settings={settings}
         viewMode={localStorage.getItem('newsViewMode') || 'compact'}
         onToggleViewMode={() => {
           const current = localStorage.getItem('newsViewMode') || 'compact';

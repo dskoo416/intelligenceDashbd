@@ -206,7 +206,7 @@ export default function SettingsModal({
                       setLocalSettings(newSettings);
                       onUpdateSettings(newSettings);
                     }}
-                    className="data-[state=unchecked]:bg-gray-300"
+                    className={cn(isDark ? "data-[state=unchecked]:bg-neutral-700" : "data-[state=unchecked]:bg-gray-300")}
                   />
                 </div>
 
@@ -222,7 +222,7 @@ export default function SettingsModal({
                       setLocalSettings(newSettings);
                       onUpdateSettings(newSettings);
                     }}
-                    className="data-[state=unchecked]:bg-gray-300"
+                    className={cn(isDark ? "data-[state=unchecked]:bg-neutral-700" : "data-[state=unchecked]:bg-gray-300")}
                   />
                 </div>
 
@@ -238,7 +238,7 @@ export default function SettingsModal({
                       setLocalSettings(newSettings);
                       onUpdateSettings(newSettings);
                     }}
-                    className="data-[state=unchecked]:bg-gray-300"
+                    className={cn(isDark ? "data-[state=unchecked]:bg-neutral-700" : "data-[state=unchecked]:bg-gray-300")}
                   />
                 </div>
 
@@ -254,7 +254,7 @@ export default function SettingsModal({
                       setLocalSettings(newSettings);
                       onUpdateSettings(newSettings);
                     }}
-                    className="data-[state=unchecked]:bg-gray-300"
+                    className={cn(isDark ? "data-[state=unchecked]:bg-neutral-700" : "data-[state=unchecked]:bg-gray-300")}
                   />
                 </div>
 
@@ -303,9 +303,79 @@ export default function SettingsModal({
                     </button>
                   </div>
                 </div>
+
+                <div className={cn("p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
+                  <p className={cn("font-medium text-sm mb-2", isDark ? "text-white" : "text-gray-900")}>Clock Display</p>
+                  <p className={cn("text-xs mb-3", isDark ? "text-neutral-400" : "text-gray-500")}>Configure time zone clocks in menu bar</p>
+
+                  <div className="space-y-3">
+                    <div>
+                      <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Display Mode</Label>
+                      <Select
+                        value={localSettings?.clock_display || 'dual'}
+                        onValueChange={(value) => setLocalSettings({ ...localSettings, clock_display: value })}
+                      >
+                        <SelectTrigger className={cn("mt-1 rounded", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300")}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className={cn("rounded", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
+                          <SelectItem value="none" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>No Clock</SelectItem>
+                          <SelectItem value="single" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>Single Clock</SelectItem>
+                          <SelectItem value="dual" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>Dual Clocks</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {localSettings?.clock_display !== 'none' && (
+                      <div>
+                        <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>
+                          {localSettings?.clock_display === 'dual' ? 'Primary Timezone' : 'Timezone'}
+                        </Label>
+                        <Select
+                          value={localSettings?.clock_timezone_1 || 'America/New_York'}
+                          onValueChange={(value) => setLocalSettings({ ...localSettings, clock_timezone_1: value })}
+                        >
+                          <SelectTrigger className={cn("mt-1 rounded", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300")}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className={cn("rounded", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
+                            <SelectItem value="America/New_York" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>EST (New York)</SelectItem>
+                            <SelectItem value="America/Los_Angeles" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>PST (Los Angeles)</SelectItem>
+                            <SelectItem value="Europe/London" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>GMT (London)</SelectItem>
+                            <SelectItem value="Asia/Seoul" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>KST (Seoul)</SelectItem>
+                            <SelectItem value="Asia/Tokyo" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>JST (Tokyo)</SelectItem>
+                            <SelectItem value="Asia/Shanghai" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>CST (Shanghai)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {localSettings?.clock_display === 'dual' && (
+                      <div>
+                        <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Secondary Timezone</Label>
+                        <Select
+                          value={localSettings?.clock_timezone_2 || 'Asia/Seoul'}
+                          onValueChange={(value) => setLocalSettings({ ...localSettings, clock_timezone_2: value })}
+                        >
+                          <SelectTrigger className={cn("mt-1 rounded", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300")}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className={cn("rounded", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
+                            <SelectItem value="America/New_York" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>EST (New York)</SelectItem>
+                            <SelectItem value="America/Los_Angeles" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>PST (Los Angeles)</SelectItem>
+                            <SelectItem value="Europe/London" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>GMT (London)</SelectItem>
+                            <SelectItem value="Asia/Seoul" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>KST (Seoul)</SelectItem>
+                            <SelectItem value="Asia/Tokyo" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>JST (Tokyo)</SelectItem>
+                            <SelectItem value="Asia/Shanghai" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>CST (Shanghai)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 </div>
 
-              <div className={cn("p-4 rounded space-y-4", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
+                <div className={cn("p-4 rounded space-y-4", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
                 <h4 className={cn("font-medium text-xs", isDark ? "text-neutral-300" : "text-gray-700")}>Keyword Filters</h4>
                 <p className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-500")}>Control how articles with specific keywords are displayed</p>
                 
