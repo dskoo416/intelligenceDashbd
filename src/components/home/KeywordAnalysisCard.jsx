@@ -87,52 +87,60 @@ export default function KeywordAnalysisCard({ theme }) {
   }, [sectors, rssSources]);
 
   return (
-    <div className={cn("rounded-lg border p-4 h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-200")}>
-      <h3 className={cn("font-semibold text-sm mb-3", isDark ? "text-white" : "text-gray-900")}>Keyword Analysis</h3>
+    <div className={cn("rounded border h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-300")}>
+      <div className={cn("px-3 py-2 border-b", isDark ? "border-neutral-800" : "border-gray-300")}>
+        <h3 className={cn("font-semibold text-xs uppercase tracking-wide", isDark ? "text-neutral-300" : "text-gray-700")}>Keyword Analysis</h3>
+      </div>
       
       {isLoading ? (
-        <div className={cn("flex-1 flex items-center justify-center text-xs", isDark ? "text-neutral-500" : "text-gray-500")}>
+        <div className={cn("flex-1 flex items-center justify-center text-xs", isDark ? "text-neutral-600" : "text-gray-500")}>
           Analyzing trends...
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto space-y-3 text-xs">
+        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2 text-xs">
           <div>
-            <div className={cn("flex items-center gap-1 mb-1 font-medium", isDark ? "text-blue-400" : "text-blue-600")}>
+            <div className={cn("flex items-center gap-1 mb-1 pb-0.5 border-b font-medium uppercase tracking-wide text-xs", isDark ? "text-blue-500 border-neutral-800" : "text-blue-600 border-gray-300")}>
               <Sparkles className="w-3 h-3" />
               Emerging
             </div>
-            {keywordTrends.emerging.map(([word, count]) => (
-              <div key={word} className={cn("flex justify-between", isDark ? "text-neutral-400" : "text-gray-600")}>
-                <span>{word}</span>
-                <span>{count}</span>
-              </div>
-            ))}
+            <div className="space-y-0.5">
+              {keywordTrends.emerging.map(([word, count]) => (
+                <div key={word} className={cn("flex justify-between leading-tight", isDark ? "text-neutral-500" : "text-gray-600")}>
+                  <span>{word}</span>
+                  <span className="tabular-nums">{count}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div>
-            <div className={cn("flex items-center gap-1 mb-1 font-medium", isDark ? "text-green-400" : "text-green-600")}>
+            <div className={cn("flex items-center gap-1 mb-1 pb-0.5 border-b font-medium uppercase tracking-wide text-xs", isDark ? "text-green-500 border-neutral-800" : "text-green-600 border-gray-300")}>
               <TrendingUp className="w-3 h-3" />
               Rising
             </div>
-            {keywordTrends.rising.map(({ word, change }) => (
-              <div key={word} className={cn("flex justify-between", isDark ? "text-neutral-400" : "text-gray-600")}>
-                <span>{word}</span>
-                <span className={cn(isDark ? "text-green-400" : "text-green-600")}>+{change}%</span>
-              </div>
-            ))}
+            <div className="space-y-0.5">
+              {keywordTrends.rising.map(({ word, change }) => (
+                <div key={word} className={cn("flex justify-between leading-tight", isDark ? "text-neutral-500" : "text-gray-600")}>
+                  <span>{word}</span>
+                  <span className={cn("tabular-nums", isDark ? "text-green-500" : "text-green-600")}>▲{change}%</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div>
-            <div className={cn("flex items-center gap-1 mb-1 font-medium", isDark ? "text-red-400" : "text-red-600")}>
+            <div className={cn("flex items-center gap-1 mb-1 pb-0.5 border-b font-medium uppercase tracking-wide text-xs", isDark ? "text-red-500 border-neutral-800" : "text-red-600 border-gray-300")}>
               <TrendingDown className="w-3 h-3" />
               Declining
             </div>
-            {keywordTrends.declining.map(([word, count]) => (
-              <div key={word} className={cn("flex justify-between", isDark ? "text-neutral-400" : "text-gray-600")}>
-                <span>{word}</span>
-                <span>{count}</span>
-              </div>
-            ))}
+            <div className="space-y-0.5">
+              {keywordTrends.declining.map(([word, count]) => (
+                <div key={word} className={cn("flex justify-between leading-tight", isDark ? "text-neutral-500" : "text-gray-600")}>
+                  <span>{word}</span>
+                  <span className="tabular-nums">{count}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

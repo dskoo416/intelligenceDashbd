@@ -146,14 +146,14 @@ export default function MarketSentimentCard({ theme }) {
   };
 
   return (
-    <div className={cn("rounded-lg border p-4 h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-200")}>
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className={cn("font-semibold text-sm", isDark ? "text-white" : "text-gray-900")}>Market Sentiment</h3>
+    <div className={cn("rounded border h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-300")}>
+      <div className={cn("px-3 py-2 border-b", isDark ? "border-neutral-800" : "border-gray-300")}>
+        <div className="flex items-center justify-between mb-1.5">
+          <h3 className={cn("font-semibold text-xs uppercase tracking-wide", isDark ? "text-neutral-300" : "text-gray-700")}>Market Sentiment</h3>
           <Popover>
             <PopoverTrigger asChild>
-              <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
-                <Settings className={cn("w-3.5 h-3.5", isDark ? "text-neutral-400" : "text-gray-600")} />
+              <Button size="sm" variant="ghost" className="h-5 w-5 p-0">
+                <Settings className={cn("w-3 h-3", isDark ? "text-neutral-500" : "text-gray-500")} />
               </Button>
             </PopoverTrigger>
             <PopoverContent className={cn("w-96", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">

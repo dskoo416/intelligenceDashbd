@@ -67,28 +67,31 @@ export default function KeywordHeatmapCard({ theme }) {
 
   const getIntensity = (count) => {
     const ratio = count / maxCount;
-    if (ratio > 0.7) return isDark ? 'bg-orange-500/80 text-white' : 'bg-orange-600 text-white';
-    if (ratio > 0.4) return isDark ? 'bg-orange-500/50 text-white' : 'bg-orange-400 text-white';
-    return isDark ? 'bg-orange-500/20 text-orange-300' : 'bg-orange-200 text-orange-800';
+    if (ratio > 0.7) return isDark ? 'bg-red-500/30 text-red-400' : 'bg-red-100 text-red-700';
+    if (ratio > 0.4) return isDark ? 'bg-yellow-500/30 text-yellow-400' : 'bg-yellow-100 text-yellow-700';
+    return isDark ? 'bg-green-500/30 text-green-400' : 'bg-green-100 text-green-700';
   };
 
   return (
-    <div className={cn("rounded-lg border p-4 h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-200")}>
-      <h3 className={cn("font-semibold text-sm mb-3", isDark ? "text-white" : "text-gray-900")}>Keyword Heatmap</h3>
+    <div className={cn("rounded border h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-300")}>
+      <div className={cn("px-3 py-2 border-b", isDark ? "border-neutral-800" : "border-gray-300")}>
+        <h3 className={cn("font-semibold text-xs uppercase tracking-wide", isDark ? "text-neutral-300" : "text-gray-700")}>Keyword Heatmap</h3>
+      </div>
       
       {isLoading ? (
-        <div className={cn("flex-1 flex items-center justify-center text-xs", isDark ? "text-neutral-500" : "text-gray-500")}>
+        <div className={cn("flex-1 flex items-center justify-center text-xs", isDark ? "text-neutral-600" : "text-gray-500")}>
           Loading keywords...
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-wrap gap-2">
+        <div className="flex-1 overflow-y-auto px-3 py-2">
+          <div className="space-y-0.5">
             {keywordData.map(([keyword, count]) => (
               <div
                 key={keyword}
-                className={cn("px-2 py-1 rounded text-xs font-medium", getIntensity(count))}
+                className={cn("px-2 py-0.5 text-xs font-mono border-l-2 flex items-center justify-between", getIntensity(count))}
               >
-                {keyword} ({count})
+                <span>{keyword}</span>
+                <span className="tabular-nums ml-2">{count}</span>
               </div>
             ))}
           </div>

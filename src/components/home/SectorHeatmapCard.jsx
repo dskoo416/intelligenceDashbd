@@ -72,38 +72,43 @@ export default function SectorHeatmapCard({ theme }) {
 
   const getHeatColor = (score) => {
     const ratio = score / maxScore;
-    if (ratio > 0.7) return isDark ? 'bg-red-500/80' : 'bg-red-600';
-    if (ratio > 0.5) return isDark ? 'bg-orange-500/80' : 'bg-orange-500';
-    if (ratio > 0.3) return isDark ? 'bg-yellow-500/80' : 'bg-yellow-500';
-    return isDark ? 'bg-green-500/50' : 'bg-green-400';
+    if (ratio > 0.7) return isDark ? 'bg-red-500/30 border-red-500/50' : 'bg-red-100 border-red-300';
+    if (ratio > 0.5) return isDark ? 'bg-yellow-500/30 border-yellow-500/50' : 'bg-yellow-100 border-yellow-300';
+    if (ratio > 0.3) return isDark ? 'bg-green-500/30 border-green-500/50' : 'bg-green-100 border-green-300';
+    return isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-300';
   };
 
   const getTextColor = (score) => {
     const ratio = score / maxScore;
-    return ratio > 0.5 ? 'text-white' : (isDark ? 'text-neutral-300' : 'text-gray-700');
+    if (ratio > 0.7) return isDark ? 'text-red-400' : 'text-red-700';
+    if (ratio > 0.5) return isDark ? 'text-yellow-400' : 'text-yellow-700';
+    if (ratio > 0.3) return isDark ? 'text-green-400' : 'text-green-700';
+    return isDark ? 'text-neutral-500' : 'text-gray-600';
   };
 
   return (
-    <div className={cn("rounded-lg border p-4 h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-200")}>
-      <h3 className={cn("font-semibold text-sm mb-3", isDark ? "text-white" : "text-gray-900")}>Sector Heatmap</h3>
+    <div className={cn("rounded border h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-300")}>
+      <div className={cn("px-3 py-2 border-b", isDark ? "border-neutral-800" : "border-gray-300")}>
+        <h3 className={cn("font-semibold text-xs uppercase tracking-wide", isDark ? "text-neutral-300" : "text-gray-700")}>Sector Heatmap</h3>
+      </div>
       
       {isLoading ? (
-        <div className={cn("flex-1 flex items-center justify-center text-xs", isDark ? "text-neutral-500" : "text-gray-500")}>
+        <div className={cn("flex-1 flex items-center justify-center text-xs", isDark ? "text-neutral-600" : "text-gray-500")}>
           Analyzing sectors...
         </div>
       ) : (
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 px-3 py-2 space-y-1">
           {sectorActivity.map((sector) => (
             <div
               key={sector.name}
-              className={cn("p-3 rounded transition-all", getHeatColor(sector.score))}
+              className={cn("p-2 border transition-all", getHeatColor(sector.score))}
             >
               <div className={cn("flex items-center justify-between", getTextColor(sector.score))}>
-                <span className="font-medium text-xs">{sector.name}</span>
-                <span className="text-xs">{sector.articleCount} articles</span>
+                <span className="font-medium text-xs uppercase tracking-wide">{sector.name}</span>
+                <span className="text-xs tabular-nums">{sector.articleCount} ART</span>
               </div>
-              <div className={cn("text-xs mt-1", getTextColor(sector.score))}>
-                Keyword density: {sector.keywordDensity}
+              <div className={cn("text-xs mt-0.5 leading-tight", getTextColor(sector.score))}>
+                Density: {sector.keywordDensity}
               </div>
             </div>
           ))}
