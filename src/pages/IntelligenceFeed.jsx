@@ -40,7 +40,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   const [dateFilter, setDateFilter] = useState(null);
   const [searchFilter, setSearchFilter] = useState('');
   
-  const sectorKey = `${activeSector?.id || 'none'}_${activeSubsector?.name || 'none'}`;
+  const sectorKey = activeSector?.id || 'none';
   const cachedData = dataCache[sectorKey] || {
     articles: [],
     criticalArticles: [],
@@ -115,7 +115,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   const fetchArticles = useCallback(async (forceRefresh = false) => {
     if (!activeSector) return;
     
-    const key = `${activeSector.id}_${activeSubsector?.name || 'none'}`;
+    const key = activeSector.id;
     const cached = dataCache[key];
 
     if (cached?.articles?.length > 0 && !forceRefresh) {
@@ -170,7 +170,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   }, [activeSector, activeSubsector, rssSources, dataCache]);
 
   useEffect(() => {
-    const key = `${activeSector?.id || 'none'}_${activeSubsector?.name || 'none'}`;
+    const key = activeSector?.id || 'none';
     const cached = dataCache[key];
 
     if (cached) {
@@ -186,7 +186,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     if (settings?.auto_reload_news || !cached?.articles) {
       fetchArticles(false);
     }
-  }, [activeSector, activeSubsector]);
+  }, [activeSector]);
 
   const generateGist = async () => {
     if (articles.length === 0) return;
@@ -287,6 +287,11 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   };
 
   const filteredArticles = articles.filter(a => {
+    // Filter by subsector if selected
+    if (activeSubsector) {
+      if (a.subsector !== activeSubsector.name) return false;
+    }
+    
     if (dateFilter && a.pubDate) {
       const articleDate = new Date(a.pubDate);
       if (dateFilter.from && dateFilter.to) {
