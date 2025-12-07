@@ -28,10 +28,10 @@ export default function Home({ sidebarOpen }) {
       <div className="w-full space-y-4">
         {/* Top Row */}
         <div className="grid grid-cols-10 gap-4 h-[300px]">
-          <div className="col-span-6">
+          <div className="col-span-5">
             <SpotlightCard theme={settings.theme} />
           </div>
-          <div className="col-span-2">
+          <div className="col-span-3">
             <MarketSentimentCard theme={settings.theme} />
           </div>
           <div className="col-span-2">

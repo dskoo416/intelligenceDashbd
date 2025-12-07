@@ -10,6 +10,7 @@ const NEGATIVE_KEYWORDS = ['decline', 'fall', 'loss', 'drop', 'crisis', 'concern
 export default function MarketSentimentCard({ theme }) {
   const [selectedSector, setSelectedSector] = useState(null);
   const [sentimentData, setSentimentData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const isDark = theme === 'dark';
 
   const { data: sectors = [] } = useQuery({
@@ -32,6 +33,7 @@ export default function MarketSentimentCard({ theme }) {
     if (!selectedSector) return;
 
     const analyzeSentiment = async () => {
+      setIsLoading(true);
       const sectorSources = rssSources.filter(s => s.sector_id === selectedSector.id && s.is_active !== false);
       let articles = [];
 
@@ -99,6 +101,7 @@ export default function MarketSentimentCard({ theme }) {
         topPositive,
         topNegative
       });
+      setIsLoading(false);
     };
 
     analyzeSentiment();
@@ -134,7 +137,11 @@ export default function MarketSentimentCard({ theme }) {
         </Select>
       </div>
 
-      {sentimentData ? (
+      {isLoading ? (
+        <div className={cn("text-xs flex-1 flex items-center justify-center", isDark ? "text-neutral-500" : "text-gray-500")}>
+          Loading sentiment data...
+        </div>
+      ) : sentimentData ? (
         <div className="flex-1 flex flex-col gap-3">
           <div className="text-center">
             <div className={cn("text-3xl font-bold", getColor(sentimentData.index))}>
