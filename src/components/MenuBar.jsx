@@ -304,6 +304,9 @@ export default function MenuBar({
             <p className={cn("text-sm", isDark ? "text-neutral-500" : "text-gray-500")}>
               Dec 2025
             </p>
+            <p className={cn("text-sm", isDark ? "text-neutral-500" : "text-gray-500")}>
+              Made for LG Chem
+            </p>
           </div>
         </DialogContent>
       </Dialog>
