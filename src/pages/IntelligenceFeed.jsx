@@ -155,7 +155,8 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
         ...a, 
         source: source.name,
         sector: activeSector.name,
-        subsector: activeSubsector?.name || ''
+        subsector: source.subsector || '',
+        subsubsector: source.subsubsector || ''
       })));
     }
     
