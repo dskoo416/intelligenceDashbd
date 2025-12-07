@@ -131,6 +131,14 @@ export default function SettingsModal({
 
   const handleSaveRSSSource = async () => {
     if (newRSSSource.name && newRSSSource.url && newRSSSource.sector_id) {
+      // Check for duplicate URL
+      const isDuplicate = rssSources.some(s => s.url === newRSSSource.url);
+      if (isDuplicate) {
+        setBulkErrors(['This RSS URL is already added.']);
+        setTimeout(() => setBulkErrors([]), 3000);
+        return;
+      }
+      
       await onSaveRSSSource(newRSSSource);
       setNewRSSSource({ name: '', url: '', sector_id: '', subsector: '', subsubsector: '' });
       setSelectedSectorForRSS(null);
@@ -142,6 +150,8 @@ export default function SettingsModal({
     const errors = [];
     const validSources = [];
     const processedLineIndices = [];
+    const existingUrls = rssSources.map(s => s.url);
+    const newUrls = new Set();
 
     lines.forEach((line, index) => {
       const trimmedLine = line.trim();
@@ -167,6 +177,13 @@ export default function SettingsModal({
         return;
       }
 
+      // Check for duplicate URL (existing or within current batch)
+      if (existingUrls.includes(rssUrl) || newUrls.has(rssUrl)) {
+        errors.push(`Line ${index + 1}: Duplicate URL already exists - "${rssUrl}"`);
+        processedLineIndices.push(index);
+        return;
+      }
+
       // Find matching sector
       const sector = sectors.find(s => s.name.toLowerCase() === sectorName.toLowerCase());
       if (!sector) {
@@ -175,6 +192,7 @@ export default function SettingsModal({
       }
 
       // Valid source
+      newUrls.add(rssUrl);
       validSources.push({
         name: sourceName,
         url: rssUrl,
@@ -206,6 +224,31 @@ export default function SettingsModal({
     setTimeout(() => {
       setBulkSuccess(null);
     }, 5000);
+  };
+
+  const removeDuplicateRSS = async () => {
+    const urlMap = new Map();
+    const duplicates = [];
+
+    rssSources.forEach(source => {
+      if (urlMap.has(source.url)) {
+        duplicates.push(source.id);
+      } else {
+        urlMap.set(source.url, source.id);
+      }
+    });
+
+    for (const id of duplicates) {
+      await onDeleteRSSSource(id);
+    }
+
+    if (duplicates.length > 0) {
+      setBulkSuccess(`Removed ${duplicates.length} duplicate RSS sources.`);
+      setTimeout(() => setBulkSuccess(null), 3000);
+    } else {
+      setBulkSuccess('No duplicates found.');
+      setTimeout(() => setBulkSuccess(null), 3000);
+    }
   };
 
   const handleRSSCategoryChange = async (sourceId, newSectorId) => {
@@ -911,7 +954,17 @@ export default function SettingsModal({
                 </div>
 
                 <div className="space-y-1">
-                <h4 className="font-medium text-xs text-neutral-400 mb-2">Existing RSS Sources</h4>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-xs text-neutral-400">Existing RSS Sources</h4>
+                    <Button 
+                      onClick={removeDuplicateRSS} 
+                      size="sm" 
+                      variant="ghost"
+                      className="text-xs h-6 text-neutral-400 hover:text-white"
+                    >
+                      Remove Duplicates
+                    </Button>
+                  </div>
                 {rssSources.length === 0 ? (
                   <p className="text-neutral-500 text-sm p-4 text-center">No RSS sources added yet.</p>
                 ) : (
