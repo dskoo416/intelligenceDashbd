@@ -168,7 +168,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     setArticles(allArticles);
     updateCache(key, { articles: allArticles });
     setIsLoadingArticles(false);
-  }, [activeSector, activeSubsector, rssSources, dataCache]);
+  }, [activeSector, rssSources, dataCache]);
 
   useEffect(() => {
     const key = activeSector?.id || 'none';
