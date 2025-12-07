@@ -217,10 +217,10 @@ export default function MarketSentimentCard({ theme }) {
           </Popover>
         </div>
         <Select value={selectedSector?.id} onValueChange={(id) => setSelectedSector(sectors.find(s => s.id === id))}>
-          <SelectTrigger className={cn("h-7 text-xs", isDark ? "bg-neutral-800 border-neutral-700" : "bg-gray-50")}>
+          <SelectTrigger className={cn("h-6 text-xs rounded", isDark ? "bg-neutral-800 border-neutral-700" : "bg-gray-50 border-gray-300")}>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className={cn(isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
+          <SelectContent className={cn("rounded", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
             {sectors.map(sector => (
               <SelectItem key={sector.id} value={sector.id} className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "")}>
                 {sector.name}
@@ -231,47 +231,50 @@ export default function MarketSentimentCard({ theme }) {
       </div>
 
       {isLoading ? (
-        <div className={cn("text-xs flex-1 flex items-center justify-center", isDark ? "text-neutral-500" : "text-gray-500")}>
+        <div className={cn("text-xs flex-1 flex items-center justify-center", isDark ? "text-neutral-600" : "text-gray-500")}>
           Loading sentiment data...
         </div>
       ) : sentimentData ? (
-        <div className="flex-1 flex flex-col gap-3">
-          <div className="text-center">
-            <div className={cn("text-3xl font-bold", getColor(sentimentData.index))}>
+        <div className="flex-1 flex flex-col justify-center px-3 py-2">
+          <div className="text-center mb-2">
+            <div className={cn("text-2xl font-bold tabular-nums mb-0.5", getColor(sentimentData.index))}>
               {sentimentData.index}
             </div>
-            <div className={cn("text-xs mt-1", isDark ? "text-neutral-500" : "text-gray-500")}>Sentiment Index</div>
-            <div className="w-full h-2 bg-gray-200 dark:bg-neutral-800 rounded-full mt-2 overflow-hidden">
-              <div 
-                className={cn("h-full transition-all", getBarColor(sentimentData.index))}
-                style={{ width: `${sentimentData.index}%` }}
-              />
-            </div>
+            <div className={cn("text-xs uppercase tracking-wider", isDark ? "text-neutral-600" : "text-gray-500")}>Sentiment Index</div>
+          </div>
+          
+          <div className={cn("relative h-1.5 mb-2 overflow-hidden", isDark ? "bg-neutral-800" : "bg-gray-300")}>
+            <div 
+              className={cn("absolute h-full transition-all", getBarColor(sentimentData.index))}
+              style={{ width: `${sentimentData.index}%` }}
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-2 text-xs flex-1 overflow-y-auto">
-            <div>
-              <div className={cn("font-medium mb-1", isDark ? "text-green-400" : "text-green-600")}>Positive</div>
-              {sentimentData.topPositive.map(([kw, count]) => (
-                <div key={kw} className={cn("flex justify-between", isDark ? "text-neutral-400" : "text-gray-600")}>
-                  <span>{kw}</span>
-                  <span>{count}</span>
-                </div>
-              ))}
-            </div>
-            <div>
-              <div className={cn("font-medium mb-1", isDark ? "text-red-400" : "text-red-600")}>Negative</div>
-              {sentimentData.topNegative.map(([kw, count]) => (
-                <div key={kw} className={cn("flex justify-between", isDark ? "text-neutral-400" : "text-gray-600")}>
-                  <span>{kw}</span>
-                  <span>{count}</span>
-                </div>
-              ))}
+          <div className={cn("border-t pt-2", isDark ? "border-neutral-800" : "border-gray-300")}>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <div className={cn("font-medium mb-1 text-xs uppercase tracking-wide", isDark ? "text-green-500" : "text-green-600")}>Positive</div>
+                {sentimentData.topPositive.map(([kw, count]) => (
+                  <div key={kw} className={cn("flex justify-between leading-tight", isDark ? "text-neutral-500" : "text-gray-600")}>
+                    <span>{kw}</span>
+                    <span className="tabular-nums">{count}</span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div className={cn("font-medium mb-1 text-xs uppercase tracking-wide", isDark ? "text-red-500" : "text-red-600")}>Negative</div>
+                {sentimentData.topNegative.map(([kw, count]) => (
+                  <div key={kw} className={cn("flex justify-between leading-tight", isDark ? "text-neutral-500" : "text-gray-600")}>
+                    <span>{kw}</span>
+                    <span className="tabular-nums">{count}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className={cn("text-xs flex-1 flex items-center justify-center", isDark ? "text-neutral-500" : "text-gray-500")}>
+        <div className={cn("text-xs flex-1 flex items-center justify-center", isDark ? "text-neutral-600" : "text-gray-500")}>
           Loading sentiment data...
         </div>
       )}

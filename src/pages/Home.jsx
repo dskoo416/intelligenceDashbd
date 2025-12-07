@@ -22,13 +22,13 @@ export default function Home({ sidebarOpen }) {
 
   return (
     <main className={cn(
-      "flex-1 overflow-y-auto p-5 text-content",
+      "flex-1 overflow-y-auto p-3 text-content",
       `text-${textSize}`,
       isDark ? "bg-neutral-950" : "bg-gray-50"
     )}>
-      <div className="w-full space-y-4">
+      <div className="w-full space-y-2">
         {/* Top Row */}
-        <div className="grid grid-cols-10 gap-4 h-[300px]">
+        <div className="grid grid-cols-10 gap-2 h-[300px]">
           <div className="col-span-5">
             <SpotlightCard theme={settings.theme} />
           </div>
@@ -46,7 +46,7 @@ export default function Home({ sidebarOpen }) {
         </div>
 
         {/* Bottom Row */}
-        <div className="grid grid-cols-3 gap-4 h-[300px]">
+        <div className="grid grid-cols-3 gap-2 h-[300px]">
           <KeywordHeatmapCard theme={settings.theme} />
           <KeywordAnalysisCard theme={settings.theme} />
           <SectorHeatmapCard theme={settings.theme} />

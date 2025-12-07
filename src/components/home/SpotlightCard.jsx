@@ -83,31 +83,39 @@ export default function SpotlightCard({ theme }) {
   };
 
   return (
-    <div className={cn("rounded-lg border p-4 h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-200")}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className={cn("font-semibold text-sm", isDark ? "text-white" : "text-gray-900")}>Spotlight</h3>
+    <div className={cn("rounded border h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-300")}>
+      <div className={cn("flex items-center justify-between px-3 py-2 border-b", isDark ? "border-neutral-800" : "border-gray-300")}>
+        <h3 className={cn("font-semibold text-xs uppercase tracking-wide", isDark ? "text-neutral-300" : "text-gray-700")}>Spotlight</h3>
         <Button
           size="sm"
           variant="ghost"
           onClick={generateSpotlight}
           disabled={isLoading}
-          className={cn("h-7 w-7 p-0", isDark ? "hover:bg-neutral-800" : "hover:bg-gray-100")}
+          className={cn("h-5 w-5 p-0", isDark ? "hover:bg-neutral-800" : "hover:bg-gray-100")}
         >
-          <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin", isDark ? "text-neutral-400" : "text-gray-600")} />
+          <RefreshCw className={cn("w-3 h-3", isLoading && "animate-spin", isDark ? "text-neutral-500" : "text-gray-500")} />
         </Button>
       </div>
       
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-3 py-2">
         {isLoading ? (
-          <div className={cn("text-xs", isDark ? "text-neutral-500" : "text-gray-500")}>
+          <div className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-500")}>
             Generating spotlight summary...
           </div>
         ) : gist ? (
-          <ReactMarkdown className={cn("text-xs leading-relaxed prose prose-sm max-w-none", isDark ? "prose-invert text-neutral-300" : "text-gray-700")}>
+          <ReactMarkdown 
+            className={cn("prose prose-sm max-w-none", isDark ? "prose-invert" : "")}
+            components={{
+              p: ({node, ...props}) => <p className={cn("mb-1.5 text-xs leading-tight", isDark ? "text-neutral-400" : "text-gray-700")} {...props} />,
+              ul: ({node, ...props}) => <ul className="mb-1.5 text-xs list-disc list-inside" {...props} />,
+              li: ({node, ...props}) => <li className={cn("mb-0.5 text-xs", isDark ? "text-neutral-500" : "text-gray-600")} {...props} />,
+              strong: ({node, ...props}) => <strong className={cn("font-semibold", isDark ? "text-neutral-200" : "text-gray-900")} {...props} />,
+            }}
+          >
             {gist}
           </ReactMarkdown>
         ) : (
-          <div className={cn("text-xs", isDark ? "text-neutral-500" : "text-gray-500")}>
+          <div className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-500")}>
             Click refresh to generate today's spotlight summary
           </div>
         )}
