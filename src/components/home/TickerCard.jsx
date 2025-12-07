@@ -42,7 +42,7 @@ export default function TickerCard({ theme }) {
                       newTickers[idx] = { ...newTickers[idx], label: e.target.value };
                       setEditingTickers(newTickers);
                     }}
-                    className={cn("mt-1 h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700" : "")}
+                    className={cn("mt-1 h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
                   />
                 </div>
               ))}

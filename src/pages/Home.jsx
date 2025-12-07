@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import SpotlightCard from '@/components/home/SpotlightCard';
 import MarketSentimentCard from '@/components/home/MarketSentimentCard';
 import TickerCard from '@/components/home/TickerCard';
+import FeaturedArticlesCard from '@/components/home/FeaturedArticlesCard';
 import KeywordHeatmapCard from '@/components/home/KeywordHeatmapCard';
 import KeywordAnalysisCard from '@/components/home/KeywordAnalysisCard';
 import SectorHeatmapCard from '@/components/home/SectorHeatmapCard';
@@ -37,6 +38,11 @@ export default function Home({ sidebarOpen }) {
           <div className="col-span-2">
             <TickerCard theme={settings.theme} />
           </div>
+        </div>
+
+        {/* Featured Articles Row */}
+        <div className="h-[280px]">
+          <FeaturedArticlesCard theme={settings.theme} />
         </div>
 
         {/* Bottom Row */}

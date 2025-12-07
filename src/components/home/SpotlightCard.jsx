@@ -10,6 +10,13 @@ export default function SpotlightCard({ theme }) {
   const [isLoading, setIsLoading] = useState(false);
   const isDark = theme === 'dark';
 
+  React.useEffect(() => {
+    const cached = localStorage.getItem('home_spotlight');
+    if (cached) {
+      setGist(cached);
+    }
+  }, []);
+
   const generateSpotlight = async () => {
     setIsLoading(true);
     
@@ -66,6 +73,7 @@ export default function SpotlightCard({ theme }) {
       });
       
       setGist(result);
+      localStorage.setItem('home_spotlight', result);
     } catch (error) {
       console.error('Error generating spotlight:', error);
       setGist('Error generating spotlight summary.');

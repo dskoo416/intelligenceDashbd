@@ -2,15 +2,41 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Settings, Plus, X } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
-const POSITIVE_KEYWORDS = ['breakthrough', 'success', 'growth', 'innovation', 'advance', 'achieve', 'gain', 'increase', 'profit', 'record', 'boost', 'win', 'launch', 'expand', 'positive', 'strong', 'high', 'up', 'rise', 'surge'];
-const NEGATIVE_KEYWORDS = ['decline', 'fall', 'loss', 'drop', 'crisis', 'concern', 'risk', 'warning', 'weak', 'fail', 'cut', 'slash', 'down', 'struggle', 'challenge', 'problem', 'delay', 'issue', 'negative', 'low'];
+const DEFAULT_POSITIVE = [
+  { word: 'breakthrough', score: 1 }, { word: 'success', score: 1 }, { word: 'growth', score: 1 },
+  { word: 'innovation', score: 1 }, { word: 'advance', score: 1 }, { word: 'achieve', score: 1 },
+  { word: 'gain', score: 1 }, { word: 'increase', score: 1 }, { word: 'profit', score: 1 },
+  { word: 'record', score: 1 }, { word: 'boost', score: 1 }, { word: 'win', score: 1 },
+  { word: 'launch', score: 1 }, { word: 'expand', score: 1 }, { word: 'positive', score: 1 },
+  { word: 'strong', score: 1 }, { word: 'high', score: 1 }, { word: 'up', score: 1 },
+  { word: 'rise', score: 1 }, { word: 'surge', score: 1 }
+];
+
+const DEFAULT_NEGATIVE = [
+  { word: 'decline', score: -1 }, { word: 'fall', score: -1 }, { word: 'loss', score: -1 },
+  { word: 'drop', score: -1 }, { word: 'crisis', score: -1 }, { word: 'concern', score: -1 },
+  { word: 'risk', score: -1 }, { word: 'warning', score: -1 }, { word: 'weak', score: -1 },
+  { word: 'fail', score: -1 }, { word: 'cut', score: -1 }, { word: 'slash', score: -1 },
+  { word: 'down', score: -1 }, { word: 'struggle', score: -1 }, { word: 'challenge', score: -1 },
+  { word: 'problem', score: -1 }, { word: 'delay', score: -1 }, { word: 'issue', score: -1 },
+  { word: 'negative', score: -1 }, { word: 'low', score: -1 }
+];
 
 export default function MarketSentimentCard({ theme }) {
   const [selectedSector, setSelectedSector] = useState(null);
   const [sentimentData, setSentimentData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [positiveKeywords, setPositiveKeywords] = useState(DEFAULT_POSITIVE);
+  const [negativeKeywords, setNegativeKeywords] = useState(DEFAULT_NEGATIVE);
+  const [newKeyword, setNewKeyword] = useState('');
+  const [newScore, setNewScore] = useState(1);
   const isDark = theme === 'dark';
 
   const { data: sectors = [] } = useQuery({
@@ -68,19 +94,19 @@ export default function MarketSentimentCard({ theme }) {
       articles.forEach(article => {
         const text = `${article.title} ${article.description}`.toLowerCase();
         
-        POSITIVE_KEYWORDS.forEach(kw => {
-          const count = (text.match(new RegExp(kw, 'g')) || []).length;
+        positiveKeywords.forEach(({ word, score: kwScore }) => {
+          const count = (text.match(new RegExp(word, 'g')) || []).length;
           if (count > 0) {
-            score += count;
-            positiveCount[kw] = (positiveCount[kw] || 0) + count;
+            score += count * kwScore;
+            positiveCount[word] = (positiveCount[word] || 0) + count;
           }
         });
 
-        NEGATIVE_KEYWORDS.forEach(kw => {
-          const count = (text.match(new RegExp(kw, 'g')) || []).length;
+        negativeKeywords.forEach(({ word, score: kwScore }) => {
+          const count = (text.match(new RegExp(word, 'g')) || []).length;
           if (count > 0) {
-            score -= count;
-            negativeCount[kw] = (negativeCount[kw] || 0) + count;
+            score += count * kwScore;
+            negativeCount[word] = (negativeCount[word] || 0) + count;
           }
         });
       });
@@ -105,7 +131,7 @@ export default function MarketSentimentCard({ theme }) {
     };
 
     analyzeSentiment();
-  }, [selectedSector, rssSources]);
+  }, [selectedSector, rssSources, positiveKeywords, negativeKeywords]);
 
   const getColor = (index) => {
     if (index >= 65) return isDark ? 'text-green-400' : 'text-green-600';
@@ -122,7 +148,74 @@ export default function MarketSentimentCard({ theme }) {
   return (
     <div className={cn("rounded-lg border p-4 h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-200")}>
       <div className="mb-3">
-        <h3 className={cn("font-semibold text-sm mb-2", isDark ? "text-white" : "text-gray-900")}>Market Sentiment</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className={cn("font-semibold text-sm", isDark ? "text-white" : "text-gray-900")}>Market Sentiment</h3>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                <Settings className={cn("w-3.5 h-3.5", isDark ? "text-neutral-400" : "text-gray-600")} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className={cn("w-96", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                <h4 className={cn("font-medium text-xs", isDark ? "text-white" : "text-gray-900")}>Sentiment Keywords</h4>
+                
+                <div>
+                  <Label className={cn("text-xs font-medium", isDark ? "text-green-400" : "text-green-600")}>Positive Keywords</Label>
+                  <div className="space-y-1 mt-1">
+                    {positiveKeywords.map((kw, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <Input value={kw.word} onChange={(e) => {
+                          const newKws = [...positiveKeywords];
+                          newKws[idx].word = e.target.value;
+                          setPositiveKeywords(newKws);
+                        }} className={cn("h-6 text-xs flex-1", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")} />
+                        <Input type="number" value={kw.score} onChange={(e) => {
+                          const newKws = [...positiveKeywords];
+                          newKws[idx].score = Number(e.target.value);
+                          setPositiveKeywords(newKws);
+                        }} className={cn("h-6 text-xs w-16", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")} />
+                        <Button size="sm" variant="ghost" onClick={() => setPositiveKeywords(positiveKeywords.filter((_, i) => i !== idx))} className="h-6 w-6 p-0">
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <Input placeholder="New keyword" value={newKeyword} onChange={(e) => setNewKeyword(e.target.value)} className={cn("h-6 text-xs flex-1", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")} />
+                    <Input type="number" placeholder="Score" value={newScore} onChange={(e) => setNewScore(Number(e.target.value))} className={cn("h-6 text-xs w-16", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")} />
+                    <Button size="sm" onClick={() => { if (newKeyword) { setPositiveKeywords([...positiveKeywords, { word: newKeyword, score: newScore }]); setNewKeyword(''); setNewScore(1); }}} className="h-6">
+                      <Plus className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className={cn("text-xs font-medium", isDark ? "text-red-400" : "text-red-600")}>Negative Keywords</Label>
+                  <div className="space-y-1 mt-1">
+                    {negativeKeywords.map((kw, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <Input value={kw.word} onChange={(e) => {
+                          const newKws = [...negativeKeywords];
+                          newKws[idx].word = e.target.value;
+                          setNegativeKeywords(newKws);
+                        }} className={cn("h-6 text-xs flex-1", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")} />
+                        <Input type="number" value={kw.score} onChange={(e) => {
+                          const newKws = [...negativeKeywords];
+                          newKws[idx].score = Number(e.target.value);
+                          setNegativeKeywords(newKws);
+                        }} className={cn("h-6 text-xs w-16", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")} />
+                        <Button size="sm" variant="ghost" onClick={() => setNegativeKeywords(negativeKeywords.filter((_, i) => i !== idx))} className="h-6 w-6 p-0">
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
         <Select value={selectedSector?.id} onValueChange={(id) => setSelectedSector(sectors.find(s => s.id === id))}>
           <SelectTrigger className={cn("h-7 text-xs", isDark ? "bg-neutral-800 border-neutral-700" : "bg-gray-50")}>
             <SelectValue />
