@@ -41,6 +41,9 @@ export default function SettingsModal({
   const [selectedSectorForRSS, setSelectedSectorForRSS] = useState(null);
   const [editingCollection, setEditingCollection] = useState(null);
   const [newCollection, setNewCollection] = useState({ name: '' });
+  const [bulkRSSText, setBulkRSSText] = useState('');
+  const [bulkErrors, setBulkErrors] = useState([]);
+  const [bulkSuccess, setBulkSuccess] = useState(null);
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -132,6 +135,77 @@ export default function SettingsModal({
       setNewRSSSource({ name: '', url: '', sector_id: '', subsector: '', subsubsector: '' });
       setSelectedSectorForRSS(null);
     }
+  };
+
+  const handleBulkAddRSS = async () => {
+    const lines = bulkRSSText.split('\n').filter(line => line.trim());
+    const errors = [];
+    const validSources = [];
+    const processedLineIndices = [];
+
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+      
+      // Skip header row
+      if (trimmedLine.toLowerCase().startsWith('source name,')) {
+        processedLineIndices.push(index);
+        return;
+      }
+      
+      // Skip empty lines
+      if (!trimmedLine) {
+        processedLineIndices.push(index);
+        return;
+      }
+
+      const parts = trimmedLine.split(',').map(p => p.trim());
+      const [sourceName, rssUrl, sectorName, subsectorName, subSubsectorName] = parts;
+
+      // Validate required fields
+      if (!sourceName || !rssUrl || !sectorName) {
+        errors.push(`Line ${index + 1}: Missing required fields (name, url, or sector) - "${trimmedLine}"`);
+        return;
+      }
+
+      // Find matching sector
+      const sector = sectors.find(s => s.name.toLowerCase() === sectorName.toLowerCase());
+      if (!sector) {
+        errors.push(`Line ${index + 1}: Sector "${sectorName}" not found - "${trimmedLine}"`);
+        return;
+      }
+
+      // Valid source
+      validSources.push({
+        name: sourceName,
+        url: rssUrl,
+        sector_id: sector.id,
+        subsector: subsectorName || '',
+        subsubsector: subSubsectorName || ''
+      });
+      processedLineIndices.push(index);
+    });
+
+    // Create valid sources
+    for (const source of validSources) {
+      await onSaveRSSSource(source);
+    }
+
+    // Update summary
+    setBulkSuccess(`${validSources.length} sources added, ${errors.length} lines skipped.`);
+    setBulkErrors(errors);
+
+    // Remove successfully processed lines
+    if (errors.length === 0) {
+      setBulkRSSText('');
+    } else {
+      const remainingLines = lines.filter((_, index) => !processedLineIndices.includes(index));
+      setBulkRSSText(remainingLines.join('\n'));
+    }
+
+    // Clear success message after 5 seconds
+    setTimeout(() => {
+      setBulkSuccess(null);
+    }, 5000);
   };
 
   const handleRSSCategoryChange = async (sourceId, newSectorId) => {
@@ -714,7 +788,7 @@ export default function SettingsModal({
 
             <TabsContent value="rss" className="space-y-4 mt-0">
               <div className="p-4 bg-neutral-800/50 rounded space-y-4">
-                <h4 className="font-medium text-xs text-neutral-300">Add RSS Source</h4>
+                <h4 className="font-medium text-xs text-neutral-300">Add Single RSS Source</h4>
                 <div className="grid grid-cols-1 gap-3">
                   <div>
                     <Label className="text-neutral-400 text-xs">Source Name</Label>
@@ -801,9 +875,42 @@ export default function SettingsModal({
                 <Button onClick={handleSaveRSSSource} size="sm" className="bg-neutral-700 hover:bg-neutral-600 rounded text-xs">
                   Add RSS Source
                 </Button>
-              </div>
-              
-              <div className="space-y-1">
+                </div>
+
+                <div className="p-4 bg-neutral-800/50 rounded space-y-4">
+                <h4 className="font-medium text-xs text-neutral-300">Bulk Add RSS Sources</h4>
+                <p className="text-xs text-neutral-400">
+                  Paste multiple sources here, one per line: Source Name, RSS URL, Sector, Subsector (optional), Sub-subsector (optional).
+                </p>
+                <Textarea
+                  value={bulkRSSText}
+                  onChange={(e) => setBulkRSSText(e.target.value)}
+                  placeholder="Example:
+                Reuters Tech, https://example.com/rss, Technology, AI
+                Bloomberg Markets, https://example.com/markets, Finance"
+                  className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white min-h-[120px] font-mono text-xs"
+                />
+                <Button onClick={handleBulkAddRSS} size="sm" className="bg-orange-600 hover:bg-orange-700 rounded text-xs">
+                  Add Sources in Bulk
+                </Button>
+
+                {bulkSuccess && (
+                  <div className="p-3 bg-green-900/30 border border-green-700 rounded">
+                    <p className="text-xs text-green-300">{bulkSuccess}</p>
+                  </div>
+                )}
+
+                {bulkErrors.length > 0 && (
+                  <div className="p-3 bg-red-900/30 border border-red-700 rounded space-y-1">
+                    <p className="text-xs font-medium text-red-300">Errors:</p>
+                    {bulkErrors.map((error, idx) => (
+                      <p key={idx} className="text-xs text-red-400">{error}</p>
+                    ))}
+                  </div>
+                )}
+                </div>
+
+                <div className="space-y-1">
                 <h4 className="font-medium text-xs text-neutral-400 mb-2">Existing RSS Sources</h4>
                 {rssSources.length === 0 ? (
                   <p className="text-neutral-500 text-sm p-4 text-center">No RSS sources added yet.</p>
