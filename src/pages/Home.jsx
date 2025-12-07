@@ -22,13 +22,13 @@ export default function Home({ sidebarOpen }) {
 
   return (
     <main className={cn(
-      "flex-1 overflow-y-auto p-3 text-content",
+      "flex-1 overflow-y-auto p-2 text-content",
       `text-${textSize}`,
-      isDark ? "bg-neutral-950" : "bg-gray-50"
+      isDark ? "bg-[#0A0A0A]" : "bg-gray-50"
     )}>
-      <div className="w-full space-y-2">
+      <div className="w-full space-y-1">
         {/* Top Row */}
-        <div className="grid grid-cols-10 gap-2 h-[300px]">
+        <div className="grid grid-cols-10 gap-1 h-[280px]">
           <div className="col-span-5">
             <SpotlightCard theme={settings.theme} />
           </div>
@@ -41,12 +41,12 @@ export default function Home({ sidebarOpen }) {
         </div>
 
         {/* Featured Articles Row */}
-        <div className="h-[280px]">
+        <div className="h-[260px]">
           <FeaturedArticlesCard theme={settings.theme} />
         </div>
 
         {/* Bottom Row */}
-        <div className="grid grid-cols-3 gap-2 h-[300px]">
+        <div className="grid grid-cols-3 gap-1 h-[280px]">
           <KeywordHeatmapCard theme={settings.theme} />
           <KeywordAnalysisCard theme={settings.theme} />
           <SectorHeatmapCard theme={settings.theme} />

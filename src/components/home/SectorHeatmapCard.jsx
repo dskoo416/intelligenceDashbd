@@ -70,45 +70,42 @@ export default function SectorHeatmapCard({ theme }) {
 
   const maxScore = sectorActivity[0]?.score || 1;
 
-  const getHeatColor = (score) => {
+  const getStripColor = (score) => {
     const ratio = score / maxScore;
-    if (ratio > 0.7) return isDark ? 'bg-red-500/30 border-red-500/50' : 'bg-red-100 border-red-300';
-    if (ratio > 0.5) return isDark ? 'bg-yellow-500/30 border-yellow-500/50' : 'bg-yellow-100 border-yellow-300';
-    if (ratio > 0.3) return isDark ? 'bg-green-500/30 border-green-500/50' : 'bg-green-100 border-green-300';
-    return isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-300';
-  };
-
-  const getTextColor = (score) => {
-    const ratio = score / maxScore;
-    if (ratio > 0.7) return isDark ? 'text-red-400' : 'text-red-700';
-    if (ratio > 0.5) return isDark ? 'text-yellow-400' : 'text-yellow-700';
-    if (ratio > 0.3) return isDark ? 'text-green-400' : 'text-green-700';
-    return isDark ? 'text-neutral-500' : 'text-gray-600';
+    if (ratio > 0.7) return isDark ? 'bg-red-500' : 'bg-red-600';
+    if (ratio > 0.5) return isDark ? 'bg-yellow-500' : 'bg-yellow-600';
+    if (ratio > 0.3) return isDark ? 'bg-green-500' : 'bg-green-600';
+    return isDark ? 'bg-neutral-700' : 'bg-gray-400';
   };
 
   return (
-    <div className={cn("rounded border h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-300")}>
-      <div className={cn("px-3 py-2 border-b", isDark ? "border-neutral-800" : "border-gray-300")}>
-        <h3 className={cn("font-semibold text-xs uppercase tracking-wide", isDark ? "text-neutral-300" : "text-gray-700")}>Sector Heatmap</h3>
+    <div className={cn("h-full flex flex-col", isDark ? "bg-[#131313] border border-[#1F1F1F]" : "bg-white border border-gray-300")}>
+      <div className={cn("px-2 py-1 border-b", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
+        <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>SECTOR HEATMAP</h3>
       </div>
       
       {isLoading ? (
-        <div className={cn("flex-1 flex items-center justify-center text-xs", isDark ? "text-neutral-600" : "text-gray-500")}>
+        <div className={cn("flex-1 flex items-center justify-center text-[10px]", isDark ? "text-neutral-700" : "text-gray-500")}>
           Analyzing sectors...
         </div>
       ) : (
-        <div className="flex-1 px-3 py-2 space-y-1">
+        <div className="flex-1 px-2 py-1 space-y-0">
           {sectorActivity.map((sector) => (
             <div
               key={sector.name}
-              className={cn("p-2 border transition-all", getHeatColor(sector.score))}
+              className={cn("flex items-center py-1 transition-all", isDark ? "bg-[#0A0A0A]" : "bg-white")}
             >
-              <div className={cn("flex items-center justify-between", getTextColor(sector.score))}>
-                <span className="font-medium text-xs uppercase tracking-wide">{sector.name}</span>
-                <span className="text-xs tabular-nums">{sector.articleCount} ART</span>
-              </div>
-              <div className={cn("text-xs mt-0.5 leading-tight", getTextColor(sector.score))}>
-                Density: {sector.keywordDensity}
+              <div className={cn("w-1 h-full mr-2", getStripColor(sector.score))}></div>
+              <div className="flex-1 flex items-center justify-between">
+                <span className={cn("text-[10px] font-medium uppercase tracking-wide", isDark ? "text-neutral-600" : "text-gray-700")}>{sector.name}</span>
+                <div className="flex items-center gap-3">
+                  <span className={cn("text-[9px] font-mono", isDark ? "text-neutral-700" : "text-gray-500")}>
+                    Density {sector.keywordDensity}
+                  </span>
+                  <span className={cn("text-[9px] font-mono tabular-nums", isDark ? "text-neutral-600" : "text-gray-600")}>
+                    {sector.articleCount} ART
+                  </span>
+                </div>
               </div>
             </div>
           ))}

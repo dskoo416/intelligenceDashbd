@@ -146,14 +146,14 @@ export default function MarketSentimentCard({ theme }) {
   };
 
   return (
-    <div className={cn("rounded border h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-300")}>
-      <div className={cn("px-3 py-2 border-b", isDark ? "border-neutral-800" : "border-gray-300")}>
-        <div className="flex items-center justify-between mb-1.5">
-          <h3 className={cn("font-semibold text-xs uppercase tracking-wide", isDark ? "text-neutral-300" : "text-gray-700")}>Market Sentiment</h3>
+    <div className={cn("h-full flex flex-col", isDark ? "bg-[#131313] border border-[#1F1F1F]" : "bg-white border border-gray-300")}>
+      <div className={cn("px-2 py-1 border-b", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>MARKET SENTIMENT</h3>
           <Popover>
             <PopoverTrigger asChild>
-              <Button size="sm" variant="ghost" className="h-5 w-5 p-0">
-                <Settings className={cn("w-3 h-3", isDark ? "text-neutral-500" : "text-gray-500")} />
+              <Button size="sm" variant="ghost" className="h-4 w-4 p-0">
+                <Settings className={cn("w-2.5 h-2.5", isDark ? "text-neutral-600" : "text-gray-500")} />
               </Button>
             </PopoverTrigger>
             <PopoverContent className={cn("w-96", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
@@ -217,12 +217,12 @@ export default function MarketSentimentCard({ theme }) {
           </Popover>
         </div>
         <Select value={selectedSector?.id} onValueChange={(id) => setSelectedSector(sectors.find(s => s.id === id))}>
-          <SelectTrigger className={cn("h-6 text-xs rounded", isDark ? "bg-neutral-800 border-neutral-700" : "bg-gray-50 border-gray-300")}>
+          <SelectTrigger className={cn("h-5 text-[10px]", isDark ? "bg-[#0A0A0A] border-[#1F1F1F]" : "bg-gray-50 border-gray-300")}>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className={cn("rounded", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
+          <SelectContent className={cn(isDark ? "bg-[#131313] border-[#1F1F1F]" : "bg-white")}>
             {sectors.map(sector => (
-              <SelectItem key={sector.id} value={sector.id} className={cn("text-xs", isDark ? "text-white focus:bg-neutral-700" : "")}>
+              <SelectItem key={sector.id} value={sector.id} className={cn("text-[10px]", isDark ? "text-neutral-400 focus:bg-[#1F1F1F]" : "")}>
                 {sector.name}
               </SelectItem>
             ))}
@@ -231,42 +231,42 @@ export default function MarketSentimentCard({ theme }) {
       </div>
 
       {isLoading ? (
-        <div className={cn("text-xs flex-1 flex items-center justify-center", isDark ? "text-neutral-600" : "text-gray-500")}>
+        <div className={cn("text-[10px] flex-1 flex items-center justify-center", isDark ? "text-neutral-700" : "text-gray-500")}>
           Loading sentiment data...
         </div>
       ) : sentimentData ? (
-        <div className="flex-1 flex flex-col justify-center px-3 py-2">
-          <div className="text-center mb-2">
-            <div className={cn("text-2xl font-bold tabular-nums mb-0.5", getColor(sentimentData.index))}>
+        <div className="flex-1 flex flex-col justify-center px-2 py-1.5">
+          <div className="text-center mb-1.5">
+            <div className={cn("text-xl font-bold font-mono tabular-nums", getColor(sentimentData.index))}>
               {sentimentData.index}
             </div>
-            <div className={cn("text-xs uppercase tracking-wider", isDark ? "text-neutral-600" : "text-gray-500")}>Sentiment Index</div>
+            <div className={cn("text-[9px] uppercase tracking-wider", isDark ? "text-neutral-700" : "text-gray-500")}>SENTIMENT INDEX</div>
           </div>
           
-          <div className={cn("relative h-1.5 mb-2 overflow-hidden", isDark ? "bg-neutral-800" : "bg-gray-300")}>
+          <div className={cn("relative h-[2px] mb-1.5", isDark ? "bg-[#1F1F1F]" : "bg-gray-300")}>
             <div 
               className={cn("absolute h-full transition-all", getBarColor(sentimentData.index))}
               style={{ width: `${sentimentData.index}%` }}
             />
           </div>
 
-          <div className={cn("border-t pt-2", isDark ? "border-neutral-800" : "border-gray-300")}>
-            <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className={cn("border-t pt-1.5", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
+            <div className="grid grid-cols-2 gap-1.5 text-[9px]">
               <div>
-                <div className={cn("font-medium mb-1 text-xs uppercase tracking-wide", isDark ? "text-green-500" : "text-green-600")}>Positive</div>
+                <div className={cn("font-semibold mb-0.5 text-[9px] uppercase tracking-wider", isDark ? "text-green-500" : "text-green-600")}>POSITIVE</div>
                 {sentimentData.topPositive.map(([kw, count]) => (
-                  <div key={kw} className={cn("flex justify-between leading-tight", isDark ? "text-neutral-500" : "text-gray-600")}>
+                  <div key={kw} className={cn("flex justify-between leading-[1.2]", isDark ? "text-neutral-600" : "text-gray-600")}>
                     <span>{kw}</span>
-                    <span className="tabular-nums">{count}</span>
+                    <span className="font-mono tabular-nums">{count}</span>
                   </div>
                 ))}
               </div>
               <div>
-                <div className={cn("font-medium mb-1 text-xs uppercase tracking-wide", isDark ? "text-red-500" : "text-red-600")}>Negative</div>
+                <div className={cn("font-semibold mb-0.5 text-[9px] uppercase tracking-wider", isDark ? "text-red-500" : "text-red-600")}>NEGATIVE</div>
                 {sentimentData.topNegative.map(([kw, count]) => (
-                  <div key={kw} className={cn("flex justify-between leading-tight", isDark ? "text-neutral-500" : "text-gray-600")}>
+                  <div key={kw} className={cn("flex justify-between leading-[1.2]", isDark ? "text-neutral-600" : "text-gray-600")}>
                     <span>{kw}</span>
-                    <span className="tabular-nums">{count}</span>
+                    <span className="font-mono tabular-nums">{count}</span>
                   </div>
                 ))}
               </div>
@@ -274,7 +274,7 @@ export default function MarketSentimentCard({ theme }) {
           </div>
         </div>
       ) : (
-        <div className={cn("text-xs flex-1 flex items-center justify-center", isDark ? "text-neutral-600" : "text-gray-500")}>
+        <div className={cn("text-[10px] flex-1 flex items-center justify-center", isDark ? "text-neutral-700" : "text-gray-500")}>
           Loading sentiment data...
         </div>
       )}

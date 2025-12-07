@@ -65,33 +65,35 @@ export default function KeywordHeatmapCard({ theme }) {
 
   const maxCount = keywordData[0]?.[1] || 1;
 
-  const getIntensity = (count) => {
+  const getBarColor = (count) => {
     const ratio = count / maxCount;
-    if (ratio > 0.7) return isDark ? 'bg-red-500/30 text-red-400' : 'bg-red-100 text-red-700';
-    if (ratio > 0.4) return isDark ? 'bg-yellow-500/30 text-yellow-400' : 'bg-yellow-100 text-yellow-700';
-    return isDark ? 'bg-green-500/30 text-green-400' : 'bg-green-100 text-green-700';
+    if (ratio > 0.7) return isDark ? 'bg-red-500' : 'bg-red-600';
+    if (ratio > 0.4) return isDark ? 'bg-yellow-500' : 'bg-yellow-600';
+    return isDark ? 'bg-green-500' : 'bg-green-600';
+  };
+
+  const getBarWidth = (count) => {
+    return Math.max(10, (count / maxCount) * 100);
   };
 
   return (
-    <div className={cn("rounded border h-full flex flex-col", isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-300")}>
-      <div className={cn("px-3 py-2 border-b", isDark ? "border-neutral-800" : "border-gray-300")}>
-        <h3 className={cn("font-semibold text-xs uppercase tracking-wide", isDark ? "text-neutral-300" : "text-gray-700")}>Keyword Heatmap</h3>
+    <div className={cn("h-full flex flex-col", isDark ? "bg-[#131313] border border-[#1F1F1F]" : "bg-white border border-gray-300")}>
+      <div className={cn("px-2 py-1 border-b", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
+        <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>KEYWORD HEATMAP</h3>
       </div>
       
       {isLoading ? (
-        <div className={cn("flex-1 flex items-center justify-center text-xs", isDark ? "text-neutral-600" : "text-gray-500")}>
+        <div className={cn("flex-1 flex items-center justify-center text-[10px]", isDark ? "text-neutral-700" : "text-gray-500")}>
           Loading keywords...
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto px-3 py-2">
-          <div className="space-y-0.5">
+        <div className="flex-1 overflow-y-auto px-2 py-1">
+          <div className="space-y-0">
             {keywordData.map(([keyword, count]) => (
-              <div
-                key={keyword}
-                className={cn("px-2 py-0.5 text-xs font-mono border-l-2 flex items-center justify-between", getIntensity(count))}
-              >
-                <span>{keyword}</span>
-                <span className="tabular-nums ml-2">{count}</span>
+              <div key={keyword} className="flex items-center gap-2 py-0.5">
+                <div className={cn("h-[3px] transition-all", getBarColor(count))} style={{ width: `${getBarWidth(count)}%` }}></div>
+                <span className={cn("text-[10px] font-mono flex-shrink-0", isDark ? "text-neutral-600" : "text-gray-700")}>{keyword}</span>
+                <span className={cn("text-[9px] font-mono tabular-nums ml-auto", isDark ? "text-neutral-700" : "text-gray-500")}>{count}</span>
               </div>
             ))}
           </div>
