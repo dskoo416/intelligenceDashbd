@@ -24,6 +24,8 @@ export default function Layout({ children, currentPageName }) {
   const [collectionsModalOpen, setCollectionsModalOpen] = useState(false);
   const [textSize, setTextSize] = useState(() => localStorage.getItem('textSize') || 'medium');
   const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [actionHistory, setActionHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -162,6 +164,43 @@ export default function Layout({ children, currentPageName }) {
     queryClient.invalidateQueries({ queryKey: ['sectors'] });
   };
 
+  const addToHistory = (action) => {
+    const newHistory = actionHistory.slice(0, historyIndex + 1);
+    newHistory.push(action);
+    setActionHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  const handleUndo = async () => {
+    if (historyIndex < 0) return;
+    const action = actionHistory[historyIndex];
+    
+    if (action.type === 'delete') {
+      await base44.entities.SavedArticle.create(action.data);
+      queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
+    } else if (action.type === 'updateCollections') {
+      await base44.entities.SavedArticle.update(action.id, { collection_ids: action.oldCollectionIds });
+      queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
+    }
+    
+    setHistoryIndex(historyIndex - 1);
+  };
+
+  const handleRedo = async () => {
+    if (historyIndex >= actionHistory.length - 1) return;
+    const action = actionHistory[historyIndex + 1];
+    
+    if (action.type === 'delete') {
+      await base44.entities.SavedArticle.delete(action.id);
+      queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
+    } else if (action.type === 'updateCollections') {
+      await base44.entities.SavedArticle.update(action.id, { collection_ids: action.newCollectionIds });
+      queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
+    }
+    
+    setHistoryIndex(historyIndex + 1);
+  };
+
   useEffect(() => {
     if (sectors.length > 0 && !activeSector) {
       const sortedSectors = [...sectors].sort((a, b) => (a.order || 0) - (b.order || 0));
@@ -180,7 +219,7 @@ export default function Layout({ children, currentPageName }) {
   const childrenWithProps = currentPageName === 'IntelligenceFeed' 
     ? React.cloneElement(children, { activeSector, activeSubsector })
     : currentPageName === 'Saved'
-    ? React.cloneElement(children, { sidebarOpen: false, activeView, onSelectView: setActiveView })
+    ? React.cloneElement(children, { sidebarOpen: false, activeView, onSelectView: setActiveView, onAddToHistory: addToHistory })
     : currentPageName === 'Home'
     ? React.cloneElement(children, { sidebarOpen })
     : children;
@@ -317,7 +356,14 @@ export default function Layout({ children, currentPageName }) {
           }
         }}
         sidebarVisible={sidebarVisible}
-        onToggleSidebarVisibility={() => setSidebarVisible(!sidebarVisible)}
+        onToggleSidebarVisibility={() => {
+          setSidebarVisible(!sidebarVisible);
+          setSidebarOpen(!sidebarVisible);
+        }}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={historyIndex >= 0}
+        canRedo={historyIndex < actionHistory.length - 1}
         />
         <style>{`
         .custom-scrollbar::-webkit-scrollbar {

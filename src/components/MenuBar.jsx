@@ -34,7 +34,11 @@ export default function MenuBar({
   onChangeTextSize,
   sidebarVisible,
   onToggleSidebarVisibility,
-  settings
+  settings,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo
 }) {
   const isDark = theme === 'dark';
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -85,8 +89,8 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium hover:bg-opacity-10 transition-colors",
-              isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
+              "px-2 py-0.5 text-[11px] font-medium transition-colors",
+              isDark ? "text-neutral-300 hover:bg-orange-500/10 hover:text-orange-400" : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
             )}>
               Actions
             </button>
@@ -98,6 +102,27 @@ export default function MenuBar({
             >
               Back
             </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={onUndo}
+              disabled={!canUndo}
+              className={cn("text-xs rounded-none", 
+                !canUndo && "opacity-50 cursor-not-allowed",
+                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600"
+              )}
+            >
+              Undo
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={onRedo}
+              disabled={!canRedo}
+              className={cn("text-xs rounded-none", 
+                !canRedo && "opacity-50 cursor-not-allowed",
+                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600"
+              )}
+            >
+              Redo
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
             <DropdownMenuItem 
               onClick={onRefresh}
               className={cn("text-xs rounded-none", isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
@@ -130,8 +155,8 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium hover:bg-opacity-10 transition-colors",
-              isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
+              "px-2 py-0.5 text-[11px] font-medium transition-colors",
+              isDark ? "text-neutral-300 hover:bg-orange-500/10 hover:text-orange-400" : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
             )}>
               Edit
             </button>
@@ -187,8 +212,8 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium hover:bg-opacity-10 transition-colors",
-              isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
+              "px-2 py-0.5 text-[11px] font-medium transition-colors",
+              isDark ? "text-neutral-300 hover:bg-orange-500/10 hover:text-orange-400" : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
             )}>
               View
             </button>
@@ -220,8 +245,8 @@ export default function MenuBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium hover:bg-opacity-10 transition-colors",
-              isDark ? "text-neutral-300 hover:bg-white" : "text-gray-700 hover:bg-gray-900"
+              "px-2 py-0.5 text-[11px] font-medium transition-colors",
+              isDark ? "text-neutral-300 hover:bg-orange-500/10 hover:text-orange-400" : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
             )}>
               Help
             </button>

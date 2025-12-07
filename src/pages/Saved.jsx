@@ -15,7 +15,7 @@ import CollectionsModal from '@/components/saved/CollectionsModal';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-export default function Saved({ sidebarOpen, activeView: propActiveView, onSelectView: propOnSelectView }) {
+export default function Saved({ sidebarOpen, activeView: propActiveView, onSelectView: propOnSelectView, onAddToHistory }) {
   const queryClient = useQueryClient();
   const activeView = propActiveView || 'main';
   const setActiveView = propOnSelectView || (() => {});
@@ -47,16 +47,32 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.SavedArticle.delete(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
+      const deletedArticle = savedArticles.find(a => a.id === id);
+      if (deletedArticle && onAddToHistory) {
+        onAddToHistory({
+          type: 'delete',
+          id: id,
+          data: deletedArticle
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
       toast.success('Article removed');
     },
   });
 
   const updateArticleCollections = useMutation({
-    mutationFn: ({ id, collectionIds }) =>
+    mutationFn: ({ id, collectionIds, oldCollectionIds }) =>
       base44.entities.SavedArticle.update(id, { collection_ids: collectionIds }),
-    onSuccess: () => {
+    onSuccess: (_, { id, collectionIds, oldCollectionIds }) => {
+      if (onAddToHistory) {
+        onAddToHistory({
+          type: 'updateCollections',
+          id: id,
+          oldCollectionIds: oldCollectionIds,
+          newCollectionIds: collectionIds
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
       toast.success('Collections updated');
     },
@@ -105,7 +121,11 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
     const newCollections = currentCollections.includes(collectionId)
       ? currentCollections.filter((id) => id !== collectionId)
       : [...currentCollections, collectionId];
-    updateArticleCollections.mutate({ id: article.id, collectionIds: newCollections });
+    updateArticleCollections.mutate({ 
+      id: article.id, 
+      collectionIds: newCollections,
+      oldCollectionIds: currentCollections
+    });
   };
 
   // Filter articles based on active view
