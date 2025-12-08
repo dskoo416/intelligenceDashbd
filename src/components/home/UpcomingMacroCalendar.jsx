@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from 'lucide-react';
 import { cn } from "@/lib/utils";
@@ -6,8 +6,6 @@ import { cn } from "@/lib/utils";
 export default function UpcomingMacroCalendar({ theme }) {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [maxRows, setMaxRows] = useState(8);
-  const listRef = useRef(null);
   const isDark = theme === 'dark';
 
   const fetchCalendar = async () => {
@@ -54,7 +52,7 @@ export default function UpcomingMacroCalendar({ theme }) {
         }
       });
       
-      setEvents(parsedEvents);
+      setEvents(parsedEvents.slice(0, 8));
     } catch (error) {
       console.error('Error fetching calendar:', error);
       setEvents([]);
@@ -66,29 +64,6 @@ export default function UpcomingMacroCalendar({ theme }) {
     fetchCalendar();
   }, []);
 
-useEffect(() => {
-  if (!listRef.current) return;
-
-  const measure = () => {
-    if (!listRef.current) return;
-
-    const containerHeight = listRef.current.clientHeight;
-    const firstRow = listRef.current.querySelector('[data-macro-row="true"]');
-    const rowHeight = firstRow ? firstRow.offsetHeight : 16;
-
-    if (rowHeight > 0) {
-      const rowsThatFit = Math.max(1, Math.floor(containerHeight / rowHeight));
-      setMaxRows(rowsThatFit);
-    }
-  };
-
-  measure();
-
-  const observer = new ResizeObserver(measure);
-  observer.observe(listRef.current);
-
-  return () => observer.disconnect();
-}, [events.length]);
   const getImpactColor = (impact) => {
     if (impact.includes('high')) return '#CC4444';
     if (impact.includes('medium')) return '#D9A441';
@@ -122,7 +97,7 @@ useEffect(() => {
           No events available
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto" ref={listRef}>
+        <div className="flex-1 overflow-y-auto">
           <div className={cn("flex items-center text-[8px] font-semibold uppercase tracking-wider px-2 py-1", isDark ? "bg-[#1C1C1C] text-neutral-600" : "bg-gray-200 text-gray-700")}>
             <div className="w-12">DATE</div>
             <div className="w-10">TIME</div>
@@ -136,13 +111,12 @@ useEffect(() => {
           <div className={cn("px-2 py-0", isDark ? "bg-[#0A0A0A]" : "bg-white")}>
             {events.map((event, idx) => (
               <div
-  key={idx}
-  data-macro-row="true"
-  className={cn(
-    "flex items-center py-[3px] text-[9px]",
-    idx < events.length - 1 && "border-b border-[#1F1F1F]"
-  )}
->
+                key={idx}
+                className={cn(
+                  "flex items-center py-[3px] text-[9px]",
+                  idx < events.length - 1 && "border-b border-[#1F1F1F]"
+                )}
+              >
                 <div className={cn("w-12 font-mono truncate", isDark ? "text-neutral-700" : "text-gray-500")}>{event.date}</div>
                 <div className={cn("w-10 font-mono", isDark ? "text-neutral-600" : "text-gray-600")}>{event.time}</div>
                 <div className={cn("w-8 font-mono font-semibold", isDark ? "text-neutral-500" : "text-gray-700")}>{event.currency}</div>
