@@ -64,6 +64,11 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     }));
   };
 
+  const { data: sectors = [] } = useQuery({
+    queryKey: ['sectors'],
+    queryFn: () => base44.entities.Sector.list('order'),
+  });
+
   const { data: rssSources = [] } = useQuery({
     queryKey: ['rssSources'],
     queryFn: () => base44.entities.RSSSource.list(),
@@ -114,10 +119,6 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
 
   const fetchArticles = useCallback(async (forceRefresh = false) => {
     const key = activeSector?.id || 'main';
-    
-    if (!activeSector) {
-      // Main view - fetch from all sectors
-      const key = 'main';
     const cached = dataCache[key];
 
     if (cached?.articles?.length > 0 && !forceRefresh) {
@@ -177,7 +178,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     setArticles(allArticles);
     updateCache(key, { articles: allArticles });
     setIsLoadingArticles(false);
-  }, [activeSector, rssSources, dataCache]);
+  }, [activeSector, rssSources, dataCache, sectors, savedCache, settings]);
 
   useEffect(() => {
     const key = activeSector?.id || 'main';
