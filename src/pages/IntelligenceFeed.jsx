@@ -113,9 +113,11 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   });
 
   const fetchArticles = useCallback(async (forceRefresh = false) => {
-    if (!activeSector) return;
+    const key = activeSector?.id || 'main';
     
-    const key = activeSector.id;
+    if (!activeSector) {
+      // Main view - fetch from all sectors
+      const key = 'main';
     const cached = dataCache[key];
 
     if (cached?.articles?.length > 0 && !forceRefresh) {
@@ -139,22 +141,29 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     
     setIsLoadingArticles(true);
     setArticles([]);
-    
-    const sectorSources = rssSources.filter(s => s.sector_id === activeSector.id && s.is_active !== false);
-    
+
+    let sectorSources;
+    if (activeSector) {
+      sectorSources = rssSources.filter(s => s.sector_id === activeSector.id && s.is_active !== false);
+    } else {
+      // Main view - get all active sources
+      sectorSources = rssSources.filter(s => s.is_active !== false);
+    }
+
     if (sectorSources.length === 0) {
       setIsLoadingArticles(false);
       return;
     }
 
     const allArticles = [];
-    
+
     for (const source of sectorSources) {
       const sourceArticles = await parseRSS(source.url);
+      const sector = sectors.find(s => s.id === source.sector_id);
       allArticles.push(...sourceArticles.map(a => ({ 
         ...a, 
         source: source.name,
-        sector: activeSector.name,
+        sector: sector?.name || '',
         subsector: source.subsector || '',
         subsubsector: source.subsubsector || ''
       })));
@@ -171,7 +180,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   }, [activeSector, rssSources, dataCache]);
 
   useEffect(() => {
-    const key = activeSector?.id || 'none';
+    const key = activeSector?.id || 'main';
     const cached = dataCache[key];
 
     if (cached) {
@@ -187,7 +196,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     if (settings?.auto_reload_news || !cached?.articles) {
       fetchArticles(false);
     }
-  }, [activeSector]);
+  }, [activeSector, activeSubsector]);
 
   const generateGist = async () => {
     if (articles.length === 0) return;
@@ -206,18 +215,20 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     setGist(result);
     updateCache(sectorKey, { gist: result });
     
-    const subsectorName = activeSubsector?.name || '';
-    if (savedCache?.id) {
-      await base44.entities.SectorCache.update(savedCache.id, { gist: result });
-    } else {
-      await base44.entities.SectorCache.create({
-        sector_id: activeSector.id,
-        subsector_name: subsectorName,
-        gist: result,
-        critical_articles: criticalArticles
-      });
+    if (activeSector) {
+      const subsectorName = activeSubsector?.name || '';
+      if (savedCache?.id) {
+        await base44.entities.SectorCache.update(savedCache.id, { gist: result });
+      } else {
+        await base44.entities.SectorCache.create({
+          sector_id: activeSector.id,
+          subsector_name: subsectorName,
+          gist: result,
+          critical_articles: criticalArticles
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['sectorCache', sectorKey] });
     }
-    queryClient.invalidateQueries({ queryKey: ['sectorCache', sectorKey] });
     
     setIsLoadingGist(false);
   };
@@ -265,18 +276,20 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     setCriticalArticles(critical);
     updateCache(sectorKey, { criticalArticles: critical });
     
-    const subsectorName = activeSubsector?.name || '';
-    if (savedCache?.id) {
-      await base44.entities.SectorCache.update(savedCache.id, { critical_articles: critical });
-    } else {
-      await base44.entities.SectorCache.create({
-        sector_id: activeSector.id,
-        subsector_name: subsectorName,
-        gist: gist,
-        critical_articles: critical
-      });
+    if (activeSector) {
+      const subsectorName = activeSubsector?.name || '';
+      if (savedCache?.id) {
+        await base44.entities.SectorCache.update(savedCache.id, { critical_articles: critical });
+      } else {
+        await base44.entities.SectorCache.create({
+          sector_id: activeSector.id,
+          subsector_name: subsectorName,
+          gist: gist,
+          critical_articles: critical
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['sectorCache', sectorKey] });
     }
-    queryClient.invalidateQueries({ queryKey: ['sectorCache', sectorKey] });
     
     setIsLoadingCritical(false);
   };
@@ -288,6 +301,11 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   };
 
   const filteredArticles = articles.filter(a => {
+    // Filter by sector if selected (skip if no sector = Main view)
+    if (activeSector && a.sector !== activeSector.name) {
+      return false;
+    }
+    
     // Filter by subsector if selected
     if (activeSubsector) {
       if (a.subsector !== activeSubsector.name) return false;

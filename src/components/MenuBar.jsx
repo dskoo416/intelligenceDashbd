@@ -137,10 +137,16 @@ export default function MenuBar({
             </DropdownMenuItem>
             <DropdownMenuSeparator className={cn(isDark ? "bg-neutral-700" : "bg-gray-200")} />
             <DropdownMenuItem 
+              onClick={() => window.location.href = '/'}
+              className={cn("text-xs rounded-none", isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
+            >
+              Home
+            </DropdownMenuItem>
+            <DropdownMenuItem 
               onClick={onNavigateToIntelligence}
               className={cn("text-xs rounded-none", isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
             >
-              Intelligence
+              Intelligence Feed
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onNavigateToSaved}

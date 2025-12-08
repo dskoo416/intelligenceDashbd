@@ -202,11 +202,8 @@ export default function Layout({ children, currentPageName }) {
   };
 
   useEffect(() => {
-    if (sectors.length > 0 && !activeSector) {
-      const sortedSectors = [...sectors].sort((a, b) => (a.order || 0) - (b.order || 0));
-      setActiveSector(sortedSectors[0]);
-    }
-  }, [sectors, activeSector]);
+    // Don't auto-select first sector, keep Main as default
+  }, []);
 
   const showTopBarActions = currentPageName === 'IntelligenceFeed';
 
@@ -220,8 +217,6 @@ export default function Layout({ children, currentPageName }) {
     ? React.cloneElement(children, { activeSector, activeSubsector })
     : currentPageName === 'Saved'
     ? React.cloneElement(children, { sidebarOpen: false, activeView, onSelectView: setActiveView, onAddToHistory: addToHistory })
-    : currentPageName === 'Home'
-    ? React.cloneElement(children, { sidebarOpen })
     : children;
 
   return (
@@ -422,6 +417,8 @@ export default function Layout({ children, currentPageName }) {
         "flex-1 overflow-hidden",
         currentPageName === 'Saved' && sidebarOpen && sidebarVisible
           ? "grid grid-cols-[208px_minmax(0,1fr)]"
+          : currentPageName === 'IntelligenceFeed' && sidebarOpen && sidebarVisible
+          ? "grid grid-cols-[208px_minmax(0,1fr)]"
           : "flex"
       )}>
         {sidebarOpen && sidebarVisible && currentPageName === 'Saved' && (
@@ -434,8 +431,8 @@ export default function Layout({ children, currentPageName }) {
             theme={settings.theme}
           />
         )}
-        
-        {sidebarOpen && sidebarVisible && (currentPageName === 'IntelligenceFeed' || currentPageName === 'Home') && (
+
+        {sidebarOpen && sidebarVisible && currentPageName === 'IntelligenceFeed' && (
           <div className="w-52 flex-shrink-0">
             <NavigationSidebar
               sectors={sectors}
@@ -449,7 +446,7 @@ export default function Layout({ children, currentPageName }) {
             />
           </div>
         )}
-        
+
         {childrenWithProps}
       </div>
 
