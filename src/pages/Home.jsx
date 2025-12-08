@@ -8,7 +8,7 @@ import TickerCard from '@/components/home/TickerCard';
 import FeaturedArticlesCard from '@/components/home/FeaturedArticlesCard';
 import KeywordHeatmapCard from '@/components/home/KeywordHeatmapCard';
 import KeywordAnalysisCard from '@/components/home/KeywordAnalysisCard';
-import SectorHeatmapCard from '@/components/home/SectorHeatmapCard';
+import UpcomingMacroCalendar from '@/components/home/UpcomingMacroCalendar';
 
 export default function Home({ sidebarOpen }) {
   const { data: settingsData = [] } = useQuery({
@@ -41,15 +41,16 @@ export default function Home({ sidebarOpen }) {
         </div>
 
         {/* Featured Articles Row */}
-        <div className="h-[260px]">
+        <div className="h-[260px] grid grid-cols-2 gap-1">
           <FeaturedArticlesCard theme={settings.theme} />
+          <div></div>
         </div>
 
         {/* Bottom Row */}
         <div className="grid grid-cols-3 gap-1 h-[280px]">
           <KeywordHeatmapCard theme={settings.theme} />
           <KeywordAnalysisCard theme={settings.theme} />
-          <SectorHeatmapCard theme={settings.theme} />
+          <UpcomingMacroCalendar theme={settings.theme} />
         </div>
       </div>
     </main>

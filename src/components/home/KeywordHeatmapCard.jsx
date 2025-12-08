@@ -67,13 +67,13 @@ export default function KeywordHeatmapCard({ theme }) {
 
   const getBarColor = (count) => {
     const ratio = count / maxCount;
-    if (ratio > 0.7) return isDark ? 'bg-red-500' : 'bg-red-600';
-    if (ratio > 0.4) return isDark ? 'bg-yellow-500' : 'bg-yellow-600';
-    return isDark ? 'bg-green-500' : 'bg-green-600';
+    if (ratio > 0.7) return '#7A2E2E';
+    if (ratio > 0.4) return '#807333';
+    return '#3A5F3A';
   };
 
   const getBarWidth = (count) => {
-    return Math.max(10, (count / maxCount) * 100);
+    return Math.max(8, (count / maxCount) * 60);
   };
 
   return (
@@ -87,12 +87,21 @@ export default function KeywordHeatmapCard({ theme }) {
           Loading keywords...
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto px-2 py-1">
+        <div className="flex-1 overflow-y-auto px-2 py-0.5" style={{ background: isDark ? '#111111' : '#F5F5F5' }}>
           <div className="space-y-0">
-            {keywordData.map(([keyword, count]) => (
-              <div key={keyword} className="flex items-center gap-2 py-0.5">
-                <div className={cn("h-[3px] transition-all", getBarColor(count))} style={{ width: `${getBarWidth(count)}%` }}></div>
-                <span className={cn("text-[10px] font-mono flex-shrink-0", isDark ? "text-neutral-600" : "text-gray-700")}>{keyword}</span>
+            {keywordData.map(([keyword, count], idx) => (
+              <div 
+                key={keyword} 
+                className={cn("flex items-center gap-1.5 py-[3px]", idx < keywordData.length - 1 && "border-b border-[#1C1C1C]")}
+              >
+                <div 
+                  className="h-[2px]" 
+                  style={{ 
+                    width: `${getBarWidth(count)}px`,
+                    backgroundColor: getBarColor(count)
+                  }}
+                ></div>
+                <span className={cn("text-[9px] font-mono", isDark ? "text-neutral-600" : "text-gray-700")}>{keyword}</span>
                 <span className={cn("text-[9px] font-mono tabular-nums ml-auto", isDark ? "text-neutral-700" : "text-gray-500")}>{count}</span>
               </div>
             ))}
