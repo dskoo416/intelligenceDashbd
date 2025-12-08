@@ -20,7 +20,7 @@ export default function TickerCard({ theme }) {
   const [editingTickers, setEditingTickers] = useState(DEFAULT_TICKERS);
 
   return (
-    <div className={cn("h-full flex flex-col", isDark ? "bg-[#131313] border border-[#1F1F1F]" : "bg-white border border-gray-300")}>
+    <div className={cn("h-full flex flex-col rounded", isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
       <div className={cn("flex items-center justify-between px-2 py-1 border-b", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
         <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>MARKET TICKER</h3>
         <Popover>
@@ -29,23 +29,78 @@ export default function TickerCard({ theme }) {
               <Settings className={cn("w-2.5 h-2.5", isDark ? "text-neutral-600" : "text-gray-500")} />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className={cn("w-80", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
+          <PopoverContent className={cn("w-96", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
             <div className="space-y-3">
               <h4 className={cn("font-medium text-xs", isDark ? "text-white" : "text-gray-900")}>Configure Tickers</h4>
               {editingTickers.map((ticker, idx) => (
-                <div key={idx}>
-                  <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Ticker {idx + 1}</Label>
-                  <Input
-                    value={ticker.label}
-                    onChange={(e) => {
-                      const newTickers = [...editingTickers];
-                      newTickers[idx] = { ...newTickers[idx], label: e.target.value };
-                      setEditingTickers(newTickers);
-                    }}
-                    className={cn("mt-1 h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
-                  />
+                <div key={idx} className="flex gap-2">
+                  <div className="flex-1">
+                    <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Label</Label>
+                    <Input
+                      value={ticker.label}
+                      onChange={(e) => {
+                        const newTickers = [...editingTickers];
+                        newTickers[idx] = { ...newTickers[idx], label: e.target.value };
+                        setEditingTickers(newTickers);
+                      }}
+                      className={cn("mt-1 h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
+                    />
+                  </div>
+                  <div className="flex items-end gap-1">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        if (idx > 0) {
+                          const newTickers = [...editingTickers];
+                          [newTickers[idx], newTickers[idx-1]] = [newTickers[idx-1], newTickers[idx]];
+                          setEditingTickers(newTickers);
+                        }
+                      }}
+                      disabled={idx === 0}
+                      className="h-7 w-7 p-0 text-xs"
+                    >
+                      ↑
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        if (idx < editingTickers.length - 1) {
+                          const newTickers = [...editingTickers];
+                          [newTickers[idx], newTickers[idx+1]] = [newTickers[idx+1], newTickers[idx]];
+                          setEditingTickers(newTickers);
+                        }
+                      }}
+                      disabled={idx === editingTickers.length - 1}
+                      className="h-7 w-7 p-0 text-xs"
+                    >
+                      ↓
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        const newTickers = editingTickers.filter((_, i) => i !== idx);
+                        setEditingTickers(newTickers);
+                      }}
+                      className="h-7 w-7 p-0 text-xs text-red-500"
+                    >
+                      ×
+                    </Button>
+                  </div>
                 </div>
               ))}
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => {
+                  setEditingTickers([...editingTickers, { label: 'New Ticker', value: '0.00', change: '+0.0%', positive: true }]);
+                }}
+                className="w-full text-xs"
+              >
+                + Add Ticker
+              </Button>
               <Button 
                 size="sm" 
                 onClick={() => setTickers(editingTickers)}

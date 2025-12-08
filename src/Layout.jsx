@@ -250,6 +250,31 @@ export default function Layout({ children, currentPageName }) {
           theme={settings.theme}
         onRefresh={handleRefresh}
         onExport={async () => {
+          // Check if we're on a sector page
+          if (currentPageName === 'IntelligenceFeed' && activeSector) {
+            // Export sector-specific data
+            const rssSources = await base44.entities.RSSSource.list();
+            const sectorSources = rssSources.filter(s => s.sector_id === activeSector.id && s.is_active !== false);
+
+            const exportData = {
+              sector: activeSector.name,
+              sources: sectorSources.map(s => s.name),
+              exportDate: new Date().toISOString()
+            };
+
+            const csvContent = `Sector Export - ${activeSector.name}\nExport Date: ${new Date().toLocaleString()}\n\nSources:\n${sectorSources.map(s => s.name).join('\n')}`;
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sector-${activeSector.name}-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            toast.success('Sector data exported');
+            return;
+          }
+
+          // Original export for Saved page
           const articles = await base44.entities.SavedArticle.list('-created_date');
           const collections = await base44.entities.Collection.list();
           const exportColumns = settings?.export_columns || ['title', 'link', 'source', 'sector', 'date', 'description'];

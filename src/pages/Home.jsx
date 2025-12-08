@@ -7,7 +7,6 @@ import MarketSentimentCard from '@/components/home/MarketSentimentCard';
 import TickerCard from '@/components/home/TickerCard';
 import FeaturedArticlesCard from '@/components/home/FeaturedArticlesCard';
 import KeywordHeatmapCard from '@/components/home/KeywordHeatmapCard';
-import KeywordAnalysisCard from '@/components/home/KeywordAnalysisCard';
 import UpcomingMacroCalendar from '@/components/home/UpcomingMacroCalendar';
 
 export default function Home({ sidebarOpen }) {
@@ -41,15 +40,13 @@ export default function Home({ sidebarOpen }) {
         </div>
 
         {/* Featured Articles Row */}
-        <div className="h-[260px] grid grid-cols-2 gap-1">
+        <div className="h-[180px]">
           <FeaturedArticlesCard theme={settings.theme} />
-          <div></div>
         </div>
 
         {/* Bottom Row */}
-        <div className="grid grid-cols-3 gap-1 h-[280px]">
+        <div className="grid grid-cols-2 gap-1 h-[320px]">
           <KeywordHeatmapCard theme={settings.theme} />
-          <KeywordAnalysisCard theme={settings.theme} />
           <UpcomingMacroCalendar theme={settings.theme} />
         </div>
       </div>
