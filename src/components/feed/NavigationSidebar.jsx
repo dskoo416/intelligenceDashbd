@@ -26,19 +26,22 @@ export default function NavigationSidebar({
   return (
     <div className={cn("h-full border-r flex flex-col", isDark ? "bg-neutral-950 border-neutral-800" : "bg-white border-gray-200")}>
       <nav className="flex-1 overflow-y-auto p-2 pt-4 space-y-0.5 custom-scrollbar">
-        <Link
-          to={createPageUrl('Home')}
+        <button
+          onClick={() => {
+            onSelectSector(null);
+            onSelectSubsector(null);
+          }}
           className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded transition-all duration-150 text-sm font-medium",
-            currentPage === 'Home'
+            "w-full text-left flex items-center gap-2 px-3 py-2 rounded transition-all duration-150 text-sm font-medium",
+            !activeSector
               ? "bg-orange-500/10 text-orange-500"
               : isDark
                 ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
           )}
         >
-          Home
-        </Link>
+          Main
+        </button>
 
         {sectors.length === 0 ? (
           <p className={cn("text-xs p-2 text-center", isDark ? "text-neutral-600" : "text-gray-400")}>

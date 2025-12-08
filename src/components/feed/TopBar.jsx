@@ -14,18 +14,33 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
       isDark ? "bg-neutral-950 border-neutral-800" : "bg-white border-gray-200"
     )}>
       <div className="flex items-center gap-3 flex-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleSidebar}
-          className={cn(
-            "h-8 w-8 p-0",
-            isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-          )}
-        >
-          <Menu className="w-4 h-4" />
-        </Button>
+        {currentPage !== 'Home' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleSidebar}
+            className={cn(
+              "h-8 w-8 p-0",
+              isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            )}
+          >
+            <Menu className="w-4 h-4" />
+          </Button>
+        )}
         <div className={cn("flex items-center gap-1", sidebarOpen ? "ml-[144px]" : "")}>
+          <Link
+            to={createPageUrl('Home')}
+            className={cn(
+              "px-3 py-1.5 rounded text-xs font-medium transition-colors",
+              currentPage === 'Home'
+                ? "bg-orange-500/10 text-orange-500"
+                : isDark
+                  ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            )}
+          >
+            Home
+          </Link>
           <Link
             to={createPageUrl('IntelligenceFeed')}
             className={cn(
