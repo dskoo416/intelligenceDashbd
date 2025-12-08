@@ -55,7 +55,6 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
         </Link>
       </div>
       
-      <div className="flex items-center gap-3 flex-1 justify-end">
       <div className="flex items-center gap-1">
         {showRefresh && (
           <Button
@@ -85,8 +84,6 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
             Export
           </Button>
         )}
-        
-
       </div>
     </header>
   );
