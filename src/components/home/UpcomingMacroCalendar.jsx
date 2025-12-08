@@ -52,7 +52,7 @@ export default function UpcomingMacroCalendar({ theme }) {
         }
       });
       
-      setEvents(parsedEvents.slice(0, 8));
+      setEvents(parsedEvents.slice(0, 20));
     } catch (error) {
       console.error('Error fetching calendar:', error);
       setEvents([]);
