@@ -195,8 +195,8 @@ export default function TickerCard({ theme }) {
               </Button>
             </div>
           </PopoverContent>
+          </Popover>
         </div>
-        </Popover>
       </div>
       
       <div className="flex-1 flex flex-col justify-center px-2 py-1 space-y-0">
