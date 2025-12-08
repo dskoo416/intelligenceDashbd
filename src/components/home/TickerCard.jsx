@@ -58,15 +58,15 @@ export default function TickerCard({ theme }) {
         </Popover>
       </div>
       
-      <div className="space-y-2">
+      <div className="flex-1 flex flex-col justify-center px-2 py-1 space-y-0">
         {tickers.map((ticker, idx) => (
-          <div key={idx} className="flex items-center justify-between">
-            <span className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>{ticker.label}</span>
-            <div className="text-right">
-              <div className={cn("text-sm font-medium", isDark ? "text-white" : "text-gray-900")}>{ticker.value}</div>
-              <div className={cn("text-xs", ticker.positive ? (isDark ? "text-green-400" : "text-green-600") : (isDark ? "text-red-400" : "text-red-600"))}>
-                {ticker.change}
-              </div>
+          <div key={idx} className={cn("flex items-center justify-between py-0.5 leading-none")}>
+            <span className={cn("text-[10px] font-medium", isDark ? "text-neutral-600" : "text-gray-600")}>{ticker.label}</span>
+            <div className="flex items-center gap-2">
+              <span className={cn("text-[10px] font-mono tabular-nums", isDark ? "text-neutral-400" : "text-gray-900")}>{ticker.value}</span>
+              <span className={cn("text-[10px] font-mono flex items-center gap-0.5 min-w-[45px] justify-end", ticker.positive ? (isDark ? "text-green-500" : "text-green-600") : (isDark ? "text-red-500" : "text-red-600"))}>
+                {ticker.positive ? '▲' : '▼'}{ticker.change.replace(/[+-]/g, '')}
+              </span>
             </div>
           </div>
         ))}
