@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from "@/lib/utils";
+import { RefreshCw } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
 export default function KeywordHeatmapCard({ theme }) {
   const isDark = theme === 'dark';
   const [keywordData, setKeywordData] = useState([]);
   const [sentimentHistory, setSentimentHistory] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -19,9 +22,8 @@ export default function KeywordHeatmapCard({ theme }) {
     queryFn: () => base44.entities.RSSSource.list(),
   });
 
-  useEffect(() => {
-    const analyzeKeywords = async () => {
-      setIsLoading(true);
+  const analyzeKeywords = async () => {
+    setIsLoading(true);
       const keywordCounts = {};
 
       for (const sector of sectors.slice(0, 4)) {
@@ -96,14 +98,21 @@ export default function KeywordHeatmapCard({ theme }) {
       }
       
       setSentimentHistory(history);
-      
-      setIsLoading(false);
-    };
+    
+    setIsLoading(false);
+  };
 
+  useEffect(() => {
     if (sectors.length > 0 && rssSources.length > 0) {
       analyzeKeywords();
     }
   }, [sectors, rssSources]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await analyzeKeywords();
+    setIsRefreshing(false);
+  };
 
   const maxCount = keywordData[0]?.[1] || 1;
   
@@ -127,8 +136,17 @@ export default function KeywordHeatmapCard({ theme }) {
     <div className={cn("h-full flex flex-col rounded", isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
       {/* Keyword Treemap - Top Half */}
       <div className="flex-1 flex flex-col border-b border-[#1F1F1F]">
-        <div className={cn("px-2 py-1 border-b", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
+        <div className={cn("px-2 py-1 border-b flex items-center justify-between", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
           <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>KEYWORD TREEMAP</h3>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="h-4 w-4 p-0"
+          >
+            <RefreshCw className={cn("w-2.5 h-2.5", isRefreshing && "animate-spin", isDark ? "text-neutral-600" : "text-gray-500")} />
+          </Button>
         </div>
         
         {isLoading ? (
