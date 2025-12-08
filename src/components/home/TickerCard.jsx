@@ -214,21 +214,32 @@ export default function TickerCard({ theme }) {
       
       {/* Top Half - Chart */}
       <div className="flex-1 flex flex-col">
-        <div className={cn("px-2 py-1 border-b flex items-center gap-1 overflow-x-auto", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
-          {tickerConfig.map((config) => (
+        <div className={cn("px-2 py-1 border-b flex items-center justify-between", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
+          <h4 className={cn("text-[9px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
+            {selectedTicker.symbol} – 1D
+          </h4>
+          <div className="flex items-center gap-1">
             <button
-              key={config.symbol}
-              onClick={() => setSelectedTicker(config)}
-              className={cn(
-                "px-2 py-0.5 text-[9px] font-medium whitespace-nowrap transition-colors",
-                selectedTicker.symbol === config.symbol
-                  ? "text-orange-500"
-                  : isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700"
-              )}
+              onClick={() => {
+                const currentIndex = tickerConfig.findIndex(t => t.symbol === selectedTicker.symbol);
+                const prevIndex = currentIndex === 0 ? tickerConfig.length - 1 : currentIndex - 1;
+                setSelectedTicker(tickerConfig[prevIndex]);
+              }}
+              className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
             >
-              {config.label}
+              <ChevronLeft className="w-3 h-3" />
             </button>
-          ))}
+            <button
+              onClick={() => {
+                const currentIndex = tickerConfig.findIndex(t => t.symbol === selectedTicker.symbol);
+                const nextIndex = currentIndex === tickerConfig.length - 1 ? 0 : currentIndex + 1;
+                setSelectedTicker(tickerConfig[nextIndex]);
+              }}
+              className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+            >
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
         </div>
         <div className={cn("flex-1", isDark ? "bg-[#0A0A0A]" : "bg-gray-50")}>
           {selectedData?.chartData && selectedData.chartData.length > 0 ? (
@@ -264,9 +275,9 @@ export default function TickerCard({ theme }) {
             </div>
           )}
         </div>
-        </div>
+      </div>
 
-        {/* Bottom Half - Ticker List */}
+      {/* Bottom Half - Ticker List */}
         <div className={cn("border-t", isDark ? "border-[#1F1F1F] bg-[#0F0F0F]" : "border-gray-300 bg-gray-50")}>
         <div className="divide-y divide-[#1F1F1F]">
           {tickerConfig.map((config) => {
@@ -306,7 +317,7 @@ export default function TickerCard({ theme }) {
             );
           })}
         </div>
-        </div>
+      </div>
     </div>
   );
 }
