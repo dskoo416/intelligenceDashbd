@@ -415,13 +415,13 @@ export default function Layout({ children, currentPageName }) {
       
       <div className={cn(
         "flex-1 overflow-hidden",
-        currentPageName === 'Saved' && sidebarOpen && sidebarVisible
+        currentPageName === 'Saved' && sidebarVisible
           ? "grid grid-cols-[208px_minmax(0,1fr)]"
-          : currentPageName === 'IntelligenceFeed' && sidebarOpen && sidebarVisible
+          : currentPageName === 'IntelligenceFeed' && sidebarVisible
           ? "grid grid-cols-[208px_minmax(0,1fr)]"
           : "flex"
       )}>
-        {sidebarOpen && sidebarVisible && currentPageName === 'Saved' && (
+        {sidebarVisible && currentPageName === 'Saved' && (
           <SavedSidebar
             savedArticles={savedArticles}
             collections={collections}
@@ -432,7 +432,7 @@ export default function Layout({ children, currentPageName }) {
           />
         )}
 
-        {sidebarOpen && sidebarVisible && currentPageName === 'IntelligenceFeed' && (
+        {sidebarVisible && currentPageName === 'IntelligenceFeed' && (
           <div className="w-52 flex-shrink-0">
             <NavigationSidebar
               sectors={sectors}

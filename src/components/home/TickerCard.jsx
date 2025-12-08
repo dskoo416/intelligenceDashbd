@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
 const DEFAULT_TICKER_CONFIG = [
   { label: 'WTI', symbol: 'CL=F' },
@@ -17,7 +18,7 @@ const DEFAULT_TICKER_CONFIG = [
 const fetchQuote = async (symbol) => {
   try {
     const corsProxy = 'https://api.allorigins.win/raw?url=';
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=5d`;
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=5m&range=1d`;
     const response = await fetch(corsProxy + encodeURIComponent(url));
     const data = await response.json();
     
@@ -25,7 +26,9 @@ const fetchQuote = async (symbol) => {
     if (!result) return null;
     
     const meta = result.meta;
+    const timestamps = result.timestamp || [];
     const quote = result.indicators?.quote?.[0];
+    const closes = quote?.close || [];
     
     const currentPrice = meta.regularMarketPrice;
     const previousClose = meta.previousClose || meta.chartPreviousClose;
@@ -35,11 +38,18 @@ const fetchQuote = async (symbol) => {
     const change = currentPrice - previousClose;
     const changePercent = (change / previousClose) * 100;
     
+    // Build chart data
+    const chartData = timestamps.map((time, idx) => ({
+      time: new Date(time * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      price: closes[idx]
+    })).filter(d => d.price != null);
+    
     return {
       price: currentPrice,
       change: change,
       changePercent: changePercent,
-      positive: change >= 0
+      positive: change >= 0,
+      chartData: chartData
     };
   } catch (error) {
     console.error(`Error fetching ${symbol}:`, error);
@@ -53,10 +63,11 @@ export default function TickerCard({ theme }) {
   const [editingConfig, setEditingConfig] = useState(DEFAULT_TICKER_CONFIG);
   const [tickerData, setTickerData] = useState({});
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedTicker, setSelectedTicker] = useState(DEFAULT_TICKER_CONFIG[0]);
 
   useEffect(() => {
     refreshTickers();
-    const interval = setInterval(refreshTickers, 60000); // Refresh every minute
+    const interval = setInterval(refreshTickers, 60000);
     return () => clearInterval(interval);
   }, [tickerConfig]);
 
@@ -81,6 +92,8 @@ export default function TickerCard({ theme }) {
     return price.toFixed(2);
   };
 
+  const selectedData = tickerData[selectedTicker.symbol];
+
   return (
     <div className={cn("h-full flex flex-col rounded", isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
       <div className={cn("flex items-center justify-between px-2 py-1 border-b", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
@@ -96,132 +109,189 @@ export default function TickerCard({ theme }) {
             <RefreshCw className={cn("w-2.5 h-2.5", isRefreshing && "animate-spin", isDark ? "text-neutral-600" : "text-gray-500")} />
           </Button>
           <Popover>
-          <PopoverTrigger asChild>
-            <Button size="sm" variant="ghost" className="h-4 w-4 p-0">
-              <Settings className={cn("w-2.5 h-2.5", isDark ? "text-neutral-600" : "text-gray-500")} />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className={cn("w-96", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
-            <div className="space-y-3">
-              <h4 className={cn("font-medium text-xs", isDark ? "text-white" : "text-gray-900")}>Configure Tickers</h4>
-              {editingConfig.map((config, idx) => (
-                <div key={idx} className="flex gap-2">
-                  <div className="flex-1">
-                    <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Label</Label>
-                    <Input
-                      value={config.label}
-                      onChange={(e) => {
-                        const newConfig = [...editingConfig];
-                        newConfig[idx] = { ...newConfig[idx], label: e.target.value };
-                        setEditingConfig(newConfig);
-                      }}
-                      className={cn("mt-1 h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Symbol</Label>
-                    <Input
-                      value={config.symbol}
-                      onChange={(e) => {
-                        const newConfig = [...editingConfig];
-                        newConfig[idx] = { ...newConfig[idx], symbol: e.target.value };
-                        setEditingConfig(newConfig);
-                      }}
-                      placeholder="e.g. CL=F"
-                      className={cn("mt-1 h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
-                    />
-                  </div>
-                  <div className="flex items-end gap-1">
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => {
-                        if (idx > 0) {
-                          const newConfig = [...editingConfig];
-                          [newConfig[idx], newConfig[idx-1]] = [newConfig[idx-1], newConfig[idx]];
-                          setEditingConfig(newConfig);
-                        }
-                      }}
-                      disabled={idx === 0}
-                      className="h-7 w-7 p-0 text-xs"
-                    >
-                      ↑
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => {
-                        if (idx < editingConfig.length - 1) {
-                          const newConfig = [...editingConfig];
-                          [newConfig[idx], newConfig[idx+1]] = [newConfig[idx+1], newConfig[idx]];
-                          setEditingConfig(newConfig);
-                        }
-                      }}
-                      disabled={idx === editingConfig.length - 1}
-                      className="h-7 w-7 p-0 text-xs"
-                    >
-                      ↓
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => {
-                        const newConfig = editingConfig.filter((_, i) => i !== idx);
-                        setEditingConfig(newConfig);
-                      }}
-                      className="h-7 w-7 p-0 text-xs text-red-500"
-                    >
-                      ×
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => {
-                  setEditingConfig([...editingConfig, { label: 'New Ticker', symbol: 'CL=F' }]);
-                }}
-                className="w-full text-xs"
-              >
-                + Add Ticker
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="ghost" className="h-4 w-4 p-0">
+                <Settings className={cn("w-2.5 h-2.5", isDark ? "text-neutral-600" : "text-gray-500")} />
               </Button>
-              <Button 
-                size="sm" 
-                onClick={() => setTickerConfig(editingConfig)}
-                className="w-full text-xs"
-              >
-                Save Changes
-              </Button>
-            </div>
-          </PopoverContent>
+            </PopoverTrigger>
+            <PopoverContent className={cn("w-96", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
+              <div className="space-y-3">
+                <h4 className={cn("font-medium text-xs", isDark ? "text-white" : "text-gray-900")}>Configure Tickers</h4>
+                {editingConfig.map((config, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <div className="flex-1">
+                      <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Label</Label>
+                      <Input
+                        value={config.label}
+                        onChange={(e) => {
+                          const newConfig = [...editingConfig];
+                          newConfig[idx] = { ...newConfig[idx], label: e.target.value };
+                          setEditingConfig(newConfig);
+                        }}
+                        className={cn("mt-1 h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Symbol</Label>
+                      <Input
+                        value={config.symbol}
+                        onChange={(e) => {
+                          const newConfig = [...editingConfig];
+                          newConfig[idx] = { ...newConfig[idx], symbol: e.target.value };
+                          setEditingConfig(newConfig);
+                        }}
+                        placeholder="e.g. CL=F"
+                        className={cn("mt-1 h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
+                      />
+                    </div>
+                    <div className="flex items-end gap-1">
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => {
+                          if (idx > 0) {
+                            const newConfig = [...editingConfig];
+                            [newConfig[idx], newConfig[idx-1]] = [newConfig[idx-1], newConfig[idx]];
+                            setEditingConfig(newConfig);
+                          }
+                        }}
+                        disabled={idx === 0}
+                        className="h-7 w-7 p-0 text-xs"
+                      >
+                        ↑
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => {
+                          if (idx < editingConfig.length - 1) {
+                            const newConfig = [...editingConfig];
+                            [newConfig[idx], newConfig[idx+1]] = [newConfig[idx+1], newConfig[idx]];
+                            setEditingConfig(newConfig);
+                          }
+                        }}
+                        disabled={idx === editingConfig.length - 1}
+                        className="h-7 w-7 p-0 text-xs"
+                      >
+                        ↓
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => {
+                          const newConfig = editingConfig.filter((_, i) => i !== idx);
+                          setEditingConfig(newConfig);
+                        }}
+                        className="h-7 w-7 p-0 text-xs text-red-500"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => {
+                    setEditingConfig([...editingConfig, { label: 'New Ticker', symbol: 'CL=F' }]);
+                  }}
+                  className="w-full text-xs"
+                >
+                  + Add Ticker
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={() => setTickerConfig(editingConfig)}
+                  className="w-full text-xs"
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </PopoverContent>
           </Popover>
         </div>
       </div>
       
-      <div className="flex-1 flex flex-col justify-center px-2 py-1 space-y-0">
-        {tickerConfig.map((config, idx) => {
-          const data = tickerData[config.symbol];
-          return (
-            <div key={idx} className={cn("flex items-center justify-between py-0.5 leading-none")}>
-              <span className={cn("text-[10px] font-medium", isDark ? "text-neutral-600" : "text-gray-600")}>{config.label}</span>
-              <div className="flex items-center gap-2">
-                {data ? (
-                  <>
-                    <span className={cn("text-[10px] font-mono tabular-nums", isDark ? "text-neutral-400" : "text-gray-900")}>
-                      {formatPrice(data.price, config.symbol)}
-                    </span>
-                    <span className={cn("text-[10px] font-mono flex items-center gap-0.5 min-w-[45px] justify-end", data.positive ? (isDark ? "text-[#2D8659]" : "text-green-600") : (isDark ? "text-[#8B3A3A]" : "text-red-600"))}>
-                      {data.positive ? '▲' : '▼'}{Math.abs(data.changePercent).toFixed(2)}%
-                    </span>
-                  </>
-                ) : (
-                  <span className={cn("text-[10px] font-mono", isDark ? "text-neutral-700" : "text-gray-400")}>N/A</span>
-                )}
-              </div>
+      {/* Top Half - Chart */}
+      <div className="flex-1 flex flex-col">
+        <div className={cn("px-2 py-1 border-b flex items-center gap-1 overflow-x-auto", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
+          {tickerConfig.map((config) => (
+            <button
+              key={config.symbol}
+              onClick={() => setSelectedTicker(config)}
+              className={cn(
+                "px-2 py-0.5 text-[9px] font-medium whitespace-nowrap transition-colors",
+                selectedTicker.symbol === config.symbol
+                  ? "text-orange-500"
+                  : isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              {config.label}
+            </button>
+          ))}
+        </div>
+        <div className={cn("flex-1", isDark ? "bg-[#0A0A0A]" : "bg-gray-50")}>
+          {selectedData?.chartData && selectedData.chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={selectedData.chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                <XAxis 
+                  dataKey="time" 
+                  tick={{ fontSize: 8, fill: isDark ? '#525252' : '#9ca3af' }}
+                  stroke={isDark ? '#1F1F1F' : '#e5e7eb'}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
+                <YAxis 
+                  domain={['auto', 'auto']}
+                  tick={{ fontSize: 8, fill: isDark ? '#525252' : '#9ca3af' }}
+                  stroke={isDark ? '#1F1F1F' : '#e5e7eb'}
+                  tickLine={false}
+                  width={35}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="price" 
+                  stroke={selectedData.positive ? '#4ADE80' : '#EF4444'} 
+                  strokeWidth={1}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className={cn("flex items-center justify-center h-full text-[9px]", isDark ? "text-neutral-700" : "text-gray-400")}>
+              {isRefreshing ? 'Loading...' : 'No chart data'}
             </div>
-          );
-        })}
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Half - Details */}
+      <div className={cn("px-2 py-1.5 border-t", isDark ? "border-[#1F1F1F] bg-[#0F0F0F]" : "border-gray-300 bg-gray-50")}>
+        {selectedData ? (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className={cn("text-[9px] font-medium", isDark ? "text-neutral-500" : "text-gray-600")}>
+                {selectedTicker.label} ({selectedTicker.symbol})
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className={cn("text-[9px]", isDark ? "text-neutral-600" : "text-gray-500")}>Last</span>
+              <span className={cn("text-[10px] font-mono font-semibold", isDark ? "text-neutral-300" : "text-gray-900")}>
+                {formatPrice(selectedData.price, selectedTicker.symbol)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className={cn("text-[9px]", isDark ? "text-neutral-600" : "text-gray-500")}>Change</span>
+              <span className={cn("text-[10px] font-mono font-semibold", selectedData.positive ? (isDark ? "text-[#2D8659]" : "text-green-600") : (isDark ? "text-[#8B3A3A]" : "text-red-600"))}>
+                {selectedData.positive ? '+' : ''}{selectedData.change.toFixed(2)} ({selectedData.positive ? '+' : ''}{selectedData.changePercent.toFixed(2)}%)
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className={cn("text-[9px] text-center", isDark ? "text-neutral-700" : "text-gray-400")}>
+            No data available
+          </div>
+        )}
       </div>
     </div>
   );
