@@ -140,7 +140,8 @@ export default function FeaturedArticlesCard({ theme }) {
           Click refresh to generate featured articles
         </div>
       ) : (
-        <div className="flex-1 grid grid-cols-6 gap-1 overflow-y-auto p-1.5">
+        <div className="flex-1 overflow-y-auto p-1.5">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-1">
           {criticalArticles.map((article, idx) => (
             <a
               key={idx}
@@ -172,6 +173,7 @@ export default function FeaturedArticlesCard({ theme }) {
               )}
             </a>
           ))}
+          </div>
         </div>
       )}
     </div>

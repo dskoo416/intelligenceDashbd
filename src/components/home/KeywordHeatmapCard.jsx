@@ -57,11 +57,44 @@ export default function KeywordHeatmapCard({ theme }) {
 
       setKeywordData(sortedKeywords);
       
-      // Generate mock 7-day sentiment history
+      // Generate 14-day article volume history
       const history = {};
-      sectors.slice(0, 4).forEach(sector => {
-        history[sector.name] = Array.from({ length: 7 }, () => Math.floor(Math.random() * 8) + 1);
-      });
+      const now = new Date();
+      const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+      
+      for (const sector of sectors.slice(0, 4)) {
+        const dailyCounts = Array(14).fill(0);
+        const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
+        
+        for (const source of sectorSources.slice(0, 5)) {
+          try {
+            const corsProxy = 'https://api.allorigins.win/raw?url=';
+            const response = await fetch(corsProxy + encodeURIComponent(source.url));
+            const text = await response.text();
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(text, 'text/xml');
+            const items = xml.querySelectorAll('item');
+
+            items.forEach((item) => {
+              const pubDateStr = item.querySelector('pubDate')?.textContent;
+              if (pubDateStr) {
+                const pubDate = new Date(pubDateStr);
+                if (pubDate >= fourteenDaysAgo && pubDate <= now) {
+                  const daysAgo = Math.floor((now - pubDate) / (24 * 60 * 60 * 1000));
+                  if (daysAgo >= 0 && daysAgo < 14) {
+                    dailyCounts[13 - daysAgo]++;
+                  }
+                }
+              }
+            });
+          } catch (error) {
+            console.error('Error parsing RSS:', error);
+          }
+        }
+        
+        history[sector.name] = dailyCounts;
+      }
+      
       setSentimentHistory(history);
       
       setIsLoading(false);
@@ -88,7 +121,7 @@ export default function KeywordHeatmapCard({ theme }) {
     return isDark ? 'bg-[#7A2E2E]' : 'bg-red-200';
   };
 
-  const sparklineChars = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+
 
   return (
     <div className={cn("h-full flex flex-col rounded", isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
@@ -125,21 +158,33 @@ export default function KeywordHeatmapCard({ theme }) {
         )}
       </div>
 
-      {/* Rolling 7 Day Sentiment - Bottom Half */}
+      {/* Rolling Activity - Bottom Half */}
       <div className="flex-1 flex flex-col">
         <div className={cn("px-2 py-1 border-b", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
-          <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>ROLLING 7 DAY SENTIMENT</h3>
+          <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>ROLLING ACTIVITY (14D)</h3>
         </div>
         
-        <div className="flex-1 px-2 py-1.5 space-y-1">
-          {Object.entries(sentimentHistory).map(([sector, values]) => (
-            <div key={sector} className="flex items-center justify-between">
-              <span className={cn("text-[9px] font-medium w-32", isDark ? "text-neutral-600" : "text-gray-700")}>{sector}</span>
-              <div className={cn("font-mono text-[11px] tracking-tight", isDark ? "text-green-500" : "text-green-600")}>
-                {values.map((v, idx) => sparklineChars[v - 1] || '▁').join('')}
+        <div className="flex-1 px-2 py-1.5 space-y-1.5">
+          {Object.entries(sentimentHistory).map(([sector, values]) => {
+            const maxVal = Math.max(...values, 1);
+            return (
+              <div key={sector} className="flex items-center gap-2">
+                <span className={cn("text-[9px] font-medium w-24 truncate", isDark ? "text-neutral-600" : "text-gray-700")}>{sector}</span>
+                <div className="flex-1 flex items-end gap-[2px] h-5">
+                  {values.map((val, idx) => {
+                    const height = (val / maxVal) * 100;
+                    return (
+                      <div 
+                        key={idx}
+                        className={cn("flex-1", isDark ? "bg-neutral-600" : "bg-gray-400")}
+                        style={{ height: `${height}%`, minHeight: '2px' }}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

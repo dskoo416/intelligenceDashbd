@@ -98,33 +98,35 @@ export default function UpcomingMacroCalendar({ theme }) {
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
-          <div className={cn("grid grid-cols-[50px_40px_30px_10px_1fr_60px_60px_60px] text-[8px] font-semibold uppercase tracking-wider px-2 py-1", isDark ? "bg-[#1C1C1C] text-neutral-600" : "bg-gray-200 text-gray-700")}>
-            <div>DATE</div>
-            <div>TIME</div>
-            <div>CUR</div>
-            <div>IMP</div>
-            <div>EVENT</div>
-            <div className="text-right">FCST</div>
-            <div className="text-right">PREV</div>
-            <div className="text-right">ACT</div>
+          <div className={cn("flex items-center text-[8px] font-semibold uppercase tracking-wider px-2 py-1", isDark ? "bg-[#1C1C1C] text-neutral-600" : "bg-gray-200 text-gray-700")}>
+            <div className="w-12">DATE</div>
+            <div className="w-10">TIME</div>
+            <div className="w-8">CUR</div>
+            <div className="w-4">I</div>
+            <div className="flex-1 min-w-0">EVENT</div>
+            <div className="w-16 text-right">FCST</div>
+            <div className="w-16 text-right">PREV</div>
+            <div className="w-16 text-right">ACT</div>
           </div>
           <div className={cn("px-2 py-0", isDark ? "bg-[#0A0A0A]" : "bg-white")}>
             {events.map((event, idx) => (
               <div
                 key={idx}
                 className={cn(
-                  "grid grid-cols-[50px_40px_30px_10px_1fr_60px_60px_60px] items-center py-[3px] text-[9px]",
+                  "flex items-center py-[3px] text-[9px]",
                   idx < events.length - 1 && "border-b border-[#1F1F1F]"
                 )}
               >
-                <div className={cn("font-mono truncate", isDark ? "text-neutral-700" : "text-gray-500")}>{event.date}</div>
-                <div className={cn("font-mono", isDark ? "text-neutral-600" : "text-gray-600")}>{event.time}</div>
-                <div className={cn("font-mono font-semibold", isDark ? "text-neutral-500" : "text-gray-700")}>{event.currency}</div>
-                <div className="w-2 h-2" style={{ backgroundColor: getImpactColor(event.impact) }}></div>
-                <div className={cn("truncate font-medium", isDark ? "text-neutral-500" : "text-gray-700")}>{event.event}</div>
-                <div className={cn("text-right font-mono tabular-nums", isDark ? "text-neutral-600" : "text-gray-600")}>{event.forecast || '-'}</div>
-                <div className={cn("text-right font-mono tabular-nums", isDark ? "text-neutral-600" : "text-gray-600")}>{event.previous || '-'}</div>
-                <div className={cn("text-right font-mono tabular-nums font-semibold", isDark ? "text-neutral-400" : "text-gray-800")}>{event.actual || '-'}</div>
+                <div className={cn("w-12 font-mono truncate", isDark ? "text-neutral-700" : "text-gray-500")}>{event.date}</div>
+                <div className={cn("w-10 font-mono", isDark ? "text-neutral-600" : "text-gray-600")}>{event.time}</div>
+                <div className={cn("w-8 font-mono font-semibold", isDark ? "text-neutral-500" : "text-gray-700")}>{event.currency}</div>
+                <div className="w-4 flex items-center">
+                  <div className="w-2 h-2" style={{ backgroundColor: getImpactColor(event.impact) }}></div>
+                </div>
+                <div className={cn("flex-1 min-w-0 truncate font-medium", isDark ? "text-neutral-500" : "text-gray-700")}>{event.event}</div>
+                <div className={cn("w-16 text-right font-mono tabular-nums", isDark ? "text-neutral-600" : "text-gray-600")}>{event.forecast || '-'}</div>
+                <div className={cn("w-16 text-right font-mono tabular-nums", isDark ? "text-neutral-600" : "text-gray-600")}>{event.previous || '-'}</div>
+                <div className={cn("w-16 text-right font-mono tabular-nums font-semibold", isDark ? "text-neutral-400" : "text-gray-800")}>{event.actual || '-'}</div>
               </div>
             ))}
           </div>

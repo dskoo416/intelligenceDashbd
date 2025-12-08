@@ -40,12 +40,12 @@ export default function Home({ sidebarOpen }) {
         </div>
 
         {/* Featured Articles Row */}
-        <div className="h-[180px]">
+        <div className="h-[140px]">
           <FeaturedArticlesCard theme={settings.theme} />
         </div>
 
         {/* Bottom Row */}
-        <div className="grid grid-cols-2 gap-1 h-[320px]">
+        <div className="grid grid-cols-2 gap-1 h-[360px]">
           <KeywordHeatmapCard theme={settings.theme} />
           <UpcomingMacroCalendar theme={settings.theme} />
         </div>
