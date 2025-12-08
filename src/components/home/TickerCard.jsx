@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
-import { Settings, RefreshCw } from 'lucide-react';
+import { Settings, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 const DEFAULT_TICKER_CONFIG = [
   { label: 'WTI', symbol: 'CL=F' },
@@ -234,16 +234,17 @@ export default function TickerCard({ theme }) {
           {selectedData?.chartData && selectedData.chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={selectedData.chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1A1A1A' : '#e5e7eb'} />
                 <XAxis 
                   dataKey="time" 
-                  tick={{ fontSize: 8, fill: isDark ? '#525252' : '#9ca3af' }}
+                  tick={{ fontSize: 7, fill: isDark ? '#525252' : '#9ca3af' }}
                   stroke={isDark ? '#1F1F1F' : '#e5e7eb'}
                   tickLine={false}
                   interval="preserveStartEnd"
                 />
                 <YAxis 
                   domain={['auto', 'auto']}
-                  tick={{ fontSize: 8, fill: isDark ? '#525252' : '#9ca3af' }}
+                  tick={{ fontSize: 7, fill: isDark ? '#525252' : '#9ca3af' }}
                   stroke={isDark ? '#1F1F1F' : '#e5e7eb'}
                   tickLine={false}
                   width={35}
@@ -251,8 +252,8 @@ export default function TickerCard({ theme }) {
                 <Line 
                   type="monotone" 
                   dataKey="price" 
-                  stroke={selectedData.positive ? '#4ADE80' : '#EF4444'} 
-                  strokeWidth={1}
+                  stroke={selectedData.positive ? (isDark ? '#2D8659' : '#16a34a') : (isDark ? '#8B3A3A' : '#dc2626')} 
+                  strokeWidth={1.5}
                   dot={false}
                 />
               </LineChart>
@@ -263,36 +264,49 @@ export default function TickerCard({ theme }) {
             </div>
           )}
         </div>
-      </div>
+        </div>
 
-      {/* Bottom Half - Details */}
-      <div className={cn("px-2 py-1.5 border-t", isDark ? "border-[#1F1F1F] bg-[#0F0F0F]" : "border-gray-300 bg-gray-50")}>
-        {selectedData ? (
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className={cn("text-[9px] font-medium", isDark ? "text-neutral-500" : "text-gray-600")}>
-                {selectedTicker.label} ({selectedTicker.symbol})
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className={cn("text-[9px]", isDark ? "text-neutral-600" : "text-gray-500")}>Last</span>
-              <span className={cn("text-[10px] font-mono font-semibold", isDark ? "text-neutral-300" : "text-gray-900")}>
-                {formatPrice(selectedData.price, selectedTicker.symbol)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className={cn("text-[9px]", isDark ? "text-neutral-600" : "text-gray-500")}>Change</span>
-              <span className={cn("text-[10px] font-mono font-semibold", selectedData.positive ? (isDark ? "text-[#2D8659]" : "text-green-600") : (isDark ? "text-[#8B3A3A]" : "text-red-600"))}>
-                {selectedData.positive ? '+' : ''}{selectedData.change.toFixed(2)} ({selectedData.positive ? '+' : ''}{selectedData.changePercent.toFixed(2)}%)
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className={cn("text-[9px] text-center", isDark ? "text-neutral-700" : "text-gray-400")}>
-            No data available
-          </div>
-        )}
-      </div>
+        {/* Bottom Half - Ticker List */}
+        <div className={cn("border-t", isDark ? "border-[#1F1F1F] bg-[#0F0F0F]" : "border-gray-300 bg-gray-50")}>
+        <div className="divide-y divide-[#1F1F1F]">
+          {tickerConfig.map((config) => {
+            const data = tickerData[config.symbol];
+            const isActive = selectedTicker.symbol === config.symbol;
+            return (
+              <button
+                key={config.symbol}
+                onClick={() => setSelectedTicker(config)}
+                className={cn(
+                  "w-full px-2 py-1 flex items-center justify-between transition-colors relative",
+                  isDark 
+                    ? "hover:bg-[#1A1A1A]" 
+                    : "hover:bg-gray-100",
+                  isActive && (isDark ? "bg-[#1A1A1A]" : "bg-gray-100")
+                )}
+              >
+                {isActive && (
+                  <div className={cn("absolute left-0 top-0 bottom-0 w-[2px]", isDark ? "bg-orange-500" : "bg-orange-600")} />
+                )}
+                <span className={cn("text-[9px] font-medium text-left pl-1", isDark ? "text-neutral-400" : "text-gray-700")}>
+                  {config.label}
+                </span>
+                {data ? (
+                  <div className="flex items-center gap-2">
+                    <span className={cn("text-[9px] font-mono font-bold", isDark ? "text-white" : "text-gray-900")}>
+                      {formatPrice(data.price, config.symbol)}
+                    </span>
+                    <span className={cn("text-[9px] font-mono", data.positive ? (isDark ? "text-[#2D8659]" : "text-green-600") : (isDark ? "text-[#8B3A3A]" : "text-red-600"))}>
+                      {data.positive ? '+' : ''}{data.change.toFixed(2)} ({data.positive ? '+' : ''}{data.changePercent.toFixed(2)}%)
+                    </span>
+                  </div>
+                ) : (
+                  <span className={cn("text-[8px]", isDark ? "text-neutral-700" : "text-gray-400")}>Loading...</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        </div>
     </div>
   );
 }

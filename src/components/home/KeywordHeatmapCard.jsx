@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from "@/lib/utils";
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, ExternalLink, Bookmark } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 export default function KeywordHeatmapCard({ theme }) {
   const isDark = theme === 'dark';
+  const queryClient = useQueryClient();
   const [keywordData, setKeywordData] = useState([]);
-  const [sentimentHistory, setSentimentHistory] = useState({});
+  const [allArticles, setAllArticles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedKeyword, setSelectedKeyword] = useState(null);
+  const [keywordArticles, setKeywordArticles] = useState([]);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -22,83 +28,78 @@ export default function KeywordHeatmapCard({ theme }) {
     queryFn: () => base44.entities.RSSSource.list(),
   });
 
+  const { data: savedArticles = [] } = useQuery({
+    queryKey: ['savedArticles'],
+    queryFn: () => base44.entities.SavedArticle.list(),
+  });
+
+  const saveArticleMutation = useMutation({
+    mutationFn: async (article) => {
+      const existing = savedArticles.find(a => a.link === article.link);
+      if (existing) {
+        await base44.entities.SavedArticle.delete(existing.id);
+        return { deleted: true };
+      } else {
+        return base44.entities.SavedArticle.create({ ...article, collection_ids: [] });
+      }
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
+      toast.success(result?.deleted ? 'Article removed' : 'Article saved');
+    },
+  });
+
   const analyzeKeywords = async () => {
     setIsLoading(true);
-      const keywordCounts = {};
+    const keywordCounts = {};
+    const articles = [];
 
-      for (const sector of sectors.slice(0, 4)) {
-        const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
-        
-        for (const source of sectorSources.slice(0, 5)) {
-          try {
-            const corsProxy = 'https://api.allorigins.win/raw?url=';
-            const response = await fetch(corsProxy + encodeURIComponent(source.url));
-            const text = await response.text();
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(text, 'text/xml');
-            const items = xml.querySelectorAll('item');
+    for (const sector of sectors.slice(0, 4)) {
+      const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
 
-            items.forEach((item, idx) => {
-              if (idx < 10) {
-                const title = item.querySelector('title')?.textContent || '';
-                const words = title.toLowerCase().split(/\s+/).filter(w => w.length > 4);
-                words.forEach(word => {
-                  keywordCounts[word] = (keywordCounts[word] || 0) + 1;
-                });
-              }
-            });
-          } catch (error) {
-            console.error('Error parsing RSS:', error);
-          }
+      for (const source of sectorSources.slice(0, 5)) {
+        try {
+          const corsProxy = 'https://api.allorigins.win/raw?url=';
+          const response = await fetch(corsProxy + encodeURIComponent(source.url));
+          const text = await response.text();
+          const parser = new DOMParser();
+          const xml = parser.parseFromString(text, 'text/xml');
+          const items = xml.querySelectorAll('item');
+
+          items.forEach((item, idx) => {
+            if (idx < 10) {
+              const title = item.querySelector('title')?.textContent || '';
+              const link = item.querySelector('link')?.textContent || '';
+              const description = item.querySelector('description')?.textContent?.replace(/<[^>]*>/g, '').slice(0, 200) || '';
+              const pubDate = item.querySelector('pubDate')?.textContent || null;
+
+              articles.push({
+                title,
+                link,
+                description,
+                pubDate,
+                source: source.name,
+                sector: sector.name
+              });
+
+              const words = title.toLowerCase().split(/\s+/).filter(w => w.length > 4);
+              words.forEach(word => {
+                keywordCounts[word] = (keywordCounts[word] || 0) + 1;
+              });
+            }
+          });
+        } catch (error) {
+          console.error('Error parsing RSS:', error);
         }
       }
+    }
 
-      const sortedKeywords = Object.entries(keywordCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 12);
+    const sortedKeywords = Object.entries(keywordCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 16);
 
-      setKeywordData(sortedKeywords);
-      
-      // Generate 14-day article volume history
-      const history = {};
-      const now = new Date();
-      const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-      
-      for (const sector of sectors.slice(0, 4)) {
-        const dailyCounts = Array(14).fill(0);
-        const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
-        
-        for (const source of sectorSources.slice(0, 5)) {
-          try {
-            const corsProxy = 'https://api.allorigins.win/raw?url=';
-            const response = await fetch(corsProxy + encodeURIComponent(source.url));
-            const text = await response.text();
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(text, 'text/xml');
-            const items = xml.querySelectorAll('item');
-
-            items.forEach((item) => {
-              const pubDateStr = item.querySelector('pubDate')?.textContent;
-              if (pubDateStr) {
-                const pubDate = new Date(pubDateStr);
-                if (pubDate >= fourteenDaysAgo && pubDate <= now) {
-                  const daysAgo = Math.floor((now - pubDate) / (24 * 60 * 60 * 1000));
-                  if (daysAgo >= 0 && daysAgo < 14) {
-                    dailyCounts[13 - daysAgo]++;
-                  }
-                }
-              }
-            });
-          } catch (error) {
-            console.error('Error parsing RSS:', error);
-          }
-        }
-        
-        history[sector.name] = dailyCounts;
-      }
-      
-      setSentimentHistory(history);
-    
+    setKeywordData(sortedKeywords);
+    setAllArticles(articles);
     setIsLoading(false);
   };
 
@@ -126,16 +127,23 @@ export default function KeywordHeatmapCard({ theme }) {
   const getBlockColor = (count) => {
     const ratio = count / maxCount;
     if (ratio > 0.7) return isDark ? 'bg-[#3A5F3A]' : 'bg-green-200';
-    if (ratio > 0.4) return isDark ? 'bg-[#807333]' : 'bg-yellow-200';
-    return isDark ? 'bg-[#7A2E2E]' : 'bg-red-200';
+    if (ratio > 0.4) return isDark ? 'bg-[#5A5A2E]' : 'bg-yellow-200';
+    return isDark ? 'bg-[#5A3535]' : 'bg-red-200';
+  };
+
+  const handleKeywordClick = (keyword) => {
+    const filtered = allArticles.filter(article => 
+      article.title.toLowerCase().includes(keyword.toLowerCase())
+    );
+    setKeywordArticles(filtered);
+    setSelectedKeyword(keyword);
   };
 
 
 
   return (
-    <div className={cn("h-full flex flex-col rounded", isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
-      {/* Keyword Treemap - Top Half */}
-      <div className="flex-1 flex flex-col border-b border-[#1F1F1F]">
+    <>
+      <div className={cn("h-full flex flex-col rounded", isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
         <div className={cn("px-2 py-1 border-b flex items-center justify-between", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
           <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>KEYWORD TREEMAP</h3>
           <Button 
@@ -155,56 +163,85 @@ export default function KeywordHeatmapCard({ theme }) {
           </div>
         ) : (
           <div className="flex-1 p-2">
-            <div className="grid grid-cols-6 grid-rows-4 gap-1 h-full">
+            <div className="grid grid-cols-6 grid-rows-6 gap-1 h-full">
               {keywordData.map(([keyword, count]) => (
-                <div
+                <button
                   key={keyword}
+                  onClick={() => handleKeywordClick(keyword)}
                   className={cn(
-                    "flex items-center justify-center text-center p-1 transition-all",
+                    "flex items-center justify-center text-center p-1 transition-all cursor-pointer",
                     getBlockSize(count),
-                    getBlockColor(count)
+                    getBlockColor(count),
+                    isDark ? "hover:opacity-80" : "hover:opacity-90"
                   )}
                 >
                   <div>
-                    <div className={cn("text-[9px] font-mono font-semibold", isDark ? "text-neutral-300" : "text-gray-800")}>{keyword}</div>
-                    <div className={cn("text-[8px] font-mono", isDark ? "text-neutral-500" : "text-gray-600")}>{count}</div>
+                    <div className={cn("text-[9px] font-mono font-semibold", isDark ? "text-neutral-200" : "text-gray-900")}>{keyword}</div>
+                    <div className={cn("text-[8px] font-mono", isDark ? "text-neutral-400" : "text-gray-700")}>{count}</div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
         )}
       </div>
 
-      {/* Rolling Activity - Bottom Half */}
-      <div className="flex-1 flex flex-col">
-        <div className={cn("px-2 py-1 border-b", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
-          <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>ROLLING ACTIVITY (14D)</h3>
-        </div>
-        
-        <div className="flex-1 px-2 py-1.5 space-y-1.5">
-          {Object.entries(sentimentHistory).map(([sector, values]) => {
-            const maxVal = Math.max(...values, 1);
-            return (
-              <div key={sector} className="flex items-center gap-2">
-                <span className={cn("text-[9px] font-medium w-24 truncate", isDark ? "text-neutral-600" : "text-gray-700")}>{sector}</span>
-                <div className="flex-1 flex items-end gap-[2px] h-5">
-                  {values.map((val, idx) => {
-                    const height = (val / maxVal) * 100;
-                    return (
-                      <div 
-                        key={idx}
-                        className={cn("flex-1", isDark ? "bg-neutral-600" : "bg-gray-400")}
-                        style={{ height: `${height}%`, minHeight: '2px' }}
-                      />
-                    );
-                  })}
-                </div>
+      <Dialog open={!!selectedKeyword} onOpenChange={() => setSelectedKeyword(null)}>
+        <DialogContent className={cn("max-w-2xl max-h-[80vh] overflow-y-auto", isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-white")}>
+          <DialogHeader>
+            <DialogTitle className={cn("text-lg font-semibold", isDark ? "text-white" : "text-gray-900")}>
+              Articles for "{selectedKeyword}"
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 mt-4">
+            {keywordArticles.length === 0 ? (
+              <div className={cn("text-sm text-center py-8", isDark ? "text-neutral-500" : "text-gray-500")}>
+                No articles found
               </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+            ) : (
+              keywordArticles.map((article, idx) => {
+                const isSaved = savedArticles.some(a => a.link === article.link);
+                return (
+                  <div key={idx} className={cn("border p-3 rounded", isDark ? "border-neutral-800 bg-neutral-950" : "border-gray-200")}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <a
+                          href={article.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn("text-sm font-medium hover:underline flex items-start gap-1", isDark ? "text-neutral-300" : "text-gray-900")}
+                        >
+                          {article.title}
+                          <ExternalLink className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                        </a>
+                        <div className={cn("text-xs mt-1", isDark ? "text-neutral-600" : "text-gray-600")}>
+                          {article.source} • {article.sector}
+                          {article.pubDate && (
+                            <> • {format(new Date(article.pubDate), 'MMM d, yyyy')}</>
+                          )}
+                        </div>
+                        {article.description && (
+                          <p className={cn("text-xs mt-1", isDark ? "text-neutral-500" : "text-gray-700")}>
+                            {article.description}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={isSaved ? "default" : "outline"}
+                        onClick={() => saveArticleMutation.mutate(article)}
+                        className="h-7 w-7 p-0"
+                      >
+                        <Bookmark className={cn("w-3 h-3", isSaved && "fill-current")} />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
