@@ -120,6 +120,15 @@ Return JSON only.`;
               </button>
             ))}
           </div>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={fetchData}
+            disabled={isLoading}
+            className="h-4 w-4 p-0"
+          >
+            <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", isDark ? "text-neutral-600" : "text-gray-500")} />
+          </Button>
         </div>
       </div>
 

@@ -138,14 +138,14 @@ export default function FeaturedArticlesCard({ theme }) {
           </div>
         ) : (
           <div 
-            className="grid gap-x-6 gap-y-1 items-center justify-items-center"
+            className="grid gap-x-6 gap-y-1"
             style={{
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
               gridAutoFlow: 'column'
             }}
           >
             {criticalArticles.map((article, idx) => (
-              <div key={idx} className="pb-0.5 w-full text-center">
+              <div key={idx} className="pb-0.5 w-full">
                 <a
                   href={article.link}
                   target="_blank"
@@ -158,10 +158,10 @@ export default function FeaturedArticlesCard({ theme }) {
                   )}
                   style={{ fontFamily: 'ui-monospace, monospace' }}
                 >
-                  <span className={cn("mr-1.5", isDark ? "text-neutral-600" : "text-gray-500")}>{idx + 1})</span>
+                  <span className={cn("mr-1.5 inline-block w-3 text-right", isDark ? "text-neutral-600" : "text-gray-500")}>{idx + 1})</span>
                   {article.title}
                 </a>
-                <div className={cn("text-[9px] mt-0.5", isDark ? "text-neutral-700" : "text-gray-500")}>
+                <div className={cn("text-[9px] mt-0.5", isDark ? "text-neutral-700" : "text-gray-500")} style={{ marginLeft: '18px' }}>
                   {article.source} • {article.sector} • {article.pubDate && format(new Date(article.pubDate), 'MMM d')}
                 </div>
               </div>
