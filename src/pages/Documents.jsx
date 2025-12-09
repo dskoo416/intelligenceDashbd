@@ -209,7 +209,7 @@ Generate the report now:`,
         <div className="overflow-hidden">
           <DocumentsSidebar
             mode={mode}
-            onModeChange={(newMode) => { setMode(newMode); setActiveView('all'); setSelectedIds([]); }}
+            onModeChange={(newMode) => { setMode(newMode); setActiveView('all'); }}
             folders={folders}
             activeView={activeView}
             onSelectView={setActiveView}

@@ -98,29 +98,29 @@ export default function DocumentsSidebar({
       isDark ? "bg-[#0D0D0D] border-[#1F1F1F]" : "bg-white border-gray-200")}>
       
       {/* Mode Switch */}
-      <div className={cn("p-2 border-b space-y-1",
+      <div className={cn("p-2 border-b flex gap-1",
         isPastel ? "border-[#4A4D6C]" :
         isDark ? "border-[#1F1F1F]" : "border-gray-200")}>
         <button
           onClick={() => onModeChange('documents')}
-          className={cn("w-full text-left px-2 py-1 text-[11px] font-medium transition-colors",
+          className={cn("flex-1 px-2 py-1 text-[11px] font-medium transition-colors border",
             mode === 'documents'
-              ? (isPastel ? "bg-[#9B8B6B] text-white" :
-                 isDark ? "bg-orange-600 text-white" : "bg-orange-600 text-white")
-              : (isPastel ? "text-[#D0D2E0] hover:bg-[#42456C]" :
-                 isDark ? "text-neutral-400 hover:bg-neutral-800" : "text-gray-600 hover:bg-gray-100")
+              ? (isPastel ? "bg-[#9B8B6B] text-white border-[#9B8B6B]" :
+                 isDark ? "bg-orange-600 text-white border-orange-600" : "bg-orange-600 text-white border-orange-600")
+              : (isPastel ? "text-[#D0D2E0] hover:bg-[#42456C] border-[#4A4D6C]" :
+                 isDark ? "text-neutral-400 hover:bg-neutral-800 border-neutral-700" : "text-gray-600 hover:bg-gray-100 border-gray-300")
           )}
         >
           My Documents
         </button>
         <button
           onClick={() => onModeChange('saved')}
-          className={cn("w-full text-left px-2 py-1 text-[11px] font-medium transition-colors",
+          className={cn("flex-1 px-2 py-1 text-[11px] font-medium transition-colors border",
             mode === 'saved'
-              ? (isPastel ? "bg-[#9B8B6B] text-white" :
-                 isDark ? "bg-orange-600 text-white" : "bg-orange-600 text-white")
-              : (isPastel ? "text-[#D0D2E0] hover:bg-[#42456C]" :
-                 isDark ? "text-neutral-400 hover:bg-neutral-800" : "text-gray-600 hover:bg-gray-100")
+              ? (isPastel ? "bg-[#9B8B6B] text-white border-[#9B8B6B]" :
+                 isDark ? "bg-orange-600 text-white border-orange-600" : "bg-orange-600 text-white border-orange-600")
+              : (isPastel ? "text-[#D0D2E0] hover:bg-[#42456C] border-[#4A4D6C]" :
+                 isDark ? "text-neutral-400 hover:bg-neutral-800 border-neutral-700" : "text-gray-600 hover:bg-gray-100 border-gray-300")
           )}
         >
           Saved
