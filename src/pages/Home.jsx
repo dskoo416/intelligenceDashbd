@@ -25,28 +25,36 @@ export default function Home({ sidebarOpen }) {
       `text-${textSize}`,
       isDark ? "bg-[#0A0A0A]" : "bg-gray-50"
     )}>
-      <div className="w-full space-y-3">
+      <div 
+        className="w-full"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1.5fr)',
+          gridAutoRows: 'auto',
+          gap: '12px'
+        }}
+      >
         {/* Top Row */}
-        <div className="grid grid-cols-10 gap-3 h-[280px]">
-          <div className="col-span-5">
-            <TodayCard theme={settings.theme} />
-          </div>
-          <div className="col-span-3">
-            <MarketSentimentCard theme={settings.theme} />
-          </div>
-          <div className="col-span-2">
-            <TickerCard theme={settings.theme} />
-          </div>
+        <div style={{ minHeight: '280px', maxHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+          <TodayCard theme={settings.theme} />
+        </div>
+        <div style={{ minHeight: '280px', maxHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+          <MarketSentimentCard theme={settings.theme} />
+        </div>
+        <div style={{ minHeight: '280px', maxHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+          <TickerCard theme={settings.theme} />
         </div>
 
         {/* Featured Articles Row */}
-        <div className="h-[140px]">
+        <div style={{ gridColumn: '1 / -1', minHeight: '140px', maxHeight: '180px' }}>
           <FeaturedArticlesCard theme={settings.theme} />
         </div>
 
         {/* Bottom Row */}
-        <div className="grid grid-cols-2 gap-3 h-[360px]">
+        <div style={{ minHeight: '360px', maxHeight: '500px', display: 'flex', flexDirection: 'column' }}>
           <KeywordHeatmapCard theme={settings.theme} />
+        </div>
+        <div style={{ gridColumn: 'span 2', minHeight: '360px', maxHeight: '500px', display: 'flex', flexDirection: 'column' }}>
           <PolicyUpdatesCard theme={settings.theme} />
         </div>
       </div>

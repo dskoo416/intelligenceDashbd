@@ -69,64 +69,41 @@ export default function PolicyUpdatesCard({ theme }) {
     setIsLoading(true);
     
     try {
-      const allUpdates = [];
-      
-      // Simulate Federal Register API
-      const federalRegisterQuery = `tariff OR export control OR anti-dumping OR battery OR steel OR aluminum`;
-      
-      // Simulate fetching (in real implementation, this would call actual APIs)
-      const mockUpdates = [
-        {
-          agency: 'ustr',
-          title: 'USTR Announces Section 301 Investigation on Digital Services Taxes',
-          link: 'https://ustr.gov/example1',
-          date: new Date().toISOString(),
-          summary: 'New tariff investigation announced on digital services taxes.',
-          type: 'press release'
-        },
-        {
-          agency: 'commerce',
-          title: 'Commerce Proposes Rule on Export Controls for Advanced Computing Items',
-          link: 'https://commerce.gov/example2',
-          date: new Date(Date.now() - 86400000).toISOString(),
-          summary: 'Proposed rule to strengthen export controls on advanced computing.',
-          type: 'proposed rule'
-        },
-        {
-          agency: 'bis',
-          title: 'BIS Adds Entities to Entity List for Activities Contrary to U.S. National Security',
-          link: 'https://bis.gov/example3',
-          date: new Date(Date.now() - 172800000).toISOString(),
-          summary: 'New entities added to the entity list.',
-          type: 'notice'
-        },
-        {
-          agency: 'treasury',
-          title: 'Treasury Announces New Sanctions on Foreign Financial Institutions',
-          link: 'https://treasury.gov/example4',
-          date: new Date(Date.now() - 259200000).toISOString(),
-          summary: 'Sanctions imposed on institutions supporting sanctioned entities.',
-          type: 'notice'
-        },
-        {
-          agency: 'whitehouse',
-          title: 'Executive Order on Securing the United States\' Leadership in Battery Technology',
-          link: 'https://whitehouse.gov/example5',
-          date: new Date(Date.now() - 345600000).toISOString(),
-          summary: 'New executive order to boost domestic battery manufacturing.',
-          type: 'executive order'
-        },
-        {
-          agency: 'commerce',
-          title: 'Final Determination on Anti-Dumping Duties for Steel Products',
-          link: 'https://commerce.gov/example6',
-          date: new Date(Date.now() - 432000000).toISOString(),
-          summary: 'Commerce issues final anti-dumping duties on imported steel.',
-          type: 'rule'
+      const prompt = `Search the web for the latest US government policy updates from Federal Register, USTR, Commerce Department, BIS, Treasury, DOE, and White House.
+
+Focus on:
+- Tariffs, duties, Section 301, Section 232, safeguards
+- Export controls, entity list additions, sanctions
+- Anti-dumping, countervailing duties
+- Policies affecting battery, EV, refinery, steel, aluminum, graphite, lithium, rare earths, advanced materials, petrochemicals
+
+Return the 10 most recent and relevant policy updates from the past 30 days.`;
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: prompt,
+        add_context_from_internet: true,
+        response_json_schema: {
+          type: 'object',
+          properties: {
+            updates: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  agency: { type: 'string' },
+                  title: { type: 'string' },
+                  link: { type: 'string' },
+                  date: { type: 'string' },
+                  summary: { type: 'string' },
+                  type: { type: 'string' }
+                }
+              }
+            }
+          }
         }
-      ];
-      
-      allUpdates.push(...mockUpdates);
+      });
+
+      const allUpdates = result.updates || [];
       
       setUpdates(allUpdates);
       localStorage.setItem('policy_updates', JSON.stringify(allUpdates));
@@ -270,14 +247,31 @@ function PolicySettingsContent({ isDark, enabledAgencies, customKeywords, onSave
       </div>
       
       <div>
-        <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>
-          Filter Keywords (comma-separated)
+        <Label className={cn("text-xs mb-1 block", isDark ? "text-neutral-400" : "text-gray-600")}>
+          Filter Keywords
         </Label>
+        <div className="flex flex-wrap gap-1 mb-2">
+          {localKeywords.split(',').map(k => k.trim()).filter(Boolean).map((keyword, idx) => (
+            <span key={idx} className={cn("text-[10px] px-1.5 py-0.5 border", isDark ? "bg-neutral-900 border-neutral-700 text-neutral-300" : "bg-gray-100 border-gray-300 text-gray-700")}>
+              {keyword}
+              <button 
+                onClick={() => {
+                  const keywords = localKeywords.split(',').map(k => k.trim()).filter(Boolean);
+                  keywords.splice(idx, 1);
+                  setLocalKeywords(keywords.join(', '));
+                }}
+                className="ml-1 text-red-500"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
         <Input
           value={localKeywords}
           onChange={(e) => setLocalKeywords(e.target.value)}
           placeholder="tariff, export control, sanctions..."
-          className={cn("mt-1 h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
+          className={cn("h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
         />
       </div>
 

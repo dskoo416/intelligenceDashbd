@@ -119,7 +119,8 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
 
   const fetchArticles = useCallback(async (forceRefresh = false) => {
     const key = activeSector?.id || 'main';
-    const cached = dataCache[key];
+    const cachedStr = localStorage.getItem(`articles_${key}`);
+    const cached = cachedStr ? JSON.parse(cachedStr) : null;
 
     if (cached?.articles?.length > 0 && !forceRefresh) {
       setArticles(cached.articles);
@@ -133,21 +134,13 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
       setGist(savedCache.gist || '');
       setCriticalArticles(savedCache.critical_articles || []);
     }
-
-    if (!settings?.auto_reload_news && cached?.articles && !forceRefresh) {
-      setArticles(cached.articles);
-      setIsLoadingArticles(false);
-      return;
-    }
     
     setIsLoadingArticles(true);
-    setArticles([]);
 
     let sectorSources;
     if (activeSector) {
       sectorSources = rssSources.filter(s => s.sector_id === activeSector.id && s.is_active !== false);
     } else {
-      // Main view - get all active sources
       sectorSources = rssSources.filter(s => s.is_active !== false);
     }
 
@@ -156,12 +149,12 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
       return;
     }
 
-    const allArticles = [];
+    const newArticles = [];
 
     for (const source of sectorSources) {
       const sourceArticles = await parseRSS(source.url);
       const sector = sectors.find(s => s.id === source.sector_id);
-      allArticles.push(...sourceArticles.map(a => ({ 
+      newArticles.push(...sourceArticles.map(a => ({ 
         ...a, 
         source: source.name,
         sector: sector?.name || '',
@@ -170,34 +163,25 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
       })));
     }
     
-    allArticles.sort((a, b) => {
+    const existingArticles = cached?.articles || [];
+    const existingLinks = new Set(existingArticles.map(a => a.link));
+    const uniqueNew = newArticles.filter(a => !existingLinks.has(a.link));
+    
+    const combined = [...uniqueNew, ...existingArticles];
+    
+    combined.sort((a, b) => {
       if (!a.pubDate || !b.pubDate) return 0;
       return new Date(b.pubDate) - new Date(a.pubDate);
     });
     
-    setArticles(allArticles);
-    updateCache(key, { articles: allArticles });
+    setArticles(combined);
+    localStorage.setItem(`articles_${key}`, JSON.stringify({ articles: combined }));
     setIsLoadingArticles(false);
-  }, [activeSector, rssSources, dataCache, sectors, savedCache, settings]);
+  }, [activeSector, rssSources, sectors, savedCache]);
 
   useEffect(() => {
-    const key = activeSector?.id || 'main';
-    const cached = dataCache[key];
-
-    if (cached) {
-      setArticles(cached.articles || []);
-      setGist(cached.gist || '');
-      setCriticalArticles(cached.criticalArticles || []);
-      setIsLoadingArticles(false);
-    } else {
-      setGist('');
-      setCriticalArticles([]);
-    }
-
-    if (settings?.auto_reload_news || !cached?.articles) {
-      fetchArticles(false);
-    }
-  }, [activeSector, activeSubsector]);
+    fetchArticles(false);
+  }, [activeSector, activeSubsector, fetchArticles]);
 
   const generateGist = async () => {
     if (articles.length === 0) return;

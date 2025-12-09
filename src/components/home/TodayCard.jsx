@@ -37,6 +37,7 @@ export default function TodayCard({ theme }) {
   const [sectorIndex, setSectorIndex] = useState(0);
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [todayIndex, setTodayIndex] = useState(0);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -54,9 +55,10 @@ export default function TodayCard({ theme }) {
   });
 
   useEffect(() => {
-    const cached = localStorage.getItem('today_summary');
+    const cached = localStorage.getItem('today_summary_all');
     if (cached && view === 'today') {
-      setContent(cached);
+      const summaries = JSON.parse(cached);
+      setContent(summaries[0] || '');
     } else if (view === 'gist' && sectors.length > 0) {
       loadGist();
     }
@@ -68,22 +70,27 @@ export default function TodayCard({ theme }) {
     } else if (view === 'gist') {
       loadGist();
     }
-  }, [view, sectorIndex]);
+  }, [view, sectorIndex, todayIndex]);
 
   const generateToday = async () => {
-    const cached = localStorage.getItem('today_summary');
-    if (cached) {
-      setContent(cached);
-      return;
+    const cachedStr = localStorage.getItem('today_summary_all');
+    if (cachedStr) {
+      const summaries = JSON.parse(cachedStr);
+      if (summaries[todayIndex]) {
+        setContent(summaries[todayIndex]);
+        return;
+      }
     }
 
     setIsLoading(true);
     const today = new Date();
     const todayStr = today.toDateString();
+    
+    const targetSector = todayIndex === 0 ? null : sectors[todayIndex - 1];
     const allArticles = [];
 
-    for (const sector of sectors.slice(0, 4)) {
-      const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
+    if (targetSector) {
+      const sectorSources = rssSources.filter(s => s.sector_id === targetSector.id && s.is_active !== false);
       
       for (const source of sectorSources.slice(0, 3)) {
         const articles = await parseRSS(source.url);
@@ -91,7 +98,20 @@ export default function TodayCard({ theme }) {
           if (!a.pubDate) return false;
           return new Date(a.pubDate).toDateString() === todayStr;
         });
-        allArticles.push(...todayArticles.map(a => ({ ...a, sector: sector.name })));
+        allArticles.push(...todayArticles.map(a => ({ ...a, sector: targetSector.name })));
+      }
+    } else {
+      for (const sector of sectors.slice(0, 4)) {
+        const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
+        
+        for (const source of sectorSources.slice(0, 3)) {
+          const articles = await parseRSS(source.url);
+          const todayArticles = articles.filter(a => {
+            if (!a.pubDate) return false;
+            return new Date(a.pubDate).toDateString() === todayStr;
+          });
+          allArticles.push(...todayArticles.map(a => ({ ...a, sector: sector.name })));
+        }
       }
     }
 
@@ -106,11 +126,14 @@ export default function TodayCard({ theme }) {
     ).join('\n');
 
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `Provide a concise daily intelligence summary for today. Focus on key themes and developments across sectors.\n\nArticles from today:\n${articleSummaries}\n\nProvide a 2-3 paragraph executive summary:`,
+      prompt: `Provide a concise daily intelligence summary for ${targetSector ? targetSector.name : 'all sectors'}. Focus on key themes and developments.\n\nArticles from today:\n${articleSummaries}\n\nProvide a 2-3 paragraph executive summary:`,
     });
 
     setContent(result);
-    localStorage.setItem('today_summary', result);
+    
+    const cachedAll = cachedStr ? JSON.parse(cachedStr) : [];
+    cachedAll[todayIndex] = result;
+    localStorage.setItem('today_summary_all', JSON.stringify(cachedAll));
     setIsLoading(false);
   };
 
@@ -130,12 +153,16 @@ export default function TodayCard({ theme }) {
   const handlePrev = () => {
     if (view === 'gist') {
       setSectorIndex((prev) => (prev === 0 ? sectors.length - 1 : prev - 1));
+    } else {
+      setTodayIndex((prev) => (prev === 0 ? sectors.length : prev - 1));
     }
   };
 
   const handleNext = () => {
     if (view === 'gist') {
       setSectorIndex((prev) => (prev === sectors.length - 1 ? 0 : prev + 1));
+    } else {
+      setTodayIndex((prev) => (prev === sectors.length ? 0 : prev + 1));
     }
   };
 
@@ -147,25 +174,25 @@ export default function TodayCard({ theme }) {
     <div className={cn("h-full flex flex-col border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
       <div className={cn("px-3 py-2 border-b flex items-center justify-between", isDark ? "border-[#262629]" : "border-gray-300")}>
         <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
-          {view === 'today' ? 'TODAY' : `GIST: ${sectors[sectorIndex]?.name || ''}`}
+          {view === 'today' 
+            ? (todayIndex === 0 ? 'TODAY - ALL SECTORS' : `TODAY - ${sectors[todayIndex - 1]?.name || ''}`)
+            : `GIST: ${sectors[sectorIndex]?.name || ''}`}
         </h3>
         <div className="flex items-center gap-2">
-          {view === 'gist' && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={handlePrev}
-                className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
-              >
-                <ChevronLeft className="w-3 h-3" />
-              </button>
-              <button
-                onClick={handleNext}
-                className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
-              >
-                <ChevronRight className="w-3 h-3" />
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handlePrev}
+              className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+            >
+              <ChevronLeft className="w-3 h-3" />
+            </button>
+            <button
+              onClick={handleNext}
+              className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+            >
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
           <button
             onClick={toggleView}
             className={cn("text-[9px] uppercase px-2 py-0.5 border transition-colors", isDark ? "border-[#262629] text-neutral-500 hover:text-neutral-300 hover:border-neutral-600" : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400")}
