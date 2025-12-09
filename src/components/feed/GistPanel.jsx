@@ -15,7 +15,7 @@ export default function GistPanel({ gist, isLoading, onRefresh, sectorName, them
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <h3 className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-neutral-400" : "text-gray-500")}>
-            Gist
+            Summary
           </h3>
           <Button
             variant="ghost"

@@ -33,11 +33,9 @@ const parseRSS = async (url) => {
 
 export default function TodayCard({ theme }) {
   const isDark = theme === 'dark';
-  const [view, setView] = useState('today');
-  const [sectorIndex, setSectorIndex] = useState(0);
+  const [todayIndex, setTodayIndex] = useState(0);
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [todayIndex, setTodayIndex] = useState(0);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -62,15 +60,15 @@ export default function TodayCard({ theme }) {
   }, []);
 
   useEffect(() => {
-    if (view === 'today') {
+    if (todayIndex === 0) {
       const cachedGist = localStorage.getItem('gist_main');
       if (cachedGist) {
         setContent(cachedGist);
       }
-    } else if (view === 'gist' && sectors.length > 0) {
+    } else if (sectors.length > 0 && todayIndex > 0) {
       loadGist();
     }
-  }, [view, sectorIndex, todayIndex, sectors]);
+  }, [sectorIndex, todayIndex, sectors]);
 
   const generateToday = async () => {
     const cachedStr = localStorage.getItem('today_summary_all');
@@ -138,9 +136,9 @@ export default function TodayCard({ theme }) {
   };
 
   const loadGist = async () => {
-    if (sectors.length === 0) return;
+    if (sectors.length === 0 || todayIndex === 0) return;
     
-    const sector = sectors[sectorIndex];
+    const sector = sectors[todayIndex - 1];
     const cache = cacheData.find(c => c.sector_id === sector.id && !c.subsector_name);
     
     if (cache?.gist) {
@@ -151,38 +149,25 @@ export default function TodayCard({ theme }) {
   };
 
   const handlePrev = () => {
-    if (view === 'gist') {
-      setSectorIndex((prev) => (prev === 0 ? sectors.length - 1 : prev - 1));
+    if (todayIndex === 0) {
+      setTodayIndex(sectors.length);
     } else {
-      setTodayIndex((prev) => (prev === 0 ? sectors.length : prev - 1));
+      setTodayIndex((prev) => prev - 1);
     }
   };
 
   const handleNext = () => {
-    if (view === 'gist') {
-      setSectorIndex((prev) => (prev === sectors.length - 1 ? 0 : prev + 1));
+    if (todayIndex === sectors.length) {
+      setTodayIndex(0);
     } else {
-      setTodayIndex((prev) => (prev === sectors.length ? 0 : prev + 1));
+      setTodayIndex((prev) => prev + 1);
     }
   };
 
-  const toggleView = () => {
-    if (view === 'today') {
-      setView('gist');
-      if (sectors.length > 0) {
-        loadGist();
-      }
-    } else {
-      setView('today');
-      const cachedGist = localStorage.getItem('gist_main');
-      if (cachedGist) {
-        setContent(cachedGist);
-      }
-    }
-  };
+
 
   const handleRefresh = () => {
-    if (view === 'today') {
+    if (todayIndex === 0) {
       generateToday();
     } else {
       loadGist();
@@ -193,37 +178,29 @@ export default function TodayCard({ theme }) {
     <div className={cn("h-full flex flex-col border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
       <div className={cn("px-3 py-2 border-b flex items-center justify-between", isDark ? "border-[#262629]" : "border-gray-300")}>
         <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
-          {view === 'today' ? 'GIST - MAIN' : `GIST: ${sectors[sectorIndex]?.name || ''}`}
+          {view === 'today' ? 'SUMMARY - MAIN' : `SUMMARY: ${sectors[sectorIndex]?.name || ''}`}
         </h3>
         <div className="flex items-center gap-2">
-          {view === 'gist' && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={handlePrev}
-                className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
-              >
-                <ChevronLeft className="w-3 h-3" />
-              </button>
-              <button
-                onClick={handleNext}
-                className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
-              >
-                <ChevronRight className="w-3 h-3" />
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handlePrev}
+              className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+            >
+              <ChevronLeft className="w-3 h-3" />
+            </button>
+            <button
+              onClick={handleNext}
+              className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+            >
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
           <button
             onClick={handleRefresh}
             disabled={isLoading}
             className={cn("text-[9px] uppercase px-2 py-0.5 border transition-colors", isDark ? "border-[#262629] text-neutral-500 hover:text-neutral-300 hover:border-neutral-600" : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400")}
           >
             {isLoading ? 'Refreshing...' : 'Refresh'}
-          </button>
-          <button
-            onClick={toggleView}
-            className={cn("text-[9px] uppercase px-2 py-0.5 border transition-colors", isDark ? "border-[#262629] text-neutral-500 hover:text-neutral-300 hover:border-neutral-600" : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400")}
-          >
-            {view === 'today' ? 'Sectors' : 'Main'}
           </button>
         </div>
       </div>

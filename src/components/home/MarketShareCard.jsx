@@ -103,7 +103,7 @@ Return JSON only.`;
                 className={cn(
                   "text-[9px] uppercase px-2 py-0.5 border transition-colors",
                   activeCategory.id === cat.id
-                    ? (isDark ? "border-orange-500 text-orange-500" : "border-orange-600 text-orange-600")
+                    ? (isDark ? "border-neutral-500 text-neutral-300" : "border-gray-500 text-gray-700")
                     : (isDark ? "border-[#262629] text-neutral-600 hover:text-neutral-400" : "border-gray-300 text-gray-600 hover:text-gray-900")
                 )}
               >
@@ -111,15 +111,6 @@ Return JSON only.`;
               </button>
             ))}
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={fetchData}
-            disabled={isLoading}
-            className="h-4 w-4 p-0"
-          >
-            <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", isDark ? "text-neutral-600" : "text-gray-500")} />
-          </Button>
         </div>
       </div>
 
@@ -136,13 +127,13 @@ Return JSON only.`;
                   <span className={cn("text-[10px]", isDark ? "text-neutral-400" : "text-gray-700")}>
                     {company.name}
                   </span>
-                  <span className={cn("text-[10px] font-mono font-semibold", isDark ? "text-orange-500" : "text-orange-600")}>
-                    {company.share}%
+                  <span className={cn("text-[10px] font-mono font-semibold", isDark ? "text-neutral-400" : "text-gray-700")}>
+                    {company.share > 1 ? `${company.share}%` : `${company.share}`}
                   </span>
                 </div>
                 <div className={cn("h-1.5 w-full", isDark ? "bg-[#1A1A1A]" : "bg-gray-200")}>
                   <div 
-                    className={cn("h-full transition-all", isDark ? "bg-orange-500/60" : "bg-orange-500")}
+                    className={cn("h-full transition-all", isDark ? "bg-neutral-600" : "bg-gray-500")}
                     style={{ width: `${(company.share / maxShare) * 100}%` }}
                   />
                 </div>
@@ -150,7 +141,7 @@ Return JSON only.`;
             ))}
             {data.source && (
               <div className={cn("text-[9px] mt-3 pt-2 border-t", isDark ? "text-neutral-700 border-[#262629]" : "text-gray-500 border-gray-300")} style={{ fontFamily: 'ui-monospace, monospace' }}>
-                Source: {data.source} – {data.period}
+                <a href="#" className="hover:underline">(sources)</a>
               </div>
             )}
           </div>
