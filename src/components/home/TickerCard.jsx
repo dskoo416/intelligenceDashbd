@@ -199,6 +199,27 @@ export default function TickerCard({ theme }) {
                 >
                   + Add Ticker
                 </Button>
+                <div className="space-y-2 border-t border-neutral-700 pt-3">
+                  <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Chart Duration</Label>
+                  <div className="grid grid-cols-5 gap-1">
+                    {['1', '7', '30', '365', 'ytd'].map(days => (
+                      <button
+                        key={days}
+                        onClick={() => {
+                          localStorage.setItem('ticker_chart_duration', days);
+                        }}
+                        className={cn(
+                          "text-[9px] uppercase px-2 py-1 transition-colors border",
+                          localStorage.getItem('ticker_chart_duration') === days || (!localStorage.getItem('ticker_chart_duration') && days === '30')
+                            ? (isDark ? "bg-[#1E1E1E] text-neutral-300 border-neutral-600" : "bg-gray-200 text-gray-900 border-gray-400")
+                            : (isDark ? "bg-[#0D0D0D] text-neutral-600 hover:text-neutral-400 border-neutral-700" : "bg-white text-gray-600 hover:text-gray-900 border-gray-300")
+                        )}
+                      >
+                        {days === 'ytd' ? 'YTD' : `${days}D`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <Button 
                   size="sm" 
                   onClick={() => setTickerConfig(editingConfig)}
@@ -216,7 +237,7 @@ export default function TickerCard({ theme }) {
       <div className="flex-1 flex flex-col">
         <div className={cn("px-2 py-1 border-b flex items-center justify-between", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
           <h4 className={cn("text-[9px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
-            {selectedTicker.symbol} – 1D
+            {selectedTicker.symbol}
           </h4>
           <div className="flex items-center gap-1">
             <button

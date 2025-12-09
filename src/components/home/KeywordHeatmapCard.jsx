@@ -49,7 +49,19 @@ export default function KeywordHeatmapCard({ theme }) {
     },
   });
 
-  const analyzeKeywords = async () => {
+  const analyzeKeywords = async (forceRefresh = false) => {
+    // Check cache first
+    if (!forceRefresh) {
+      const cached = localStorage.getItem('home_keyword_treemap');
+      if (cached) {
+        const data = JSON.parse(cached);
+        setKeywordData(data.keywords);
+        setAllArticles(data.articles);
+        setIsLoading(false);
+        return;
+      }
+    }
+
     setIsLoading(true);
     const keywordCounts = {};
     const articles = [];
@@ -100,6 +112,13 @@ export default function KeywordHeatmapCard({ theme }) {
 
     setKeywordData(sortedKeywords);
     setAllArticles(articles);
+    
+    // Cache the data
+    localStorage.setItem('home_keyword_treemap', JSON.stringify({
+      keywords: sortedKeywords,
+      articles: articles
+    }));
+    
     setIsLoading(false);
   };
 
@@ -111,7 +130,7 @@ export default function KeywordHeatmapCard({ theme }) {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await analyzeKeywords();
+    await analyzeKeywords(true);
     setIsRefreshing(false);
   };
 
