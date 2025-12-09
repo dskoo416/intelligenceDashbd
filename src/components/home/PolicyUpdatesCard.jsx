@@ -204,7 +204,7 @@ Return ONLY the JSON object and nothing else.`;
               Data may be stale – click refresh to update
             </div>
           )}
-        <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
+          <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
           {filteredUpdates.map((update, idx) => (
             <a
               key={idx}
@@ -241,7 +241,8 @@ Return ONLY the JSON object and nothing else.`;
               )}
             </a>
           ))}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
