@@ -47,6 +47,21 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
           Intelligence Feed
         </Link>
         <Link
+          to={createPageUrl('Documents')}
+          className={cn(
+            "px-4 h-full flex items-center text-[11px] font-medium uppercase tracking-wide transition-colors border-b-2",
+            currentPage === 'Documents'
+              ? "border-orange-500 text-orange-500"
+              : isPastel
+                ? "border-transparent text-[#9B9EBC] hover:text-white"
+                : isDark
+                  ? "border-transparent text-neutral-500 hover:text-neutral-300"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
+          )}
+        >
+          Documents
+        </Link>
+        <Link
           to={createPageUrl('Saved')}
           className={cn(
             "px-4 h-full flex items-center text-[11px] font-medium uppercase tracking-wide transition-colors border-b-2",
