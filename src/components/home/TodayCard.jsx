@@ -178,7 +178,7 @@ export default function TodayCard({ theme }) {
     <div className={cn("h-full flex flex-col border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
       <div className={cn("px-3 py-2 border-b flex items-center justify-between", isDark ? "border-[#262629]" : "border-gray-300")}>
         <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
-          {view === 'today' ? 'SUMMARY - MAIN' : `SUMMARY: ${sectors[sectorIndex]?.name || ''}`}
+          {todayIndex === 0 ? 'SUMMARY - MAIN' : `SUMMARY: ${sectors[todayIndex - 1]?.name || ''}`}
         </h3>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
