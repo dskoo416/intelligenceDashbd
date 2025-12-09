@@ -249,7 +249,9 @@ export default function TickerCard({ theme }) {
                 const prevIndex = currentIndex === 0 ? tickerConfig.length - 1 : currentIndex - 1;
                 setSelectedTicker(tickerConfig[prevIndex]);
               }}
-              className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+              className={cn("p-0.5 transition-colors", 
+                isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" :
+                isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
             >
               <ChevronLeft className="w-3 h-3" />
             </button>
@@ -259,7 +261,9 @@ export default function TickerCard({ theme }) {
                 const nextIndex = currentIndex === tickerConfig.length - 1 ? 0 : currentIndex + 1;
                 setSelectedTicker(tickerConfig[nextIndex]);
               }}
-              className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+              className={cn("p-0.5 transition-colors", 
+                isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" :
+                isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
             >
               <ChevronRight className="w-3 h-3" />
             </button>
@@ -276,15 +280,15 @@ export default function TickerCard({ theme }) {
                   isDark ? '#1A1A1A' : '#e5e7eb'} />
                 <XAxis 
                   dataKey="time" 
-                  tick={{ fontSize: 7, fill: isDark ? '#525252' : '#9ca3af' }}
-                  stroke={isDark ? '#1F1F1F' : '#e5e7eb'}
+                  tick={{ fontSize: 7, fill: isPastel ? '#9B9EBC' : isDark ? '#525252' : '#9ca3af' }}
+                  stroke={isPastel ? '#4A4D6C' : isDark ? '#1F1F1F' : '#e5e7eb'}
                   tickLine={false}
                   interval="preserveStartEnd"
                 />
                 <YAxis 
                   domain={['auto', 'auto']}
-                  tick={{ fontSize: 7, fill: isDark ? '#525252' : '#9ca3af' }}
-                  stroke={isDark ? '#1F1F1F' : '#e5e7eb'}
+                  tick={{ fontSize: 7, fill: isPastel ? '#9B9EBC' : isDark ? '#525252' : '#9ca3af' }}
+                  stroke={isPastel ? '#4A4D6C' : isDark ? '#1F1F1F' : '#e5e7eb'}
                   tickLine={false}
                   width={35}
                 />
