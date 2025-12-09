@@ -138,29 +138,33 @@ export default function FeaturedArticlesCard({ theme }) {
           </div>
         ) : (
           <div 
+            className="grid gap-x-6 gap-y-1"
             style={{
-              columnCount: 'auto',
-              columnWidth: '200px',
-              columnGap: '24px'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gridAutoFlow: 'column'
             }}
           >
             {criticalArticles.map((article, idx) => (
-              <a
-                key={idx}
-                href={article.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(
-                  "block mb-1.5 text-[11px] leading-[1.4] transition-colors break-inside-avoid",
-                  isDark 
-                    ? "text-orange-500 hover:text-orange-400" 
-                    : "text-orange-600 hover:text-orange-700"
-                )}
-                style={{ fontFamily: 'ui-monospace, monospace' }}
-              >
-                <span className={cn("mr-1.5", isDark ? "text-neutral-600" : "text-gray-500")}>{idx + 1})</span>
-                {article.title}
-              </a>
+              <div key={idx} className={cn("pb-1 border-b", isDark ? "border-[#262629]" : "border-gray-300")}>
+                <a
+                  href={article.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "block text-[11px] leading-[1.4] transition-colors",
+                    isDark 
+                      ? "text-orange-500 hover:text-orange-400" 
+                      : "text-orange-600 hover:text-orange-700"
+                  )}
+                  style={{ fontFamily: 'ui-monospace, monospace' }}
+                >
+                  <span className={cn("mr-1.5", isDark ? "text-neutral-600" : "text-gray-500")}>{idx + 1})</span>
+                  {article.title}
+                </a>
+                <div className={cn("text-[9px] mt-0.5", isDark ? "text-neutral-700" : "text-gray-500")}>
+                  {article.source} • {article.sector} • {article.pubDate && format(new Date(article.pubDate), 'MMM d')}
+                </div>
+              </div>
             ))}
           </div>
         )}

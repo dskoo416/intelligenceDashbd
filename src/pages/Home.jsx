@@ -3,11 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { cn } from "@/lib/utils";
 import TodayCard from '@/components/home/TodayCard';
-import MarketSentimentCard from '@/components/home/MarketSentimentCard';
+import PolicyUpdatesCard from '@/components/home/PolicyUpdatesCard';
 import TickerCard from '@/components/home/TickerCard';
 import FeaturedArticlesCard from '@/components/home/FeaturedArticlesCard';
 import KeywordHeatmapCard from '@/components/home/KeywordHeatmapCard';
-import PolicyUpdatesCard from '@/components/home/PolicyUpdatesCard';
+import MarketShareCard from '@/components/home/MarketShareCard';
 
 export default function Home({ sidebarOpen }) {
   const { data: settingsData = [] } = useQuery({
@@ -39,7 +39,7 @@ export default function Home({ sidebarOpen }) {
           <TodayCard theme={settings.theme} />
         </div>
         <div style={{ minHeight: '280px', maxHeight: '400px', display: 'flex', flexDirection: 'column' }}>
-          <MarketSentimentCard theme={settings.theme} />
+          <PolicyUpdatesCard theme={settings.theme} />
         </div>
         <div style={{ minHeight: '280px', maxHeight: '400px', display: 'flex', flexDirection: 'column' }}>
           <TickerCard theme={settings.theme} />
@@ -55,7 +55,7 @@ export default function Home({ sidebarOpen }) {
           <KeywordHeatmapCard theme={settings.theme} />
         </div>
         <div style={{ gridColumn: 'span 2', minHeight: '360px', maxHeight: '500px', display: 'flex', flexDirection: 'column' }}>
-          <PolicyUpdatesCard theme={settings.theme} />
+          <MarketShareCard theme={settings.theme} />
         </div>
       </div>
     </main>

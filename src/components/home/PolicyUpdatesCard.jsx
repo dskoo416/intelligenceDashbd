@@ -55,6 +55,13 @@ export default function PolicyUpdatesCard({ theme }) {
     applyFilters(updates);
   }, [enabledAgencies, customKeywords, updates]);
 
+  const isDataStale = () => {
+    if (updates.length === 0) return false;
+    const oldestDate = new Date(Math.min(...updates.map(u => new Date(u.date).getTime())));
+    const daysDiff = (new Date() - oldestDate) / (1000 * 60 * 60 * 24);
+    return daysDiff > 30;
+  };
+
   const applyFilters = (data) => {
     const filtered = data.filter(update => {
       if (!enabledAgencies.includes(update.agency)) return false;
@@ -126,7 +133,9 @@ Return ONLY the JSON object and nothing else.`;
         }
       });
 
-      const allUpdates = result.updates || [];
+      const allUpdates = (result.updates || []).sort((a, b) => {
+        return new Date(b.date) - new Date(a.date);
+      });
       
       setUpdates(allUpdates);
       localStorage.setItem('policy_updates', JSON.stringify(allUpdates));
@@ -184,15 +193,17 @@ Return ONLY the JSON object and nothing else.`;
         </div>
       </div>
 
-      {isLoading ? (
-        <div className={cn("flex-1 flex items-center justify-center text-[10px]", isDark ? "text-neutral-700" : "text-gray-500")}>
-          Loading policy updates...
-        </div>
-      ) : filteredUpdates.length === 0 ? (
+      {filteredUpdates.length === 0 && !isLoading ? (
         <div className={cn("flex-1 flex items-center justify-center text-[10px]", isDark ? "text-neutral-700" : "text-gray-500")}>
           Click refresh to load policy updates
         </div>
       ) : (
+        <>
+          {isDataStale() && (
+            <div className={cn("px-2 py-1 text-[9px] border-b", isDark ? "text-neutral-600 border-[#262629]" : "text-gray-500 border-gray-300")}>
+              Data may be stale – click refresh to update
+            </div>
+          )}
         <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
           {filteredUpdates.map((update, idx) => (
             <a
@@ -210,8 +221,12 @@ Return ONLY the JSON object and nothing else.`;
               </div>
               <div className={cn("text-[8px] mt-0.5", isDark ? "text-neutral-700" : "text-gray-500")}>
                 <span className={cn(isDark ? "text-blue-500" : "text-blue-600")}>{AGENCIES.find(a => a.id === update.agency)?.name}</span>
-                <span className="mx-1">•</span>
-                <span>{format(new Date(update.date), 'MMM d')}</span>
+                {update.date && (
+                  <>
+                    <span className="mx-1">•</span>
+                    <span>{format(new Date(update.date), 'MMM d')}</span>
+                  </>
+                )}
                 {update.type && (
                   <>
                     <span className="mx-1">•</span>

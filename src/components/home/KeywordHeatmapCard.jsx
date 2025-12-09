@@ -189,15 +189,35 @@ export default function KeywordHeatmapCard({ theme }) {
       <Dialog open={!!selectedKeyword} onOpenChange={() => setSelectedKeyword(null)}>
         <DialogContent className={cn("max-w-2xl max-h-[80vh] border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
           <div className={cn("flex items-center justify-between px-3 py-2 border-b", isDark ? "border-[#262629]" : "border-gray-300")}>
-            <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
-              Articles for "{selectedKeyword}"
-            </h3>
-            <button
-              onClick={() => setSelectedKeyword(null)}
-              className={cn("text-[14px] transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
-            >
-              ×
-            </button>
+            <div className="flex items-center gap-2">
+              <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
+                Articles for "{selectedKeyword}"
+              </h3>
+              <button className={cn("text-[10px] transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}>
+                ▼
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  keywordArticles.forEach(article => {
+                    const isSaved = savedArticles.some(a => a.link === article.link);
+                    if (!isSaved) {
+                      saveArticleMutation.mutate(article);
+                    }
+                  });
+                }}
+                className={cn("text-[14px] transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+              >
+                +
+              </button>
+              <button
+                onClick={() => setSelectedKeyword(null)}
+                className={cn("text-[14px] transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div className="overflow-y-auto" style={{ maxHeight: 'calc(80vh - 60px)' }}>
             {keywordArticles.length === 0 ? (
