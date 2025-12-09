@@ -19,6 +19,8 @@ export default function KeywordHeatmapCard({ theme }) {
   const [selectedKeyword, setSelectedKeyword] = useState(null);
   const [keywordArticles, setKeywordArticles] = useState([]);
   const [viewBySector, setViewBySector] = useState(false);
+  const [selectedSectorFilter, setSelectedSectorFilter] = useState(null);
+  const [displayMode, setDisplayMode] = useState('treemap');
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -52,9 +54,11 @@ export default function KeywordHeatmapCard({ theme }) {
   });
 
   const analyzeKeywords = async (forceRefresh = false) => {
+    const cacheKey = selectedSectorFilter ? `home_keyword_${selectedSectorFilter.id}` : 'home_keyword_treemap';
+
     // Check cache first
-    if (!forceRefresh && !viewBySector) {
-      const cached = localStorage.getItem('home_keyword_treemap');
+    if (!forceRefresh) {
+      const cached = localStorage.getItem(cacheKey);
       if (cached) {
         const data = JSON.parse(cached);
         setKeywordData(data.keywords);
@@ -66,10 +70,11 @@ export default function KeywordHeatmapCard({ theme }) {
 
     setIsLoading(true);
     const keywordCounts = {};
-    const sectorCounts = {};
     const articles = [];
 
-    for (const sector of sectors.slice(0, 4)) {
+    const targetSectors = selectedSectorFilter ? [selectedSectorFilter] : sectors.slice(0, 4);
+
+    for (const sector of targetSectors) {
       const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
 
       for (const source of sectorSources.slice(0, 5)) {
@@ -97,8 +102,6 @@ export default function KeywordHeatmapCard({ theme }) {
                 sector: sector.name
               });
 
-              sectorCounts[sector.name] = (sectorCounts[sector.name] || 0) + 1;
-
               const words = title.toLowerCase().split(/\s+/).filter(w => w.length > 4);
               words.forEach(word => {
                 keywordCounts[word] = (keywordCounts[word] || 0) + 1;
@@ -111,27 +114,16 @@ export default function KeywordHeatmapCard({ theme }) {
       }
     }
 
-    if (viewBySector) {
-      const sortedSectors = Object.entries(sectorCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 16);
-      setKeywordData(sortedSectors);
-    } else {
-      const sortedKeywords = Object.entries(keywordCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 16);
-      setKeywordData(sortedKeywords);
-    }
-
+    const sortedKeywords = Object.entries(keywordCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 16);
+    setKeywordData(sortedKeywords);
     setAllArticles(articles);
 
-    // Cache the data
-    if (!viewBySector) {
-      localStorage.setItem('home_keyword_treemap', JSON.stringify({
-        keywords: Object.entries(keywordCounts).sort((a, b) => b[1] - a[1]).slice(0, 16),
-        articles: articles
-      }));
-    }
+    localStorage.setItem(cacheKey, JSON.stringify({
+      keywords: sortedKeywords,
+      articles: articles
+    }));
 
     setIsLoading(false);
   };
@@ -140,7 +132,7 @@ export default function KeywordHeatmapCard({ theme }) {
     if (sectors.length > 0 && rssSources.length > 0) {
       analyzeKeywords();
     }
-  }, [sectors, rssSources, viewBySector]);
+  }, [sectors, rssSources, selectedSectorFilter]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -173,9 +165,7 @@ export default function KeywordHeatmapCard({ theme }) {
   };
 
   const handleKeywordClick = (keyword) => {
-    const filtered = viewBySector 
-      ? allArticles.filter(article => article.sector === keyword)
-      : allArticles.filter(article => article.title.toLowerCase().includes(keyword.toLowerCase()));
+    const filtered = allArticles.filter(article => article.title.toLowerCase().includes(keyword.toLowerCase()));
     setKeywordArticles(filtered);
     setSelectedKeyword(keyword);
   };
@@ -194,16 +184,31 @@ export default function KeywordHeatmapCard({ theme }) {
           <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
             isPastel ? "text-[#A5A8C0]" :
             isDark ? "text-neutral-500" : "text-gray-700")}>
-            {viewBySector ? 'SECTOR TREEMAP' : 'KEYWORD TREEMAP'}
+            KEYWORD ANALYSIS
           </h3>
           <div className="flex items-center gap-1">
+            <select
+              value={selectedSectorFilter?.id || 'all'}
+              onChange={(e) => {
+                const newSector = e.target.value === 'all' ? null : sectors.find(s => s.id === e.target.value);
+                setSelectedSectorFilter(newSector);
+              }}
+              className={cn("text-[9px] uppercase px-2 py-0.5 border transition-colors",
+                isPastel ? "bg-[#32354C] border-[#4A4D6C] text-[#9B9EBC]" :
+                isDark ? "bg-[#0A0A0A] border-[#262629] text-neutral-500" : "bg-white border-gray-300 text-gray-600")}
+            >
+              <option value="all">ALL SECTORS</option>
+              {sectors.slice(0, 4).map(s => (
+                <option key={s.id} value={s.id}>{s.name.toUpperCase()}</option>
+              ))}
+            </select>
             <button
-              onClick={() => setViewBySector(!viewBySector)}
+              onClick={() => setDisplayMode(displayMode === 'treemap' ? 'wordcloud' : 'treemap')}
               className={cn("text-[9px] uppercase px-2 py-0.5 border transition-colors",
                 isPastel ? "border-[#4A4D6C] text-[#9B9EBC] hover:text-white hover:border-[#6B6E8C]" :
                 isDark ? "border-[#262629] text-neutral-500 hover:text-neutral-300 hover:border-neutral-600" : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400")}
             >
-              {viewBySector ? 'Keywords' : 'Sectors'}
+              {displayMode === 'treemap' ? 'CLOUD' : 'TREEMAP'}
             </button>
             <Button 
               size="sm" 
@@ -225,7 +230,7 @@ export default function KeywordHeatmapCard({ theme }) {
             isDark ? "text-neutral-700" : "text-gray-500")}>
             Loading keywords...
           </div>
-          ) : (
+          ) : displayMode === 'treemap' ? (
           <div className={cn("flex-1 p-2", isPastel ? "bg-[#32354C]" : "")}>
             <div className="grid grid-cols-6 grid-rows-6 gap-1 h-full">
               {keywordData.map(([keyword, count]) => (
@@ -251,7 +256,29 @@ export default function KeywordHeatmapCard({ theme }) {
               ))}
             </div>
           </div>
-        )}
+          ) : (
+          <div className={cn("flex-1 p-3 flex items-center justify-center", isPastel ? "bg-[#32354C]" : "")}>
+            <div className="flex flex-wrap gap-2 items-center justify-center">
+              {keywordData.map(([keyword, count]) => {
+                const fontSize = 8 + Math.min(count / maxCount * 12, 12);
+                return (
+                  <button
+                    key={keyword}
+                    onClick={() => handleKeywordClick(keyword)}
+                    className={cn(
+                      "transition-all cursor-pointer hover:opacity-70",
+                      isPastel ? "text-[#D0D2E0]" :
+                      isDark ? "text-neutral-400" : "text-gray-700"
+                    )}
+                    style={{ fontSize: `${fontSize}px` }}
+                  >
+                    {keyword}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          )}
       </div>
 
       <Dialog open={!!selectedKeyword} onOpenChange={() => setSelectedKeyword(null)}>

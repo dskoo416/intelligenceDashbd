@@ -2,10 +2,10 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { cn } from "@/lib/utils";
-import TodayCard from '@/components/home/TodayCard';
+import SectorSnapshotStrip from '@/components/home/SectorSnapshotStrip';
+import FeaturedSectorTiles from '@/components/home/FeaturedSectorTiles';
 import PolicyUpdatesCard from '@/components/home/PolicyUpdatesCard';
 import TickerCard from '@/components/home/TickerCard';
-import FeaturedArticlesCard from '@/components/home/FeaturedArticlesCard';
 import KeywordHeatmapCard from '@/components/home/KeywordHeatmapCard';
 import MarketShareCard from '@/components/home/MarketShareCard';
 
@@ -26,37 +26,31 @@ export default function Home({ sidebarOpen }) {
       settings.theme === 'pastel' ? "bg-[#2B2D42]" :
       isDark ? "bg-[#0A0A0A]" : "bg-gray-50"
     )}>
-      <div 
-        className="w-full"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1.5fr)',
-          gridAutoRows: 'auto',
-          gap: settings.theme === 'pastel' ? '8px' : '12px'
-        }}
-      >
-        {/* Top Row */}
-        <div style={{ minHeight: '280px', maxHeight: '400px', display: 'flex', flexDirection: 'column' }}>
-          <TodayCard theme={settings.theme} />
-        </div>
-        <div style={{ minHeight: '280px', maxHeight: '400px', display: 'flex', flexDirection: 'column' }}>
-          <PolicyUpdatesCard theme={settings.theme} />
-        </div>
-        <div style={{ minHeight: '280px', maxHeight: '400px', display: 'flex', flexDirection: 'column' }}>
-          <TickerCard theme={settings.theme} />
+      <div className="w-full space-y-3">
+        {/* Top Strip - Sector Snapshot */}
+        <SectorSnapshotStrip theme={settings.theme} />
+
+        {/* Top Row - 3 Featured Tiles + Policy Updates */}
+        <div className="grid grid-cols-4 gap-3" style={{ minHeight: '200px' }}>
+          <div className="col-span-3">
+            <FeaturedSectorTiles theme={settings.theme} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <PolicyUpdatesCard theme={settings.theme} />
+          </div>
         </div>
 
-        {/* Featured Articles Row */}
-        <div style={{ gridColumn: '1 / -1', minHeight: '120px', maxHeight: '160px' }}>
-          <FeaturedArticlesCard theme={settings.theme} />
-        </div>
-
-        {/* Bottom Row */}
-        <div style={{ minHeight: '360px', maxHeight: '500px', display: 'flex', flexDirection: 'column' }}>
-          <KeywordHeatmapCard theme={settings.theme} />
-        </div>
-        <div style={{ gridColumn: 'span 2', minHeight: '360px', maxHeight: '500px', display: 'flex', flexDirection: 'column' }}>
-          <MarketShareCard theme={settings.theme} />
+        {/* Bottom Row - 3 Equal Cards */}
+        <div className="grid grid-cols-3 gap-3" style={{ minHeight: '360px', maxHeight: '500px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <KeywordHeatmapCard theme={settings.theme} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <TickerCard theme={settings.theme} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <MarketShareCard theme={settings.theme} />
+          </div>
         </div>
       </div>
     </main>
