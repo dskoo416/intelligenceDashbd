@@ -33,6 +33,7 @@ const parseRSS = async (url) => {
 
 export default function TodayCard({ theme }) {
   const isDark = theme === 'dark';
+  const isPastel = theme === 'pastel';
   const [todayIndex, setTodayIndex] = useState(0);
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -175,9 +176,15 @@ export default function TodayCard({ theme }) {
   };
 
   return (
-    <div className={cn("h-full flex flex-col border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
-      <div className={cn("px-3 py-2 border-b flex items-center justify-between", isDark ? "border-[#262629]" : "border-gray-300")}>
-        <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
+    <div className={cn("h-full flex flex-col border", 
+      isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+      isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
+      <div className={cn("px-3 py-2 border-b flex items-center justify-between", 
+        isPastel ? "border-[#4A4D6C]" :
+        isDark ? "border-[#262629]" : "border-gray-300")}>
+        <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
+          isPastel ? "text-[#A5A8C0]" :
+          isDark ? "text-neutral-500" : "text-gray-700")}>
           {todayIndex === 0 ? 'SUMMARY - MAIN' : `SUMMARY: ${sectors[todayIndex - 1]?.name || ''}`}
         </h3>
         <div className="flex items-center gap-2">
@@ -198,28 +205,40 @@ export default function TodayCard({ theme }) {
           <button
             onClick={handleRefresh}
             disabled={isLoading}
-            className={cn("text-[9px] uppercase px-2 py-0.5 border transition-colors", isDark ? "border-[#262629] text-neutral-500 hover:text-neutral-300 hover:border-neutral-600" : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400")}
+            className={cn("text-[9px] uppercase px-2 py-0.5 border transition-colors", 
+              isPastel ? "border-[#4A4D6C] text-[#9B9EBC] hover:text-white hover:border-[#6B6E8C]" :
+              isDark ? "border-[#262629] text-neutral-500 hover:text-neutral-300 hover:border-neutral-600" : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400")}
           >
             {isLoading ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
       </div>
       
-      <div className={cn("flex-1 overflow-y-auto p-3", isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
+      <div className={cn("flex-1 overflow-y-auto p-3", 
+        isPastel ? "bg-[#32354C]" :
+        isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
         {content ? (
           <ReactMarkdown
-            className={cn("text-[12px] leading-[1.4] space-y-2", isDark ? "text-neutral-400" : "text-gray-700")}
+            className={cn("text-[12px] leading-[1.4] space-y-2", 
+              isPastel ? "text-[#D0D2E0]" :
+              isDark ? "text-neutral-400" : "text-gray-700")}
             components={{
               p: ({node, ...props}) => <p className="mb-2" {...props} />,
-              strong: ({node, ...props}) => <strong className={cn("font-semibold", isDark ? "text-neutral-300" : "text-gray-900")} {...props} />,
+              strong: ({node, ...props}) => <strong className={cn("font-semibold", 
+                isPastel ? "text-white" :
+                isDark ? "text-neutral-300" : "text-gray-900")} {...props} />,
               ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-1" {...props} />,
-              li: ({node, ...props}) => <li className={cn(isDark ? "text-neutral-400" : "text-gray-700")} {...props} />
+              li: ({node, ...props}) => <li className={cn(
+                isPastel ? "text-[#D0D2E0]" :
+                isDark ? "text-neutral-400" : "text-gray-700")} {...props} />
             }}
           >
             {content}
           </ReactMarkdown>
         ) : (
-          <div className={cn("text-[11px]", isDark ? "text-neutral-600" : "text-gray-500")}>
+          <div className={cn("text-[11px]", 
+            isPastel ? "text-[#7B7E9C]" :
+            isDark ? "text-neutral-600" : "text-gray-500")}>
             {isLoading ? 'Generating summary...' : 'No content available.'}
           </div>
         )}

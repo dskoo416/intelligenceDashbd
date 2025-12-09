@@ -59,6 +59,7 @@ const fetchQuote = async (symbol) => {
 
 export default function TickerCard({ theme }) {
   const isDark = theme === 'dark';
+  const isPastel = theme === 'pastel';
   const [tickerConfig, setTickerConfig] = useState(DEFAULT_TICKER_CONFIG);
   const [editingConfig, setEditingConfig] = useState(DEFAULT_TICKER_CONFIG);
   const [tickerData, setTickerData] = useState({});
@@ -95,9 +96,15 @@ export default function TickerCard({ theme }) {
   const selectedData = tickerData[selectedTicker.symbol];
 
   return (
-    <div className={cn("h-full flex flex-col rounded", isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
-      <div className={cn("flex items-center justify-between px-2 py-1 border-b", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
-        <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>MARKET TICKER</h3>
+    <div className={cn("h-full flex flex-col rounded", 
+      isPastel ? "bg-[#3A3D5C] border border-[#4A4D6C] shadow-sm" :
+      isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
+      <div className={cn("flex items-center justify-between px-2 py-1 border-b", 
+        isPastel ? "border-[#4A4D6C]" :
+        isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
+        <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
+          isPastel ? "text-[#A5A8C0]" :
+          isDark ? "text-neutral-500" : "text-gray-700")}>MARKET TICKER</h3>
         <div className="flex items-center gap-1">
           <Button 
             size="sm" 
@@ -106,12 +113,16 @@ export default function TickerCard({ theme }) {
             disabled={isRefreshing}
             className="h-4 w-4 p-0"
           >
-            <RefreshCw className={cn("w-2.5 h-2.5", isRefreshing && "animate-spin", isDark ? "text-neutral-600" : "text-gray-500")} />
+            <RefreshCw className={cn("w-2.5 h-2.5", isRefreshing && "animate-spin", 
+              isPastel ? "text-[#7B7E9C]" :
+              isDark ? "text-neutral-600" : "text-gray-500")} />
           </Button>
           <Popover>
             <PopoverTrigger asChild>
               <Button size="sm" variant="ghost" className="h-4 w-4 p-0">
-                <Settings className={cn("w-2.5 h-2.5", isDark ? "text-neutral-600" : "text-gray-500")} />
+                <Settings className={cn("w-2.5 h-2.5", 
+                  isPastel ? "text-[#7B7E9C]" :
+                  isDark ? "text-neutral-600" : "text-gray-500")} />
               </Button>
             </PopoverTrigger>
             <PopoverContent className={cn("w-96", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
@@ -235,8 +246,12 @@ export default function TickerCard({ theme }) {
       
       {/* Top Half - Chart */}
       <div className="flex-1 flex flex-col">
-        <div className={cn("px-2 py-1 border-b flex items-center justify-between", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
-          <h4 className={cn("text-[9px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
+        <div className={cn("px-2 py-1 border-b flex items-center justify-between", 
+          isPastel ? "border-[#4A4D6C]" :
+          isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
+          <h4 className={cn("text-[9px] font-semibold uppercase tracking-wider", 
+            isPastel ? "text-[#A5A8C0]" :
+            isDark ? "text-neutral-500" : "text-gray-700")}>
             {selectedTicker.symbol}
           </h4>
           <div className="flex items-center gap-1">
@@ -262,11 +277,15 @@ export default function TickerCard({ theme }) {
             </button>
           </div>
         </div>
-        <div className={cn("flex-1", isDark ? "bg-[#0A0A0A]" : "bg-gray-50")}>
+        <div className={cn("flex-1", 
+          isPastel ? "bg-[#32354C]" :
+          isDark ? "bg-[#0A0A0A]" : "bg-gray-50")}>
           {selectedData?.chartData && selectedData.chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={selectedData.chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1A1A1A' : '#e5e7eb'} />
+                <CartesianGrid strokeDasharray="3 3" stroke={
+                  isPastel ? '#4A4D6C' :
+                  isDark ? '#1A1A1A' : '#e5e7eb'} />
                 <XAxis 
                   dataKey="time" 
                   tick={{ fontSize: 7, fill: isDark ? '#525252' : '#9ca3af' }}
@@ -291,7 +310,9 @@ export default function TickerCard({ theme }) {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className={cn("flex items-center justify-center h-full text-[9px]", isDark ? "text-neutral-700" : "text-gray-400")}>
+            <div className={cn("flex items-center justify-center h-full text-[9px]", 
+              isPastel ? "text-[#7B7E9C]" :
+              isDark ? "text-neutral-700" : "text-gray-400")}>
               {isRefreshing ? 'Loading...' : 'No chart data'}
             </div>
           )}
@@ -299,7 +320,9 @@ export default function TickerCard({ theme }) {
       </div>
 
       {/* Bottom Half - Ticker List */}
-        <div className={cn("border-t", isDark ? "border-[#1F1F1F] bg-[#0F0F0F]" : "border-gray-300 bg-gray-50")}>
+        <div className={cn("border-t", 
+          isPastel ? "border-[#4A4D6C] bg-[#2F3248]" :
+          isDark ? "border-[#1F1F1F] bg-[#0F0F0F]" : "border-gray-300 bg-gray-50")}>
         <div className="divide-y divide-[#1F1F1F]">
           {tickerConfig.map((config) => {
             const data = tickerData[config.symbol];
@@ -310,29 +333,39 @@ export default function TickerCard({ theme }) {
                 onClick={() => setSelectedTicker(config)}
                 className={cn(
                   "w-full px-2 py-1 flex items-center justify-between transition-colors relative",
-                  isDark 
-                    ? "hover:bg-[#1A1A1A]" 
-                    : "hover:bg-gray-100",
-                  isActive && (isDark ? "bg-[#1A1A1A]" : "bg-gray-100")
+                  isPastel ? "hover:bg-[#42456C]" :
+                  isDark ? "hover:bg-[#1A1A1A]" : "hover:bg-gray-100",
+                  isActive && (isPastel ? "bg-[#42456C]" : isDark ? "bg-[#1A1A1A]" : "bg-gray-100")
                 )}
               >
                 {isActive && (
-                  <div className={cn("absolute left-0 top-0 bottom-0 w-[2px]", isDark ? "bg-orange-500" : "bg-orange-600")} />
+                  <div className={cn("absolute left-0 top-0 bottom-0 w-[2px]", 
+                    isPastel ? "bg-[#9B8B6B]" :
+                    isDark ? "bg-orange-500" : "bg-orange-600")} />
                 )}
-                <span className={cn("text-[9px] font-medium text-left pl-1", isDark ? "text-neutral-400" : "text-gray-700")}>
+                <span className={cn("text-[9px] font-medium text-left pl-1", 
+                  isPastel ? "text-[#D0D2E0]" :
+                  isDark ? "text-neutral-400" : "text-gray-700")}>
                   {config.label}
                 </span>
                 {data ? (
                   <div className="flex items-center gap-2">
-                    <span className={cn("text-[9px] font-mono font-bold", isDark ? "text-white" : "text-gray-900")}>
+                    <span className={cn("text-[9px] font-mono font-bold", 
+                      isPastel ? "text-white" :
+                      isDark ? "text-white" : "text-gray-900")}>
                       {formatPrice(data.price, config.symbol)}
                     </span>
-                    <span className={cn("text-[9px] font-mono", data.positive ? (isDark ? "text-[#2D8659]" : "text-green-600") : (isDark ? "text-[#8B3A3A]" : "text-red-600"))}>
+                    <span className={cn("text-[9px] font-mono", 
+                      data.positive 
+                        ? (isPastel ? "text-[#6B9B9B]" : isDark ? "text-[#2D8659]" : "text-green-600") 
+                        : (isPastel ? "text-[#9B6B7B]" : isDark ? "text-[#8B3A3A]" : "text-red-600"))}>
                       {data.positive ? '+' : ''}{data.change.toFixed(2)} ({data.positive ? '+' : ''}{data.changePercent.toFixed(2)}%)
                     </span>
                   </div>
                 ) : (
-                  <span className={cn("text-[8px]", isDark ? "text-neutral-700" : "text-gray-400")}>Loading...</span>
+                  <span className={cn("text-[8px]", 
+                    isPastel ? "text-[#7B7E9C]" :
+                    isDark ? "text-neutral-700" : "text-gray-400")}>Loading...</span>
                 )}
               </button>
             );
