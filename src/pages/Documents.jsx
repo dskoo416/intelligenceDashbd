@@ -127,17 +127,14 @@ export default function Documents() {
     
     setIsGenerating(true);
     
-    const items = mode === 'documents' 
-      ? documents.filter(d => selectedIds.includes(d.id))
-      : savedArticles.filter(a => selectedIds.includes(a.id));
+    // Get all selected items from both documents and saved articles
+    const selectedDocs = documents.filter(d => selectedIds.includes(d.id));
+    const selectedSaved = savedArticles.filter(a => selectedIds.includes(a.id));
 
-    const contentSummary = items.map(item => {
-      if (mode === 'documents') {
-        return `Document: ${item.title}\n${item.content || ''}`;
-      } else {
-        return `Article: ${item.title}\n${item.description || ''}`;
-      }
-    }).join('\n\n');
+    const contentSummary = [
+      ...selectedDocs.map(doc => `Document: ${doc.title}\n${doc.content || ''}`),
+      ...selectedSaved.map(article => `Article: ${article.title}\n${article.description || ''}`)
+    ].join('\n\n');
 
     const formatText = reportFormatItem 
       ? (reportFormatItem.content || reportFormatItem.description || '')
@@ -213,9 +210,11 @@ Generate the report now:`,
         });
       })();
 
-  const selectedItems = mode === 'documents'
-    ? documents.filter(d => selectedIds.includes(d.id))
-    : savedArticles.filter(a => selectedIds.includes(a.id));
+  // Combine selected items from both documents and saved articles
+  const selectedItems = [
+    ...documents.filter(d => selectedIds.includes(d.id)),
+    ...savedArticles.filter(a => selectedIds.includes(a.id))
+  ];
 
   const textSize = localStorage.getItem('textSize') || 'medium';
 
