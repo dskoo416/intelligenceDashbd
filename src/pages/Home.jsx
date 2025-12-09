@@ -31,11 +31,11 @@ export default function Home({ sidebarOpen }) {
         <SectorSnapshotStrip theme={settings.theme} />
 
         {/* Top Row - 3 Featured Tiles + Policy Updates */}
-        <div className="grid grid-cols-4 gap-3" style={{ minHeight: '200px' }}>
-          <div className="col-span-3">
+        <div className="grid grid-cols-4 gap-3" style={{ height: '280px' }}>
+          <div className="col-span-3 h-full">
             <FeaturedSectorTiles theme={settings.theme} />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="h-full">
             <PolicyUpdatesCard theme={settings.theme} />
           </div>
         </div>

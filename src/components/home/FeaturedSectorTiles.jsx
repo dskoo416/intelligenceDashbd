@@ -3,6 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from "@/lib/utils";
 import { format } from 'date-fns';
+import { RefreshCw } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
 const parseRSS = async (url) => {
   try {
@@ -36,6 +38,7 @@ export default function FeaturedSectorTiles({ theme }) {
   const isDark = theme === 'dark';
   const isPastel = theme === 'pastel';
   const [featuredArticles, setFeaturedArticles] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -59,7 +62,16 @@ export default function FeaturedSectorTiles({ theme }) {
     loadFeatured();
   }, [sectors, rssSources]);
 
-  const loadFeatured = async () => {
+  const loadFeatured = async (forceRefresh = false) => {
+    if (!forceRefresh) {
+      const cached = localStorage.getItem('home_featured_tiles');
+      if (cached) {
+        setFeaturedArticles(JSON.parse(cached));
+        return;
+      }
+    }
+
+    setIsLoading(true);
     const featured = [];
 
     for (const sector of sectors.slice(0, 3)) {
@@ -86,19 +98,43 @@ export default function FeaturedSectorTiles({ theme }) {
 
     setFeaturedArticles(featured);
     localStorage.setItem('home_featured_tiles', JSON.stringify(featured));
+    setIsLoading(false);
+  };
+
+  const handleRefresh = async () => {
+    await loadFeatured(true);
   };
 
   return (
-    <div className="grid grid-cols-3 gap-3">
-      {featuredArticles.map((item, idx) => (
-        <div key={idx} className={cn("border p-3", 
-          isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
-          isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
-          <div className={cn("text-[9px] font-semibold uppercase mb-2 tracking-wider", 
-            isPastel ? "text-[#A5A8C0]" :
-            isDark ? "text-neutral-500" : "text-gray-700")}>
-            {item.sector}
-          </div>
+    <div className="h-full flex flex-col">
+      <div className={cn("px-3 py-1 border-b flex items-center justify-between", 
+        isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+        isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
+        <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
+          isPastel ? "text-[#A5A8C0]" :
+          isDark ? "text-neutral-500" : "text-gray-700")}>SUMMARY</h3>
+        <Button 
+          size="sm" 
+          variant="ghost" 
+          onClick={handleRefresh}
+          disabled={isLoading}
+          className="h-4 w-4 p-0"
+        >
+          <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", 
+            isPastel ? "text-[#7B7E9C]" :
+            isDark ? "text-neutral-600" : "text-gray-500")} />
+        </Button>
+      </div>
+      <div className="grid grid-cols-3 gap-3 flex-1 p-3">
+        {featuredArticles.map((item, idx) => (
+          <div key={idx} className={cn("border p-3", 
+            isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+            isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
+            <div className={cn("text-[9px] font-semibold uppercase mb-2 tracking-wider", 
+              isPastel ? "text-[#A5A8C0]" :
+              isDark ? "text-neutral-500" : "text-gray-700")}>
+              {item.sector}
+            </div>
           {item.article ? (
             <div>
               <a
@@ -126,6 +162,7 @@ export default function FeaturedSectorTiles({ theme }) {
           )}
         </div>
       ))}
+      </div>
     </div>
   );
 }
