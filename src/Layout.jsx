@@ -365,6 +365,7 @@ export default function Layout({ children, currentPageName }) {
           const newSettings = { ...settings, theme: settings.theme === 'dark' ? 'light' : 'dark' };
           updateSettingsMutation.mutate(newSettings);
         }}
+        onUpdateSettings={(data) => updateSettingsMutation.mutate(data)}
         onNavigateToIntelligence={() => navigate(createPageUrl('IntelligenceFeed'))}
         onNavigateToSaved={() => navigate(createPageUrl('Home'))}
         textSize={textSize}

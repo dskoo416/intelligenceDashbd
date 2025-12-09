@@ -38,7 +38,7 @@ export default function FeaturedSectorTiles({ theme }) {
   const isDark = theme === 'dark';
   const isPastel = theme === 'pastel';
   const [featuredArticles, setFeaturedArticles] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingStates, setLoadingStates] = useState({});
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -58,83 +58,76 @@ export default function FeaturedSectorTiles({ theme }) {
   }, []);
 
   useEffect(() => {
-    if (featuredArticles.length > 0) return;
-    loadFeatured();
+    const cached = localStorage.getItem('home_featured_tiles');
+    if (cached) {
+      setFeaturedArticles(JSON.parse(cached));
+    } else if (sectors.length > 0 && rssSources.length > 0) {
+      loadInitialFeatured();
+    }
   }, [sectors, rssSources]);
 
-  const loadFeatured = async (forceRefresh = false) => {
-    if (!forceRefresh) {
-      const cached = localStorage.getItem('home_featured_tiles');
-      if (cached) {
-        setFeaturedArticles(JSON.parse(cached));
-        return;
-      }
-    }
-
-    setIsLoading(true);
+  const loadInitialFeatured = async () => {
     const featured = [];
-
     for (const sector of sectors.slice(0, 3)) {
-      const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
-      let articles = [];
-
-      for (const source of sectorSources.slice(0, 3)) {
-        const sourceArticles = await parseRSS(source.url);
-        articles.push(...sourceArticles.map(a => ({ ...a, source: source.name })));
-      }
-
-      if (articles.length > 0) {
-        featured.push({
-          sector: sector.name,
-          article: articles[0]
-        });
-      } else {
-        featured.push({
-          sector: sector.name,
-          article: null
-        });
-      }
+      featured.push({ sector: sector.name, article: null, sectorId: sector.id });
     }
-
     setFeaturedArticles(featured);
-    localStorage.setItem('home_featured_tiles', JSON.stringify(featured));
-    setIsLoading(false);
   };
 
-  const handleRefresh = async () => {
-    await loadFeatured(true);
+  const loadFeaturedForSector = async (sectorIdx) => {
+    const sector = sectors[sectorIdx];
+    if (!sector) return;
+
+    setLoadingStates(prev => ({ ...prev, [sectorIdx]: true }));
+    const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
+    let articles = [];
+
+    for (const source of sectorSources.slice(0, 3)) {
+      const sourceArticles = await parseRSS(source.url);
+      articles.push(...sourceArticles.map(a => ({ ...a, source: source.name })));
+    }
+
+    const newFeatured = [...featuredArticles];
+    newFeatured[sectorIdx] = {
+      sector: sector.name,
+      article: articles.length > 0 ? articles[0] : null,
+      sectorId: sector.id
+    };
+
+    setFeaturedArticles(newFeatured);
+    localStorage.setItem('home_featured_tiles', JSON.stringify(newFeatured));
+    setLoadingStates(prev => ({ ...prev, [sectorIdx]: false }));
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className={cn("px-3 py-1 border-b flex items-center justify-between", 
-        isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
-        isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
-        <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
-          isPastel ? "text-[#A5A8C0]" :
-          isDark ? "text-neutral-500" : "text-gray-700")}>SUMMARY</h3>
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          onClick={handleRefresh}
-          disabled={isLoading}
-          className="h-4 w-4 p-0"
-        >
-          <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", 
-            isPastel ? "text-[#7B7E9C]" :
-            isDark ? "text-neutral-600" : "text-gray-500")} />
-        </Button>
-      </div>
-      <div className="grid grid-cols-3 gap-3 flex-1 p-3">
-        {featuredArticles.map((item, idx) => (
-          <div key={idx} className={cn("border p-3", 
-            isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
-            isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
-            <div className={cn("text-[9px] font-semibold uppercase mb-2 tracking-wider", 
+    <div className="grid grid-cols-3 gap-3 h-full">
+      {featuredArticles.map((item, idx) => (
+        <div key={idx} className={cn("border flex flex-col h-full", 
+          isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+          isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
+          <div className={cn("px-3 py-1 border-b flex items-center justify-between", 
+            isPastel ? "border-[#4A4D6C]" :
+            isDark ? "border-[#262629]" : "border-gray-300")}>
+            <h3 className={cn("text-[9px] font-semibold uppercase tracking-wider", 
               isPastel ? "text-[#A5A8C0]" :
               isDark ? "text-neutral-500" : "text-gray-700")}>
               {item.sector}
-            </div>
+            </h3>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={() => loadFeaturedForSector(idx)}
+              disabled={loadingStates[idx]}
+              className="h-4 w-4 p-0"
+            >
+              <RefreshCw className={cn("w-2.5 h-2.5", loadingStates[idx] && "animate-spin", 
+                isPastel ? "text-[#7B7E9C]" :
+                isDark ? "text-neutral-600" : "text-gray-500")} />
+            </Button>
+          </div>
+          <div className={cn("flex-1 p-3", 
+            isPastel ? "bg-[#32354C]" :
+            isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
           {item.article ? (
             <div>
               <a
@@ -160,9 +153,9 @@ export default function FeaturedSectorTiles({ theme }) {
               No featured article yet
             </div>
           )}
+          </div>
         </div>
       ))}
-      </div>
     </div>
   );
 }

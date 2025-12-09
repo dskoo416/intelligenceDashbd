@@ -202,15 +202,16 @@ export default function TickerCard({ theme }) {
                     {['1', '7', '30', '365', 'ytd'].map(days => (
                       <button
                         key={days}
-                        onClick={() => {
-                          const newSettings = { ...settingsData[0], ticker_chart_duration: days };
-                          base44.entities.AppSettings.update(settingsData[0]?.id, newSettings);
+                        onClick={async () => {
+                          if (settingsData[0]?.id) {
+                            await base44.entities.AppSettings.update(settingsData[0].id, { ticker_chart_duration: days });
+                          }
                           localStorage.setItem('ticker_chart_duration', days);
-                          window.location.reload();
+                          setChartDuration(days);
                         }}
                         className={cn(
                           "text-[9px] uppercase px-1 py-0.5 transition-colors border",
-                          (settingsData[0]?.ticker_chart_duration || localStorage.getItem('ticker_chart_duration') || '30') === days
+                          chartDuration === days
                             ? (isDark ? "bg-[#1E1E1E] text-neutral-300 border-neutral-600" : "bg-gray-200 text-gray-900 border-gray-400")
                             : (isDark ? "bg-[#0D0D0D] text-neutral-600 hover:text-neutral-400 border-neutral-700" : "bg-white text-gray-600 hover:text-gray-900 border-gray-300")
                         )}

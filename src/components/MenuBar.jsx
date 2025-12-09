@@ -28,6 +28,7 @@ export default function MenuBar({
   viewMode,
   onToggleViewMode,
   onToggleTheme,
+  onUpdateSettings,
   onNavigateToIntelligence,
   onNavigateToSaved,
   textSize,
