@@ -18,9 +18,9 @@ export default function ReportBuilder({
   const isDark = theme === 'dark';
   const isPastel = theme === 'pastel';
   const [instructions, setInstructions] = useState('');
-  const [reportFormatId, setReportFormatId] = useState(null);
+  const [reportFormatIds, setReportFormatIds] = useState([]);
 
-  const reportFormatItem = selectedItems.find(item => item.id === reportFormatId);
+  const reportFormatItems = selectedItems.filter(item => reportFormatIds.includes(item.id));
 
   const handleDownload = () => {
     if (!reportContent) {
@@ -51,11 +51,15 @@ export default function ReportBuilder({
         </h3>
         <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
           {selectedItems.map(item => {
-            const isReportFormat = item.id === reportFormatId;
+            const isReportFormat = reportFormatIds.includes(item.id);
             return (
               <div
                 key={item.id}
-                onClick={() => setReportFormatId(item.id)}
+                onClick={() => {
+                  setReportFormatIds(prev => 
+                    prev.includes(item.id) ? prev.filter(id => id !== item.id) : [...prev, item.id]
+                  );
+                }}
                 className={cn("flex items-center gap-1 px-2 py-1 text-[10px] border cursor-pointer transition-colors",
                   isReportFormat
                     ? (isPastel ? "bg-[#9B8B6B] border-[#9B8B6B] text-white" :
@@ -71,7 +75,7 @@ export default function ReportBuilder({
                   onClick={(e) => {
                     e.stopPropagation();
                     onRemoveItem(item.id);
-                    if (reportFormatId === item.id) setReportFormatId(null);
+                    setReportFormatIds(prev => prev.filter(id => id !== item.id));
                   }}
                   className={cn("hover:opacity-70",
                     isReportFormat ? "text-white" :
@@ -95,16 +99,23 @@ export default function ReportBuilder({
           isDark ? "text-neutral-500" : "text-gray-700")}>
           Report Format
         </h3>
-        <div className={cn("p-2 text-[9px] h-24 overflow-y-auto border font-mono",
+        <div className={cn("p-2 text-[10px] h-24 overflow-y-auto border",
           isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-[#9B9EBC]" :
-          isDark ? "bg-[#0A0A0A] border-[#1F1F1F] text-neutral-600" : "bg-white border-gray-300 text-gray-600")}>
-          {reportFormatItem ? (
-            <pre className="whitespace-pre-wrap">{reportFormatItem.content || reportFormatItem.description || 'No content available'}</pre>
+          isDark ? "bg-[#0A0A0A] border-[#1F1F1F] text-neutral-400" : "bg-white border-gray-300 text-gray-600")}>
+          {reportFormatItems.length > 0 ? (
+            <div className="space-y-1">
+              {reportFormatItems.map(item => (
+                <div key={item.id} className="flex items-center gap-1">
+                  <Check className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">{item.title}</span>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className={cn("text-center py-4",
               isPastel ? "text-[#7B7E9C]" :
               isDark ? "text-neutral-700" : "text-gray-500")}>
-              Click a selected item above to use as format
+              Click selected items above to use as format
             </div>
           )}
         </div>
@@ -129,7 +140,7 @@ export default function ReportBuilder({
         />
         <div className="flex gap-2 mt-2">
           <Button
-            onClick={() => onGenerateReport(instructions, reportFormatItem)}
+            onClick={() => onGenerateReport(instructions, reportFormatItems)}
             disabled={selectedItems.length === 0 || isGenerating}
             className={cn("flex-1 text-[11px] h-7",
               isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" :
@@ -150,22 +161,22 @@ export default function ReportBuilder({
         </div>
       </div>
 
-      {/* Text Editor */}
-      <div className="flex-1 overflow-hidden">
-        <ReactQuill
+      {/* Report Output */}
+      <div className={cn("p-3 border-t flex-1 flex flex-col",
+        isPastel ? "bg-[#32354C] border-[#4A4D6C]" :
+        isDark ? "bg-[#0f0f10] border-[#262629]" : "bg-gray-50 border-gray-300")}>
+        <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider mb-2",
+          isPastel ? "text-[#A5A8C0]" :
+          isDark ? "text-neutral-500" : "text-gray-700")}>
+          Generated Report
+        </h3>
+        <Textarea
           value={reportContent}
-          onChange={onReportChange}
-          theme="snow"
-          className={cn("h-full",
-            isDark && "quill-dark")}
-          modules={{
-            toolbar: [
-              [{ 'header': [1, 2, 3, false] }],
-              ['bold', 'italic', 'underline'],
-              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-              ['clean']
-            ]
-          }}
+          onChange={(e) => onReportChange(e.target.value)}
+          placeholder="Generated report will appear here..."
+          className={cn("flex-1 text-[10px] font-mono resize-none",
+            isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-[#D0D2E0]" :
+            isDark ? "bg-[#0A0A0A] border-[#1F1F1F] text-neutral-300" : "bg-white")}
         />
       </div>
     </div>

@@ -122,7 +122,7 @@ export default function Documents() {
     setSelectedIds(prev => prev.filter(i => i !== id));
   };
 
-  const handleGenerateReport = async (instructions, reportFormatItem) => {
+  const handleGenerateReport = async (instructions, reportFormatItems) => {
     if (selectedIds.length === 0) return;
     
     setIsGenerating(true);
@@ -136,8 +136,8 @@ export default function Documents() {
       ...selectedSaved.map(article => `Article: ${article.title}\n${article.description || ''}`)
     ].join('\n\n');
 
-    const formatText = reportFormatItem 
-      ? (reportFormatItem.content || reportFormatItem.description || '')
+    const formatText = reportFormatItems && reportFormatItems.length > 0
+      ? reportFormatItems.map(item => item.content || item.description || '').join('\n\n')
       : `# Report Title
 
 ## Executive Summary
