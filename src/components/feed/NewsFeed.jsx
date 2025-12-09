@@ -11,6 +11,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFilter, onSearchFilter, dateFilter, searchFilter, sectorName, savedArticleIds, theme, onRefresh }) {
   const isDark = theme === 'dark';
+  const isPastel = theme === 'pastel';
   const [showSearch, setShowSearch] = useState(false);
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('newsViewMode') || 'compact');
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,11 +25,14 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
   return (
     <div className={cn(
       "rounded border p-4 w-full overflow-hidden flex flex-col",
+      isPastel ? "bg-[#3A3D5C]/50 border-[#4A4D6C]" :
       isDark ? "bg-neutral-900/50 border-neutral-800" : "bg-white border-gray-200"
     )}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <h3 className={cn("text-xs font-semibold uppercase tracking-wider", isDark ? "text-neutral-400" : "text-gray-500")}>
+          <h3 className={cn("text-xs font-semibold uppercase tracking-wider", 
+            isPastel ? "text-[#A5A8C0]" :
+            isDark ? "text-neutral-400" : "text-gray-500")}>
             {sectorName ? `${sectorName} News` : 'Most Recent'}
           </h3>
           <Button 
@@ -37,21 +41,29 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
             onClick={onRefresh}
             className="h-5 w-5 p-0"
           >
-            <RefreshCw className={cn("w-3 h-3", isDark ? "text-neutral-500" : "text-gray-500")} />
+            <RefreshCw className={cn("w-3 h-3", 
+              isPastel ? "text-[#7B7E9C]" :
+              isDark ? "text-neutral-500" : "text-gray-500")} />
           </Button>
         </div>
         <div className="flex items-center gap-2">
-            <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
+            <span className={cn("text-xs", 
+              isPastel ? "text-[#9B9EBC]" :
+              isDark ? "text-neutral-600" : "text-gray-400")}>
               {articles.length} articles
             </span>
 
             <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                <Calendar className={cn("w-3.5 h-3.5", dateFilter ? "text-orange-500" : isDark ? "text-neutral-500" : "text-gray-500")} />
+                <Calendar className={cn("w-3.5 h-3.5", dateFilter ? "text-orange-500" : 
+                  isPastel ? "text-[#7B7E9C]" :
+                  isDark ? "text-neutral-500" : "text-gray-500")} />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className={cn("w-auto p-3", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
+            <PopoverContent className={cn("w-auto p-3", 
+              isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+              isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -105,7 +117,9 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
             onClick={() => setShowSearch(!showSearch)}
             className="h-7 w-7 p-0"
           >
-            <Search className={cn("w-3.5 h-3.5", searchFilter ? "text-orange-500" : isDark ? "text-neutral-500" : "text-gray-500")} />
+            <Search className={cn("w-3.5 h-3.5", searchFilter ? "text-orange-500" : 
+              isPastel ? "text-[#7B7E9C]" :
+              isDark ? "text-neutral-500" : "text-gray-500")} />
           </Button>
         </div>
       </div>
@@ -117,14 +131,18 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
               placeholder="Search articles..."
               value={searchFilter}
               onChange={(e) => onSearchFilter(e.target.value)}
-              className={cn("pr-8 text-sm h-8", isDark ? "bg-neutral-800 border-neutral-700" : "bg-gray-50")}
+              className={cn("pr-8 text-sm h-8", 
+                isPastel ? "bg-[#32354C] border-[#4A4D6C] text-white" :
+                isDark ? "bg-neutral-800 border-neutral-700" : "bg-gray-50")}
             />
             {searchFilter && (
               <button
                 onClick={() => onSearchFilter('')}
                 className="absolute right-2 top-1/2 -translate-y-1/2"
               >
-                <X className={cn("w-3.5 h-3.5", isDark ? "text-neutral-500" : "text-gray-500")} />
+                <X className={cn("w-3.5 h-3.5", 
+                  isPastel ? "text-[#7B7E9C]" :
+                  isDark ? "text-neutral-500" : "text-gray-500")} />
               </button>
             )}
           </div>
@@ -133,7 +151,9 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
       
       {isLoading ? (
         <div className="py-8">
-          <span className={cn("text-sm", isDark ? "text-neutral-400" : "text-gray-500")}>Fetching news...</span>
+          <span className={cn("text-sm", 
+            isPastel ? "text-[#D0D2E0]" :
+            isDark ? "text-neutral-400" : "text-gray-500")}>Fetching news...</span>
         </div>
       ) : articles.length > 0 ? (
         <>
@@ -147,21 +167,26 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
                   rel="noopener noreferrer"
                   className={cn(
                     "block px-2.5 py-1.5 rounded border transition-all",
-                    isDark 
-                      ? "bg-neutral-800/30 border-neutral-800/50 hover:border-neutral-700 hover:bg-neutral-800/50" 
-                      : "bg-gray-50/50 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                    isPastel ? "bg-[#4A4D6C]/30 border-[#5A5D7C]/50 hover:border-[#6A6D8C] hover:bg-[#4A4D6C]/50" :
+                    isDark ? "bg-neutral-800/30 border-neutral-800/50 hover:border-neutral-700 hover:bg-neutral-800/50" : "bg-gray-50/50 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex-1 min-w-0 flex items-center gap-2">
-                      <h4 className={cn("text-sm font-medium truncate", isDark ? "text-neutral-200" : "text-gray-800")}>
+                      <h4 className={cn("text-sm font-medium truncate", 
+                        isPastel ? "text-[#E8E9F0]" :
+                        isDark ? "text-neutral-200" : "text-gray-800")}>
                         {article.title}
                       </h4>
-                      <span className={cn("text-xs whitespace-nowrap", isDark ? "text-neutral-600" : "text-gray-400")}>
+                      <span className={cn("text-xs whitespace-nowrap", 
+                        isPastel ? "text-[#9B9EBC]" :
+                        isDark ? "text-neutral-600" : "text-gray-400")}>
                         {article.source}
                       </span>
                       {article.pubDate && (
-                        <span className={cn("text-xs whitespace-nowrap", isDark ? "text-neutral-700" : "text-gray-400")}>
+                        <span className={cn("text-xs whitespace-nowrap", 
+                          isPastel ? "text-[#7B7E9C]" :
+                          isDark ? "text-neutral-700" : "text-gray-400")}>
                           {format(new Date(article.pubDate), 'MMM d')}
                         </span>
                       )}
@@ -235,7 +260,9 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
             ))}
           </div>
           {totalPages > 1 && (
-            <div className={cn("flex items-center justify-between pt-3 border-t", isDark ? "border-neutral-800" : "border-gray-200")}>
+            <div className={cn("flex items-center justify-between pt-3 border-t", 
+              isPastel ? "border-[#4A4D6C]" :
+              isDark ? "border-neutral-800" : "border-gray-200")}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -246,7 +273,9 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
                 <ChevronLeft className="w-3.5 h-3.5 mr-1" />
                 Previous
               </Button>
-              <span className={cn("text-xs", isDark ? "text-neutral-500" : "text-gray-500")}>
+              <span className={cn("text-xs", 
+                isPastel ? "text-[#9B9EBC]" :
+                isDark ? "text-neutral-500" : "text-gray-500")}>
                 Page {currentPage} of {totalPages}
               </span>
               <Button
@@ -263,7 +292,9 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
           )}
         </>
       ) : (
-        <p className={cn("text-sm py-8", isDark ? "text-neutral-500" : "text-gray-500")}>
+        <p className={cn("text-sm py-8", 
+          isPastel ? "text-[#9B9EBC]" :
+          isDark ? "text-neutral-500" : "text-gray-500")}>
           No articles available. Add RSS sources in settings.
         </p>
       )}

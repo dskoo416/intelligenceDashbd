@@ -318,6 +318,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     <main className={cn(
       "flex-1 overflow-y-auto p-5 space-y-4 text-content",
       `text-${textSize}`,
+      settings.theme === 'pastel' ? "bg-[#2B2D42]" :
       settings.theme === 'dark' ? "bg-neutral-950" : "bg-gray-50"
     )}>
       <div className="w-full">

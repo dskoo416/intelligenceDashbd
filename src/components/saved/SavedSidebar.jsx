@@ -11,6 +11,7 @@ export default function SavedSidebar({
   theme 
 }) {
   const isDark = theme === 'dark';
+  const isPastel = theme === 'pastel';
   const [expandedMonths, setExpandedMonths] = useState(true);
   const [expandedCollections, setExpandedCollections] = useState(true);
 
@@ -33,7 +34,9 @@ export default function SavedSidebar({
   const sortedMonths = Object.keys(articlesByMonth).sort().reverse();
 
   return (
-    <div className={cn("h-full border-r flex flex-col", isDark ? "bg-neutral-950 border-neutral-800" : "bg-white border-gray-200")}>
+    <div className={cn("h-full border-r flex flex-col", 
+      isPastel ? "bg-[#2B2D42] border-[#4A4D6C]" :
+      isDark ? "bg-neutral-950 border-neutral-800" : "bg-white border-gray-200")}>
       <nav className="flex-1 overflow-y-auto p-2 pt-4 space-y-0.5 custom-scrollbar">
         {/* Main */}
         <button
@@ -42,9 +45,11 @@ export default function SavedSidebar({
             "w-full flex items-center gap-2 px-3 py-2 rounded transition-all duration-150 text-sm font-medium text-left",
             activeView === 'main'
               ? "bg-orange-500/10 text-orange-500"
-              : isDark
-                ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              : isPastel
+                ? "text-[#9B9EBC] hover:text-white hover:bg-[#3A3D5C]/50"
+                : isDark
+                  ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
           )}
         >
           Main
@@ -78,13 +83,17 @@ export default function SavedSidebar({
                       "w-full text-left px-3 py-1.5 rounded transition-all duration-150 text-xs flex items-center justify-between cursor-pointer",
                       activeView === `month-${monthKey}`
                         ? "bg-orange-500/10 text-orange-500"
-                        : isDark
-                          ? "text-neutral-500 hover:text-white hover:bg-neutral-800/50"
-                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                        : isPastel
+                          ? "text-[#9B9EBC] hover:text-white hover:bg-[#3A3D5C]/50"
+                          : isDark
+                            ? "text-neutral-500 hover:text-white hover:bg-neutral-800/50"
+                            : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                     )}
                   >
                     <span>{monthData.label}</span>
-                    <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
+                    <span className={cn("text-xs", 
+                      isPastel ? "text-[#7B7E9C]" :
+                      isDark ? "text-neutral-600" : "text-gray-400")}>
                       {monthData.articles.length}
                     </span>
                   </button>
@@ -95,7 +104,9 @@ export default function SavedSidebar({
         </div>
 
         {/* Separator */}
-        <div className={cn("my-3 mx-3 border-t", isDark ? "border-neutral-800" : "border-gray-200")} />
+        <div className={cn("my-3 mx-3 border-t", 
+          isPastel ? "border-[#4A4D6C]" :
+          isDark ? "border-neutral-800" : "border-gray-200")} />
 
         {/* Collections */}
         <div>
@@ -120,9 +131,11 @@ export default function SavedSidebar({
                     "w-full text-left px-3 py-1.5 rounded transition-all duration-150 text-xs",
                     activeView === `collection-${collection.id}`
                       ? "bg-orange-500/10 text-orange-500"
-                      : isDark
-                        ? "text-neutral-500 hover:text-white hover:bg-neutral-800/50"
-                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                      : isPastel
+                        ? "text-[#9B9EBC] hover:text-white hover:bg-[#3A3D5C]/50"
+                        : isDark
+                          ? "text-neutral-500 hover:text-white hover:bg-neutral-800/50"
+                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                   )}
                 >
                   {collection.name}
@@ -133,14 +146,18 @@ export default function SavedSidebar({
         </div>
       </nav>
       
-      <div className={cn("p-2 border-t", isDark ? "border-neutral-800" : "border-gray-200")}>
+      <div className={cn("p-2 border-t", 
+        isPastel ? "border-[#4A4D6C]" :
+        isDark ? "border-neutral-800" : "border-gray-200")}>
         <button
           onClick={onOpenCollectionsModal}
           className={cn(
             "w-full px-3 py-2 rounded text-xs font-medium transition-colors text-left",
-            isDark
-              ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            isPastel
+              ? "text-[#9B9EBC] hover:text-white hover:bg-[#3A3D5C]/50"
+              : isDark
+                ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           )}
         >
           Edit Collections

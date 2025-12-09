@@ -7,10 +7,12 @@ import { createPageUrl } from '@/utils';
 
 export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshing, onToggleSidebar, showRefresh, currentPage, sidebarOpen, theme }) {
   const isDark = theme === 'dark';
+  const isPastel = theme === 'pastel';
 
   return (
     <header className={cn(
       "h-10 border-b flex items-center justify-between px-4",
+      isPastel ? "bg-[#32354C] border-[#4A4D6C]" :
       isDark ? "bg-[#0f0f10] border-[#262629]" : "bg-white border-gray-300"
     )}>
       <div className="flex items-center gap-0 h-full">
@@ -20,9 +22,11 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
             "px-4 h-full flex items-center text-[11px] font-medium uppercase tracking-wide transition-colors border-b-2",
             currentPage === 'Home'
               ? "border-orange-500 text-orange-500"
-              : isDark
-                ? "border-transparent text-neutral-500 hover:text-neutral-300"
-                : "border-transparent text-gray-600 hover:text-gray-900"
+              : isPastel
+                ? "border-transparent text-[#9B9EBC] hover:text-white"
+                : isDark
+                  ? "border-transparent text-neutral-500 hover:text-neutral-300"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
           )}
         >
           Home
@@ -33,9 +37,11 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
             "px-4 h-full flex items-center text-[11px] font-medium uppercase tracking-wide transition-colors border-b-2",
             currentPage === 'IntelligenceFeed'
               ? "border-orange-500 text-orange-500"
-              : isDark
-                ? "border-transparent text-neutral-500 hover:text-neutral-300"
-                : "border-transparent text-gray-600 hover:text-gray-900"
+              : isPastel
+                ? "border-transparent text-[#9B9EBC] hover:text-white"
+                : isDark
+                  ? "border-transparent text-neutral-500 hover:text-neutral-300"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
           )}
         >
           Intelligence Feed
@@ -46,9 +52,11 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
             "px-4 h-full flex items-center text-[11px] font-medium uppercase tracking-wide transition-colors border-b-2",
             currentPage === 'Saved'
               ? "border-orange-500 text-orange-500"
-              : isDark
-                ? "border-transparent text-neutral-500 hover:text-neutral-300"
-                : "border-transparent text-gray-600 hover:text-gray-900"
+              : isPastel
+                ? "border-transparent text-[#9B9EBC] hover:text-white"
+                : isDark
+                  ? "border-transparent text-neutral-500 hover:text-neutral-300"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
           )}
         >
           Saved

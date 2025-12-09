@@ -10,6 +10,7 @@ export default function FeaturedArticlesCard({ theme }) {
   const [criticalArticles, setCriticalArticles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const isDark = theme === 'dark';
+  const isPastel = theme === 'pastel';
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -117,9 +118,15 @@ export default function FeaturedArticlesCard({ theme }) {
   }, []);
 
   return (
-    <div className={cn("h-full flex flex-col border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
-      <div className={cn("flex items-center justify-between px-3 py-2 border-b", isDark ? "border-[#262629]" : "border-gray-300")}>
-        <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>FEATURED</h3>
+    <div className={cn("h-full flex flex-col border", 
+      isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+      isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
+      <div className={cn("flex items-center justify-between px-3 py-2 border-b", 
+        isPastel ? "border-[#4A4D6C]" :
+        isDark ? "border-[#262629]" : "border-gray-300")}>
+        <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
+          isPastel ? "text-[#A5A8C0]" :
+          isDark ? "text-neutral-500" : "text-gray-700")}>FEATURED</h3>
         <Button
           size="sm"
           variant="ghost"
@@ -127,13 +134,19 @@ export default function FeaturedArticlesCard({ theme }) {
           disabled={isLoading}
           className="h-4 w-4 p-0"
         >
-          <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", isDark ? "text-neutral-600" : "text-gray-500")} />
+          <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", 
+            isPastel ? "text-[#7B7E9C]" :
+            isDark ? "text-neutral-600" : "text-gray-500")} />
         </Button>
       </div>
 
-      <div className={cn("flex-1 overflow-y-auto px-3 py-1.5", isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
+      <div className={cn("flex-1 overflow-y-auto px-3 py-1.5", 
+        isPastel ? "bg-[#32354C]" :
+        isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
         {criticalArticles.length === 0 && !isLoading ? (
-          <div className={cn("text-[10px]", isDark ? "text-neutral-600" : "text-gray-500")}>
+          <div className={cn("text-[10px]", 
+            isPastel ? "text-[#7B7E9C]" :
+            isDark ? "text-neutral-600" : "text-gray-500")}>
             Click refresh to generate featured articles
           </div>
         ) : (
@@ -152,16 +165,19 @@ export default function FeaturedArticlesCard({ theme }) {
                   rel="noopener noreferrer"
                   className={cn(
                     "block text-[11px] leading-[1.3] transition-colors",
-                    isDark 
-                      ? "text-neutral-300 hover:text-white" 
-                      : "text-gray-700 hover:text-gray-900"
+                    isPastel ? "text-[#E8E9F0] hover:text-white" :
+                    isDark ? "text-neutral-300 hover:text-white" : "text-gray-700 hover:text-gray-900"
                   )}
                   style={{ fontFamily: 'ui-monospace, monospace' }}
                 >
-                  <span className={cn("mr-1.5 inline-block w-3 text-right", isDark ? "text-neutral-600" : "text-gray-500")}>{idx + 1})</span>
+                  <span className={cn("mr-1.5 inline-block w-3 text-right", 
+                    isPastel ? "text-[#7B7E9C]" :
+                    isDark ? "text-neutral-600" : "text-gray-500")}>{idx + 1})</span>
                   {article.title}
                 </a>
-                <div className={cn("text-[9px] mt-0.5", isDark ? "text-neutral-700" : "text-gray-500")} style={{ marginLeft: '21px' }}>
+                <div className={cn("text-[9px] mt-0.5", 
+                  isPastel ? "text-[#7B7E9C]" :
+                  isDark ? "text-neutral-700" : "text-gray-500")} style={{ marginLeft: '21px' }}>
                   {article.source} • {article.sector} • {article.pubDate && format(new Date(article.pubDate), 'MMM d')}
                 </div>
               </div>

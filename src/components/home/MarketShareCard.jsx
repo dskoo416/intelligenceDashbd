@@ -13,6 +13,7 @@ const CATEGORIES = [
 
 export default function MarketShareCard({ theme }) {
   const isDark = theme === 'dark';
+  const isPastel = theme === 'pastel';
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -98,9 +99,15 @@ Return JSON only.`;
 
   return (
     <>
-      <div className={cn("h-full flex flex-col border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
-        <div className={cn("px-3 py-2 border-b flex items-center justify-between", isDark ? "border-[#262629]" : "border-gray-300")}>
-          <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
+      <div className={cn("h-full flex flex-col border", 
+        isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+        isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
+        <div className={cn("px-3 py-2 border-b flex items-center justify-between", 
+          isPastel ? "border-[#4A4D6C]" :
+          isDark ? "border-[#262629]" : "border-gray-300")}>
+          <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
+            isPastel ? "text-[#A5A8C0]" :
+            isDark ? "text-neutral-500" : "text-gray-700")}>
             MARKET SHARE
           </h3>
         <div className="flex items-center gap-2">
@@ -112,8 +119,8 @@ Return JSON only.`;
                 className={cn(
                   "text-[9px] uppercase px-2 py-0.5 border transition-colors",
                   activeCategory.id === cat.id
-                    ? (isDark ? "border-neutral-500 text-neutral-300" : "border-gray-500 text-gray-700")
-                    : (isDark ? "border-[#262629] text-neutral-600 hover:text-neutral-400" : "border-gray-300 text-gray-600 hover:text-gray-900")
+                    ? (isPastel ? "border-[#6B6E8C] text-white" : isDark ? "border-neutral-500 text-neutral-300" : "border-gray-500 text-gray-700")
+                    : (isPastel ? "border-[#4A4D6C] text-[#9B9EBC] hover:text-white" : isDark ? "border-[#262629] text-neutral-600 hover:text-neutral-400" : "border-gray-300 text-gray-600 hover:text-gray-900")
                 )}
               >
                 {cat.label}
@@ -127,14 +134,20 @@ Return JSON only.`;
             disabled={isLoading}
             className="h-4 w-4 p-0"
           >
-            <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", isDark ? "text-neutral-600" : "text-gray-500")} />
+            <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", 
+              isPastel ? "text-[#7B7E9C]" :
+              isDark ? "text-neutral-600" : "text-gray-500")} />
           </Button>
         </div>
       </div>
 
-      <div className={cn("flex-1 overflow-y-auto p-3", isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
+      <div className={cn("flex-1 overflow-y-auto p-3", 
+        isPastel ? "bg-[#32354C]" :
+        isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
         {!data && !isLoading ? (
-          <div className={cn("text-[10px]", isDark ? "text-neutral-600" : "text-gray-500")}>
+          <div className={cn("text-[10px]", 
+            isPastel ? "text-[#7B7E9C]" :
+            isDark ? "text-neutral-600" : "text-gray-500")}>
             Click refresh to load market share data
           </div>
         ) : data?.companies ? (
@@ -142,28 +155,40 @@ Return JSON only.`;
             {data.companies.map((company, idx) => (
               <div key={idx}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className={cn("text-[10px]", isDark ? "text-neutral-400" : "text-gray-700")}>
+                  <span className={cn("text-[10px]", 
+                    isPastel ? "text-[#D0D2E0]" :
+                    isDark ? "text-neutral-400" : "text-gray-700")}>
                     {company.name}
                   </span>
-                  <span className={cn("text-[10px] font-mono font-semibold", isDark ? "text-neutral-400" : "text-gray-700")}>
+                  <span className={cn("text-[10px] font-mono font-semibold", 
+                    isPastel ? "text-[#D0D2E0]" :
+                    isDark ? "text-neutral-400" : "text-gray-700")}>
                     {data.isPercentage ? `${company.share}%` : company.share}
                   </span>
                 </div>
-                <div className={cn("h-1.5 w-full", isDark ? "bg-[#1A1A1A]" : "bg-gray-200")}>
+                <div className={cn("h-1.5 w-full", 
+                  isPastel ? "bg-[#2A2D4C]" :
+                  isDark ? "bg-[#1A1A1A]" : "bg-gray-200")}>
                   <div 
-                    className={cn("h-full transition-all", isDark ? "bg-neutral-600" : "bg-gray-500")}
+                    className={cn("h-full transition-all", 
+                      isPastel ? "bg-[#9B8B6B]" :
+                      isDark ? "bg-neutral-600" : "bg-gray-500")}
                     style={{ width: `${(company.share / maxShare) * 100}%` }}
                   />
                 </div>
               </div>
             ))}
             {data.source && (
-              <div className={cn("text-[9px] mt-3 pt-2 border-t", isDark ? "text-neutral-700 border-[#262629]" : "text-gray-500 border-gray-300")} style={{ fontFamily: 'ui-monospace, monospace' }}>
+              <div className={cn("text-[9px] mt-3 pt-2 border-t", 
+                isPastel ? "text-[#7B7E9C] border-[#4A4D6C]" :
+                isDark ? "text-neutral-700 border-[#262629]" : "text-gray-500 border-gray-300")} style={{ fontFamily: 'ui-monospace, monospace' }}>
                 <button onClick={() => setShowSources(true)} className="hover:underline">(sources)</button>
               </div>
             )}
             {data.period && (
-              <div className={cn("text-[9px] mt-1", isDark ? "text-neutral-700" : "text-gray-500")} style={{ fontFamily: 'ui-monospace, monospace' }}>
+              <div className={cn("text-[9px] mt-1", 
+                isPastel ? "text-[#7B7E9C]" :
+                isDark ? "text-neutral-700" : "text-gray-500")} style={{ fontFamily: 'ui-monospace, monospace' }}>
                 {data.period}
               </div>
             )}
@@ -173,13 +198,21 @@ Return JSON only.`;
     </div>
 
     <Dialog open={showSources} onOpenChange={setShowSources}>
-      <DialogContent className={cn("max-w-xl border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
-        <div className={cn("px-3 py-2 border-b", isDark ? "border-[#262629]" : "border-gray-300")}>
-          <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
+      <DialogContent className={cn("max-w-xl border", 
+        isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+        isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
+        <div className={cn("px-3 py-2 border-b", 
+          isPastel ? "border-[#4A4D6C]" :
+          isDark ? "border-[#262629]" : "border-gray-300")}>
+          <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
+            isPastel ? "text-[#A5A8C0]" :
+            isDark ? "text-neutral-500" : "text-gray-700")}>
             Data Sources
           </h3>
         </div>
-        <div className={cn("px-3 py-3 text-[11px]", isDark ? "text-neutral-400" : "text-gray-700")}>
+        <div className={cn("px-3 py-3 text-[11px]", 
+          isPastel ? "text-[#D0D2E0]" :
+          isDark ? "text-neutral-400" : "text-gray-700")}>
           {data?.source || 'No source information available'}
         </div>
       </DialogContent>

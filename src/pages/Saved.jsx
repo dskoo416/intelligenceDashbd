@@ -44,6 +44,7 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
 
   const settings = settingsData[0] || { theme: 'dark' };
   const isDark = settings.theme === 'dark';
+  const isPastel = settings.theme === 'pastel';
 
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.SavedArticle.delete(id),
@@ -187,10 +188,14 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
   const textSize = localStorage.getItem('textSize') || 'medium';
   
   return (
-    <main className={cn("flex-1 overflow-y-auto p-5 text-content", `text-${textSize}`, isDark ? "bg-neutral-950" : "bg-gray-50")}>
+    <main className={cn("flex-1 overflow-y-auto p-5 text-content", `text-${textSize}`, 
+      isPastel ? "bg-[#2B2D42]" :
+      isDark ? "bg-neutral-950" : "bg-gray-50")}>
         <div className="w-full">
           <div className="flex items-center justify-between mb-6">
-            <h1 className={cn("text-2xl font-bold", isDark ? "text-white" : "text-gray-900")}>
+            <h1 className={cn("text-2xl font-bold", 
+              isPastel ? "text-white" :
+              isDark ? "text-white" : "text-gray-900")}>
               {activeView === 'main'
                 ? 'Main'
                 : activeView.startsWith('collection-')
@@ -225,7 +230,9 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
             </h1>
 
             <div className="flex items-center gap-2">
-              <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
+              <span className={cn("text-xs", 
+                isPastel ? "text-[#9B9EBC]" :
+                isDark ? "text-neutral-600" : "text-gray-400")}>
                 {filteredArticles.length} articles
               </span>
 
@@ -237,9 +244,11 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                         "w-3.5 h-3.5",
                         dateFilter
                           ? "text-orange-500"
-                          : isDark
-                            ? "text-neutral-500"
-                            : "text-gray-500"
+                          : isPastel
+                            ? "text-[#7B7E9C]"
+                            : isDark
+                              ? "text-neutral-500"
+                              : "text-gray-500"
                       )}
                     />
                   </Button>
@@ -247,6 +256,7 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                 <PopoverContent
                   className={cn(
                     "w-auto p-3",
+                    isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
                     isDark ? "bg-neutral-800 border-neutral-700" : "bg-white"
                   )}
                   align="end"
@@ -345,9 +355,11 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                     "w-3.5 h-3.5",
                     searchFilter
                       ? "text-orange-500"
-                      : isDark
-                        ? "text-neutral-500"
-                        : "text-gray-500"
+                      : isPastel
+                        ? "text-[#7B7E9C]"
+                        : isDark
+                          ? "text-neutral-500"
+                          : "text-gray-500"
                   )}
                 />
               </Button>
@@ -363,6 +375,7 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                   onChange={(e) => setSearchFilter(e.target.value)}
                   className={cn(
                     "pr-8 text-sm h-8",
+                    isPastel ? "bg-[#32354C] border-[#4A4D6C] text-white" :
                     isDark ? "bg-neutral-800 border-neutral-700" : "bg-gray-50"
                   )}
                 />
@@ -374,6 +387,7 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                     <X
                       className={cn(
                         "w-3.5 h-3.5",
+                        isPastel ? "text-[#7B7E9C]" :
                         isDark ? "text-neutral-500" : "text-gray-500"
                       )}
                     />
@@ -384,13 +398,16 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
           )}
 
           {isLoading ? (
-            <div className={cn("text-sm", isDark ? "text-neutral-400" : "text-gray-500")}>
+            <div className={cn("text-sm", 
+              isPastel ? "text-[#D0D2E0]" :
+              isDark ? "text-neutral-400" : "text-gray-500")}>
               Loading...
             </div>
           ) : filteredArticles.length === 0 ? (
             <div
               className={cn(
                 "text-center py-12 text-sm",
+                isPastel ? "text-[#9B9EBC]" :
                 isDark ? "text-neutral-500" : "text-gray-500"
               )}
             >
@@ -404,9 +421,11 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                     key={article.id}
                     className={cn(
                       "flex items-center gap-3 w-full rounded border px-4 py-2.5 transition-all",
-                      isDark
-                        ? "bg-neutral-800/30 border-neutral-800/50 hover:border-neutral-700 hover:bg-neutral-800/50"
-                        : "bg-gray-50/50 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                      isPastel
+                        ? "bg-[#4A4D6C]/30 border-[#5A5D7C]/50 hover:border-[#6A6D8C] hover:bg-[#4A4D6C]/50"
+                        : isDark
+                          ? "bg-neutral-800/30 border-neutral-800/50 hover:border-neutral-700 hover:bg-neutral-800/50"
+                          : "bg-gray-50/50 border-gray-100 hover:border-gray-200 hover:bg-gray-50"
                     )}
                   >
                     <a
@@ -419,6 +438,7 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                       <h3
                         className={cn(
                           "flex-1 text-sm font-medium truncate",
+                          isPastel ? "text-[#E8E9F0]" :
                           isDark ? "text-neutral-200" : "text-gray-800"
                         )}
                       >
@@ -429,6 +449,7 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                       <span
                         className={cn(
                           "text-xs whitespace-nowrap flex-shrink-0",
+                          isPastel ? "text-[#9B9EBC]" :
                           isDark ? "text-neutral-600" : "text-gray-400"
                         )}
                       >
@@ -439,6 +460,7 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                         <span
                           className={cn(
                             "text-xs whitespace-nowrap flex-shrink-0",
+                            isPastel ? "text-[#7B7E9C]" :
                             isDark ? "text-neutral-700" : "text-gray-400"
                           )}
                         >
@@ -456,9 +478,11 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                                 "p-1 rounded hover:bg-orange-500/10 transition-all",
                                 article.collection_ids?.length > 0
                                   ? "text-orange-500"
-                                  : isDark
-                                    ? "text-neutral-500 hover:text-orange-500"
-                                    : "text-gray-400 hover:text-orange-500"
+                                  : isPastel
+                                    ? "text-[#7B7E9C] hover:text-orange-500"
+                                    : isDark
+                                      ? "text-neutral-500 hover:text-orange-500"
+                                      : "text-gray-400 hover:text-orange-500"
                               )}
                             >
                               <ChevronDown className="w-4 h-4" />
@@ -519,9 +543,11 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                         onClick={() => deleteMutation.mutate(article.id)}
                         className={cn(
                           "p-1 rounded hover:bg-orange-500/10 transition-all",
-                          isDark
-                            ? "text-neutral-500 hover:text-orange-500"
-                            : "text-gray-400 hover:text-orange-500"
+                          isPastel
+                            ? "text-[#7B7E9C] hover:text-orange-500"
+                            : isDark
+                              ? "text-neutral-500 hover:text-orange-500"
+                              : "text-gray-400 hover:text-orange-500"
                         )}
                       >
                         <X className="w-4 h-4 transition-transform" />

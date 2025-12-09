@@ -9,6 +9,7 @@ export default function SpotlightCard({ theme }) {
   const [gist, setGist] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const isDark = theme === 'dark';
+  const isPastel = theme === 'pastel';
 
   React.useEffect(() => {
     const cached = localStorage.getItem('home_spotlight');
@@ -83,39 +84,59 @@ export default function SpotlightCard({ theme }) {
   };
 
   return (
-    <div className={cn("h-full flex flex-col rounded", isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
-      <div className={cn("flex items-center justify-between px-2 py-1 border-b", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
-        <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>SPOTLIGHT</h3>
+    <div className={cn("h-full flex flex-col rounded", 
+      isPastel ? "bg-[#3A3D5C] border border-[#4A4D6C] shadow-sm" :
+      isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
+      <div className={cn("flex items-center justify-between px-2 py-1 border-b", 
+        isPastel ? "border-[#4A4D6C]" :
+        isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
+        <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
+          isPastel ? "text-[#A5A8C0]" :
+          isDark ? "text-neutral-500" : "text-gray-700")}>SPOTLIGHT</h3>
         <Button
           size="sm"
           variant="ghost"
           onClick={generateSpotlight}
           disabled={isLoading}
-          className={cn("h-4 w-4 p-0", isDark ? "hover:bg-[#1F1F1F]" : "hover:bg-gray-100")}
+          className={cn("h-4 w-4 p-0", 
+            isPastel ? "hover:bg-[#4A4D6C]" :
+            isDark ? "hover:bg-[#1F1F1F]" : "hover:bg-gray-100")}
         >
-          <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", isDark ? "text-neutral-600" : "text-gray-500")} />
+          <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", 
+            isPastel ? "text-[#7B7E9C]" :
+            isDark ? "text-neutral-600" : "text-gray-500")} />
         </Button>
       </div>
       
       <div className="flex-1 overflow-y-auto px-2 py-1.5">
         {isLoading ? (
-          <div className={cn("text-[10px]", isDark ? "text-neutral-700" : "text-gray-500")}>
+          <div className={cn("text-[10px]", 
+            isPastel ? "text-[#7B7E9C]" :
+            isDark ? "text-neutral-700" : "text-gray-500")}>
             Generating spotlight summary...
           </div>
         ) : gist ? (
           <ReactMarkdown 
-            className={cn("prose prose-sm max-w-none", isDark ? "prose-invert" : "")}
+            className={cn("prose prose-sm max-w-none", isPastel ? "prose-invert" : isDark ? "prose-invert" : "")}
             components={{
-              p: ({node, ...props}) => <p className={cn("mb-1 text-[10px] leading-[1.3]", isDark ? "text-neutral-500" : "text-gray-700")} {...props} />,
+              p: ({node, ...props}) => <p className={cn("mb-1 text-[10px] leading-[1.3]", 
+                isPastel ? "text-[#D0D2E0]" :
+                isDark ? "text-neutral-500" : "text-gray-700")} {...props} />,
               ul: ({node, ...props}) => <ul className="mb-1 text-[10px] list-disc list-inside" {...props} />,
-              li: ({node, ...props}) => <li className={cn("mb-0.5 text-[10px]", isDark ? "text-neutral-600" : "text-gray-600")} {...props} />,
-              strong: ({node, ...props}) => <strong className={cn("font-semibold", isDark ? "text-neutral-400" : "text-gray-900")} {...props} />,
+              li: ({node, ...props}) => <li className={cn("mb-0.5 text-[10px]", 
+                isPastel ? "text-[#9B9EBC]" :
+                isDark ? "text-neutral-600" : "text-gray-600")} {...props} />,
+              strong: ({node, ...props}) => <strong className={cn("font-semibold", 
+                isPastel ? "text-white" :
+                isDark ? "text-neutral-400" : "text-gray-900")} {...props} />,
             }}
           >
             {gist}
           </ReactMarkdown>
         ) : (
-          <div className={cn("text-[10px]", isDark ? "text-neutral-700" : "text-gray-500")}>
+          <div className={cn("text-[10px]", 
+            isPastel ? "text-[#7B7E9C]" :
+            isDark ? "text-neutral-700" : "text-gray-500")}>
             Click refresh to generate today's spotlight summary
           </div>
         )}
