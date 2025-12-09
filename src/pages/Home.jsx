@@ -46,7 +46,7 @@ export default function Home({ sidebarOpen }) {
         </div>
 
         {/* Featured Articles Row */}
-        <div style={{ gridColumn: '1 / -1', minHeight: '140px', maxHeight: '180px' }}>
+        <div style={{ gridColumn: '1 / -1', minHeight: '120px', maxHeight: '160px' }}>
           <FeaturedArticlesCard theme={settings.theme} />
         </div>
 

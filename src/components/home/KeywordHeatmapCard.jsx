@@ -175,8 +175,8 @@ export default function KeywordHeatmapCard({ theme }) {
                     isDark ? "hover:opacity-80" : "hover:opacity-90"
                   )}
                 >
-                  <div>
-                    <div className={cn("text-[9px] font-mono font-semibold", isDark ? "text-neutral-200" : "text-gray-900")}>{keyword}</div>
+                  <div className="overflow-hidden w-full h-full flex flex-col items-center justify-center">
+                    <div className={cn("font-mono font-semibold truncate w-full text-center", isDark ? "text-neutral-200" : "text-gray-900")} style={{ fontSize: keyword.length > 10 ? '7px' : '9px' }}>{keyword}</div>
                     <div className={cn("text-[8px] font-mono", isDark ? "text-neutral-400" : "text-gray-700")}>{count}</div>
                   </div>
                 </button>
@@ -189,35 +189,15 @@ export default function KeywordHeatmapCard({ theme }) {
       <Dialog open={!!selectedKeyword} onOpenChange={() => setSelectedKeyword(null)}>
         <DialogContent className={cn("max-w-2xl max-h-[80vh] border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
           <div className={cn("flex items-center justify-between px-3 py-2 border-b", isDark ? "border-[#262629]" : "border-gray-300")}>
-            <div className="flex items-center gap-2">
-              <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
-                Articles for "{selectedKeyword}"
-              </h3>
-              <button className={cn("text-[10px] transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}>
-                ▼
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  keywordArticles.forEach(article => {
-                    const isSaved = savedArticles.some(a => a.link === article.link);
-                    if (!isSaved) {
-                      saveArticleMutation.mutate(article);
-                    }
-                  });
-                }}
-                className={cn("text-[14px] transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
-              >
-                +
-              </button>
-              <button
-                onClick={() => setSelectedKeyword(null)}
-                className={cn("text-[14px] transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
-              >
-                ×
-              </button>
-            </div>
+            <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
+              Articles for "{selectedKeyword}"
+            </h3>
+            <button
+              onClick={() => setSelectedKeyword(null)}
+              className={cn("text-[14px] transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+            >
+              ×
+            </button>
           </div>
           <div className="overflow-y-auto" style={{ maxHeight: 'calc(80vh - 60px)' }}>
             {keywordArticles.length === 0 ? (
@@ -251,9 +231,9 @@ export default function KeywordHeatmapCard({ theme }) {
                       </div>
                       <button
                         onClick={() => saveArticleMutation.mutate(article)}
-                        className={cn("flex-shrink-0 transition-colors", isDark ? "text-neutral-600 hover:text-orange-500" : "text-gray-500 hover:text-orange-600")}
+                        className={cn("flex-shrink-0 text-[16px] font-bold transition-colors", isDark ? "text-neutral-600 hover:text-orange-500" : "text-gray-500 hover:text-orange-600")}
                       >
-                        <Bookmark className={cn("w-3.5 h-3.5", isSaved && "fill-current")} />
+                        {isSaved ? '×' : '+'}
                       </button>
                     </div>
                   );

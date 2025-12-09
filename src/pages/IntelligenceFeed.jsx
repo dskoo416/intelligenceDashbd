@@ -286,15 +286,14 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   };
 
   const filteredArticles = articles.filter(a => {
-    // Filter by sector if selected (skip if no sector = Main view)
-    if (activeSector && a.sector !== activeSector.name) {
-      return false;
-    }
-    
     // Filter by subsector if selected
     if (activeSubsector) {
       if (a.subsector !== activeSubsector.name) return false;
+    } else if (activeSector) {
+      // Only filter by sector if a sector is selected and no subsector
+      if (a.sector !== activeSector.name) return false;
     }
+    // If no sector selected (Main view), show all articles
     
     if (dateFilter && a.pubDate) {
       const articleDate = new Date(a.pubDate);

@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { cn } from "@/lib/utils";
 import { RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const CATEGORIES = [
   { id: 'ev_oems', label: 'EV OEMs', cacheKey: 'market_share_ev_oems' },
@@ -15,6 +16,7 @@ export default function MarketShareCard({ theme }) {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0]);
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSources, setShowSources] = useState(false);
 
   useEffect(() => {
     const cached = localStorage.getItem(activeCategory.cacheKey);
@@ -76,6 +78,12 @@ Return JSON only.`;
 
       if (result.companies && result.companies.length > 0) {
         result.companies.sort((a, b) => b.share - a.share);
+        
+        // Validate data - check if it's percentage data (should add up to ~100)
+        const total = result.companies.reduce((sum, c) => sum + c.share, 0);
+        const isPercentage = total > 50 && total <= 120;
+        
+        result.isPercentage = isPercentage;
         setData(result);
         localStorage.setItem(activeCategory.cacheKey, JSON.stringify(result));
       }
@@ -89,11 +97,12 @@ Return JSON only.`;
   const maxShare = data?.companies ? Math.max(...data.companies.map(c => c.share)) : 100;
 
   return (
-    <div className={cn("h-full flex flex-col border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
-      <div className={cn("px-3 py-2 border-b flex items-center justify-between", isDark ? "border-[#262629]" : "border-gray-300")}>
-        <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
-          MARKET SHARE SNAPSHOT
-        </h3>
+    <>
+      <div className={cn("h-full flex flex-col border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
+        <div className={cn("px-3 py-2 border-b flex items-center justify-between", isDark ? "border-[#262629]" : "border-gray-300")}>
+          <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
+            MARKET SHARE
+          </h3>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
             {CATEGORIES.map(cat => (
@@ -128,7 +137,7 @@ Return JSON only.`;
                     {company.name}
                   </span>
                   <span className={cn("text-[10px] font-mono font-semibold", isDark ? "text-neutral-400" : "text-gray-700")}>
-                    {company.share > 1 ? `${company.share}%` : `${company.share}`}
+                    {data.isPercentage ? `${company.share}%` : company.share}
                   </span>
                 </div>
                 <div className={cn("h-1.5 w-full", isDark ? "bg-[#1A1A1A]" : "bg-gray-200")}>
@@ -141,12 +150,31 @@ Return JSON only.`;
             ))}
             {data.source && (
               <div className={cn("text-[9px] mt-3 pt-2 border-t", isDark ? "text-neutral-700 border-[#262629]" : "text-gray-500 border-gray-300")} style={{ fontFamily: 'ui-monospace, monospace' }}>
-                <a href="#" className="hover:underline">(sources)</a>
+                <button onClick={() => setShowSources(true)} className="hover:underline">(sources)</button>
+              </div>
+            )}
+            {data.period && (
+              <div className={cn("text-[9px] mt-1", isDark ? "text-neutral-700" : "text-gray-500")} style={{ fontFamily: 'ui-monospace, monospace' }}>
+                {data.period}
               </div>
             )}
           </div>
         ) : null}
       </div>
     </div>
+
+    <Dialog open={showSources} onOpenChange={setShowSources}>
+      <DialogContent className={cn("max-w-xl border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
+        <div className={cn("px-3 py-2 border-b", isDark ? "border-[#262629]" : "border-gray-300")}>
+          <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
+            Data Sources
+          </h3>
+        </div>
+        <div className={cn("px-3 py-3 text-[11px]", isDark ? "text-neutral-400" : "text-gray-700")}>
+          {data?.source || 'No source information available'}
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>
   );
 }

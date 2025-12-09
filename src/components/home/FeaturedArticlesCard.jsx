@@ -138,20 +138,20 @@ export default function FeaturedArticlesCard({ theme }) {
           </div>
         ) : (
           <div 
-            className="grid gap-x-6 gap-y-1"
+            className="grid gap-x-6 gap-y-1 items-center justify-items-center"
             style={{
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
               gridAutoFlow: 'column'
             }}
           >
             {criticalArticles.map((article, idx) => (
-              <div key={idx} className="pb-0.5">
+              <div key={idx} className="pb-0.5 w-full text-center">
                 <a
                   href={article.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
-                    "block text-[11px] leading-[1.4] transition-colors",
+                    "block text-[11px] leading-[1.3] transition-colors",
                     isDark 
                       ? "text-neutral-300 hover:text-white" 
                       : "text-gray-700 hover:text-gray-900"
