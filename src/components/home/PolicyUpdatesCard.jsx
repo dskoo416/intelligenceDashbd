@@ -69,15 +69,38 @@ export default function PolicyUpdatesCard({ theme }) {
     setIsLoading(true);
     
     try {
-      const prompt = `Search the web for the latest US government policy updates from Federal Register, USTR, Commerce Department, BIS, Treasury, DOE, and White House.
+      const prompt = `You are powering a policy dashboard. 
+Return ONLY real, recently announced US government trade / industrial policy measures that affect goods, tariffs, duties, export controls, or sanctions.
 
-Focus on:
-- Tariffs, duties, Section 301, Section 232, safeguards
-- Export controls, entity list additions, sanctions
-- Anti-dumping, countervailing duties
-- Policies affecting battery, EV, refinery, steel, aluminum, graphite, lithium, rare earths, advanced materials, petrochemicals
+Task:
+Search the web with browsing enabled. Look ONLY at official sources on these domains:
+   - federalregister.gov
+   - ustr.gov
+   - commerce.gov
+   - bis.doc.gov
+   - treasury.gov
+   - energy.gov
+   - whitehouse.gov
 
-Return the 10 most recent and relevant policy updates from the past 30 days.`;
+Find the most recent and relevant measures from the last 45 days that relate to:
+   - Tariffs, duties, Section 301, Section 232, safeguards
+   - Export controls, entity list additions, sanctions
+   - Anti-dumping, countervailing duties
+   - Policies that materially affect: batteries, EVs, refineries, steel, aluminum, graphite, lithium, rare earths, advanced materials, petrochemicals.
+
+Output requirements:
+- You MUST follow this JSON structure exactly, under a top-level key "updates".
+- For "agency", use ONLY these ids: "ustr", "commerce", "bis", "treasury", "doe", "whitehouse", "federal_register"
+- For "date", use YYYY-MM-DD.
+- "type" is a short label like "tariff", "export_control", "sanction", "anti_dumping", "countervailing_duty", or "other".
+
+Critical constraints:
+- DO NOT invent URLs. Every "link" MUST be an actual, public URL copied from the official site.
+- DO NOT use placeholder paths like "/example" or "/sample".
+- If you cannot find 10 valid items, return fewer. It is better to return 3–5 real updates than 10 fabricated ones.
+- Do not include opinion, forecasts, or news commentary. Only concrete regulatory or policy actions.
+
+Return ONLY the JSON object and nothing else.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
@@ -211,7 +234,8 @@ Return the 10 most recent and relevant policy updates from the past 30 days.`;
 
 function PolicySettingsContent({ isDark, enabledAgencies, customKeywords, onSave }) {
   const [localAgencies, setLocalAgencies] = useState(enabledAgencies);
-  const [localKeywords, setLocalKeywords] = useState(customKeywords.join(', '));
+  const [localKeywords, setLocalKeywords] = useState(customKeywords);
+  const [inputValue, setInputValue] = useState('');
 
   const handleToggleAgency = (agencyId) => {
     if (localAgencies.includes(agencyId)) {
@@ -221,9 +245,27 @@ function PolicySettingsContent({ isDark, enabledAgencies, customKeywords, onSave
     }
   };
 
+  const handleAddKeyword = () => {
+    const trimmed = inputValue.trim();
+    if (trimmed && !localKeywords.includes(trimmed)) {
+      setLocalKeywords([...localKeywords, trimmed]);
+      setInputValue('');
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddKeyword();
+    }
+  };
+
+  const handleRemoveKeyword = (idx) => {
+    setLocalKeywords(localKeywords.filter((_, i) => i !== idx));
+  };
+
   const handleSave = () => {
-    const keywords = localKeywords.split(',').map(k => k.trim()).filter(Boolean);
-    onSave(localAgencies, keywords);
+    onSave(localAgencies, localKeywords);
   };
 
   return (
@@ -251,16 +293,20 @@ function PolicySettingsContent({ isDark, enabledAgencies, customKeywords, onSave
           Filter Keywords
         </Label>
         <div className="flex flex-wrap gap-1 mb-2">
-          {localKeywords.split(',').map(k => k.trim()).filter(Boolean).map((keyword, idx) => (
-            <span key={idx} className={cn("text-[10px] px-1.5 py-0.5 border", isDark ? "bg-neutral-900 border-neutral-700 text-neutral-300" : "bg-gray-100 border-gray-300 text-gray-700")}>
+          {localKeywords.map((keyword, idx) => (
+            <span 
+              key={idx} 
+              className={cn(
+                "text-[10px] px-2 py-0.5 border inline-flex items-center gap-1 transition-colors",
+                isDark 
+                  ? "bg-neutral-900 border-neutral-700 text-neutral-300 hover:border-neutral-600" 
+                  : "bg-gray-100 border-gray-300 text-gray-700 hover:border-gray-400"
+              )}
+            >
               {keyword}
               <button 
-                onClick={() => {
-                  const keywords = localKeywords.split(',').map(k => k.trim()).filter(Boolean);
-                  keywords.splice(idx, 1);
-                  setLocalKeywords(keywords.join(', '));
-                }}
-                className="ml-1 text-red-500"
+                onClick={() => handleRemoveKeyword(idx)}
+                className={cn("hover:text-red-500 transition-colors", isDark ? "text-neutral-500" : "text-gray-500")}
               >
                 ×
               </button>
@@ -268,9 +314,10 @@ function PolicySettingsContent({ isDark, enabledAgencies, customKeywords, onSave
           ))}
         </div>
         <Input
-          value={localKeywords}
-          onChange={(e) => setLocalKeywords(e.target.value)}
-          placeholder="tariff, export control, sanctions..."
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Type keyword and press Enter..."
           className={cn("h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
         />
       </div>

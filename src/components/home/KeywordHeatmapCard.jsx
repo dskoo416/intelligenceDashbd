@@ -187,57 +187,58 @@ export default function KeywordHeatmapCard({ theme }) {
       </div>
 
       <Dialog open={!!selectedKeyword} onOpenChange={() => setSelectedKeyword(null)}>
-        <DialogContent className={cn("max-w-2xl max-h-[80vh] overflow-y-auto", isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-white")}>
-          <DialogHeader>
-            <DialogTitle className={cn("text-lg font-semibold", isDark ? "text-white" : "text-gray-900")}>
+        <DialogContent className={cn("max-w-2xl max-h-[80vh] border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
+          <div className={cn("flex items-center justify-between px-3 py-2 border-b", isDark ? "border-[#262629]" : "border-gray-300")}>
+            <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
               Articles for "{selectedKeyword}"
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 mt-4">
+            </h3>
+            <button
+              onClick={() => setSelectedKeyword(null)}
+              className={cn("text-[14px] transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+            >
+              ×
+            </button>
+          </div>
+          <div className="overflow-y-auto" style={{ maxHeight: 'calc(80vh - 60px)' }}>
             {keywordArticles.length === 0 ? (
-              <div className={cn("text-sm text-center py-8", isDark ? "text-neutral-500" : "text-gray-500")}>
+              <div className={cn("text-[10px] text-center py-8", isDark ? "text-neutral-600" : "text-gray-500")}>
                 No articles found
               </div>
             ) : (
-              keywordArticles.map((article, idx) => {
-                const isSaved = savedArticles.some(a => a.link === article.link);
-                return (
-                  <div key={idx} className={cn("border p-3 rounded", isDark ? "border-neutral-800 bg-neutral-950" : "border-gray-200")}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
+              <div className={cn("divide-y", isDark ? "divide-[#262629]" : "divide-gray-300")}>
+                {keywordArticles.map((article, idx) => {
+                  const isSaved = savedArticles.some(a => a.link === article.link);
+                  return (
+                    <div key={idx} className={cn("px-3 py-2 flex items-start justify-between gap-3 transition-colors", isDark ? "hover:bg-[#17181b]" : "hover:bg-gray-50")}>
+                      <div className="flex-1 min-w-0">
                         <a
                           href={article.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={cn("text-sm font-medium hover:underline flex items-start gap-1", isDark ? "text-neutral-300" : "text-gray-900")}
+                          className={cn("text-[11px] font-medium transition-colors block", isDark ? "text-neutral-300 hover:text-orange-500" : "text-gray-900 hover:text-orange-600")}
                         >
                           {article.title}
-                          <ExternalLink className="w-3 h-3 flex-shrink-0 mt-0.5" />
                         </a>
-                        <div className={cn("text-xs mt-1", isDark ? "text-neutral-600" : "text-gray-600")}>
+                        <div className={cn("text-[10px] mt-0.5", isDark ? "text-neutral-600" : "text-gray-600")}>
                           {article.source} • {article.sector}
-                          {article.pubDate && (
-                            <> • {format(new Date(article.pubDate), 'MMM d, yyyy')}</>
-                          )}
+                          {article.pubDate && <> • {format(new Date(article.pubDate), 'MMM d')}</>}
                         </div>
                         {article.description && (
-                          <p className={cn("text-xs mt-1", isDark ? "text-neutral-500" : "text-gray-700")}>
+                          <p className={cn("text-[10px] mt-0.5 line-clamp-1", isDark ? "text-neutral-700" : "text-gray-500")}>
                             {article.description}
                           </p>
                         )}
                       </div>
-                      <Button
-                        size="sm"
-                        variant={isSaved ? "default" : "outline"}
+                      <button
                         onClick={() => saveArticleMutation.mutate(article)}
-                        className="h-7 w-7 p-0"
+                        className={cn("flex-shrink-0 transition-colors", isDark ? "text-neutral-600 hover:text-orange-500" : "text-gray-500 hover:text-orange-600")}
                       >
-                        <Bookmark className={cn("w-3 h-3", isSaved && "fill-current")} />
-                      </Button>
+                        <Bookmark className={cn("w-3.5 h-3.5", isSaved && "fill-current")} />
+                      </button>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })}
+              </div>
             )}
           </div>
         </DialogContent>

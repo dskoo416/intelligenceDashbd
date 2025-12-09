@@ -55,22 +55,22 @@ export default function TodayCard({ theme }) {
   });
 
   useEffect(() => {
-    const cached = localStorage.getItem('today_summary_all');
-    if (cached && view === 'today') {
-      const summaries = JSON.parse(cached);
-      setContent(summaries[0] || '');
-    } else if (view === 'gist' && sectors.length > 0) {
-      loadGist();
+    const cachedGist = localStorage.getItem('gist_main');
+    if (cachedGist) {
+      setContent(cachedGist);
     }
   }, []);
 
   useEffect(() => {
     if (view === 'today') {
-      generateToday();
-    } else if (view === 'gist') {
+      const cachedGist = localStorage.getItem('gist_main');
+      if (cachedGist) {
+        setContent(cachedGist);
+      }
+    } else if (view === 'gist' && sectors.length > 0) {
       loadGist();
     }
-  }, [view, sectorIndex, todayIndex]);
+  }, [view, sectorIndex, todayIndex, sectors]);
 
   const generateToday = async () => {
     const cachedStr = localStorage.getItem('today_summary_all');
@@ -167,47 +167,69 @@ export default function TodayCard({ theme }) {
   };
 
   const toggleView = () => {
-    setView(view === 'today' ? 'gist' : 'today');
+    if (view === 'today') {
+      setView('gist');
+      if (sectors.length > 0) {
+        loadGist();
+      }
+    } else {
+      setView('today');
+      const cachedGist = localStorage.getItem('gist_main');
+      if (cachedGist) {
+        setContent(cachedGist);
+      }
+    }
+  };
+
+  const handleRefresh = () => {
+    if (view === 'today') {
+      generateToday();
+    } else {
+      loadGist();
+    }
   };
 
   return (
     <div className={cn("h-full flex flex-col border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
       <div className={cn("px-3 py-2 border-b flex items-center justify-between", isDark ? "border-[#262629]" : "border-gray-300")}>
         <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
-          {view === 'today' 
-            ? (todayIndex === 0 ? 'TODAY - ALL SECTORS' : `TODAY - ${sectors[todayIndex - 1]?.name || ''}`)
-            : `GIST: ${sectors[sectorIndex]?.name || ''}`}
+          {view === 'today' ? 'GIST - MAIN' : `GIST: ${sectors[sectorIndex]?.name || ''}`}
         </h3>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <button
-              onClick={handlePrev}
-              className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
-            >
-              <ChevronLeft className="w-3 h-3" />
-            </button>
-            <button
-              onClick={handleNext}
-              className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
-            >
-              <ChevronRight className="w-3 h-3" />
-            </button>
-          </div>
+          {view === 'gist' && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handlePrev}
+                className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+              >
+                <ChevronLeft className="w-3 h-3" />
+              </button>
+              <button
+                onClick={handleNext}
+                className={cn("p-0.5 transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+              >
+                <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+          <button
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className={cn("text-[9px] uppercase px-2 py-0.5 border transition-colors", isDark ? "border-[#262629] text-neutral-500 hover:text-neutral-300 hover:border-neutral-600" : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400")}
+          >
+            {isLoading ? 'Refreshing...' : 'Refresh'}
+          </button>
           <button
             onClick={toggleView}
             className={cn("text-[9px] uppercase px-2 py-0.5 border transition-colors", isDark ? "border-[#262629] text-neutral-500 hover:text-neutral-300 hover:border-neutral-600" : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400")}
           >
-            {view === 'today' ? 'View Gist' : 'View Today'}
+            {view === 'today' ? 'Sectors' : 'Main'}
           </button>
         </div>
       </div>
       
       <div className={cn("flex-1 overflow-y-auto p-3", isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
-        {isLoading ? (
-          <div className={cn("text-[11px]", isDark ? "text-neutral-600" : "text-gray-500")}>
-            Generating summary...
-          </div>
-        ) : content ? (
+        {content ? (
           <ReactMarkdown
             className={cn("text-[12px] leading-[1.4] space-y-2", isDark ? "text-neutral-400" : "text-gray-700")}
             components={{
@@ -221,7 +243,7 @@ export default function TodayCard({ theme }) {
           </ReactMarkdown>
         ) : (
           <div className={cn("text-[11px]", isDark ? "text-neutral-600" : "text-gray-500")}>
-            No content available.
+            {isLoading ? 'Generating summary...' : 'No content available.'}
           </div>
         )}
       </div>
