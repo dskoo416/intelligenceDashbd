@@ -162,16 +162,16 @@ Return ONLY the JSON object and nothing else.`;
   };
 
   return (
-    <div className={cn("h-full flex flex-col rounded", isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
-      <div className={cn("flex items-center justify-between px-2 py-1 border-b", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
-        <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>POLICY UPDATES</h3>
+    <div className={cn("h-full flex flex-col border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
+      <div className={cn("flex items-center justify-between px-3 py-2 border-b", isDark ? "border-[#262629]" : "border-gray-300")}>
+        <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>POLICY UPDATES</h3>
         <div className="flex items-center gap-1">
           <Button
             size="sm"
             variant="ghost"
             onClick={fetchUpdates}
             disabled={isLoading}
-            className={cn("h-4 w-4 p-0", isDark ? "hover:bg-[#1F1F1F]" : "hover:bg-gray-100")}
+            className="h-4 w-4 p-0"
           >
             <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", isDark ? "text-neutral-600" : "text-gray-500")} />
           </Button>
@@ -181,7 +181,7 @@ Return ONLY the JSON object and nothing else.`;
                 <Settings className={cn("w-2.5 h-2.5", isDark ? "text-neutral-600" : "text-gray-500")} />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className={cn("w-96", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
+            <PopoverContent className={cn("w-96 border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")} align="end">
               <PolicySettingsContent 
                 isDark={isDark}
                 enabledAgencies={enabledAgencies}
@@ -194,55 +194,55 @@ Return ONLY the JSON object and nothing else.`;
       </div>
 
       {filteredUpdates.length === 0 && !isLoading ? (
-        <div className={cn("flex-1 flex items-center justify-center text-[10px]", isDark ? "text-neutral-700" : "text-gray-500")}>
+        <div className={cn("flex-1 flex items-center justify-center text-[10px]", isDark ? "text-neutral-600" : "text-gray-500")}>
           Click refresh to load policy updates
         </div>
       ) : (
-        <>
+        <div className={cn("flex-1 flex flex-col", isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
           {isDataStale() && (
-            <div className={cn("px-2 py-1 text-[9px] border-b", isDark ? "text-neutral-600 border-[#262629]" : "text-gray-500 border-gray-300")}>
+            <div className={cn("px-3 py-1 text-[9px] border-b", isDark ? "text-neutral-600 border-[#262629]" : "text-gray-500 border-gray-300")}>
               Data may be stale – click refresh to update
             </div>
           )}
-          <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
-          {filteredUpdates.map((update, idx) => (
-            <a
-              key={idx}
-              href={update.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn("block border p-1.5 transition-all", isDark ? "bg-[#0A0A0A] border-[#1F1F1F] hover:border-[#2A2A2A]" : "bg-gray-50 border-gray-300 hover:border-gray-400")}
-            >
-              <div className="flex items-start justify-between gap-1">
-                <h4 className={cn("text-[9px] font-medium line-clamp-2 leading-[1.2]", isDark ? "text-neutral-400" : "text-gray-900")}>
-                  {update.title}
-                </h4>
-                <ExternalLink className={cn("w-2 h-2 flex-shrink-0 mt-0.5", isDark ? "text-neutral-700" : "text-gray-400")} />
-              </div>
-              <div className={cn("text-[8px] mt-0.5", isDark ? "text-neutral-700" : "text-gray-500")}>
-                <span className={cn(isDark ? "text-blue-500" : "text-blue-600")}>{AGENCIES.find(a => a.id === update.agency)?.name}</span>
-                {update.date && (
-                  <>
-                    <span className="mx-1">•</span>
-                    <span>{format(new Date(update.date), 'MMM d')}</span>
-                  </>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            {filteredUpdates.map((update, idx) => (
+              <a
+                key={idx}
+                href={update.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn("block border p-2 transition-all", isDark ? "bg-[#0A0A0A] border-[#1F1F1F] hover:bg-[#17181b] hover:border-[#2A2A2A]" : "bg-gray-50 border-gray-300 hover:border-gray-400")}
+              >
+                <div className="flex items-start justify-between gap-1">
+                  <h4 className={cn("text-[10px] font-medium line-clamp-2 leading-[1.3]", isDark ? "text-neutral-400" : "text-gray-900")}>
+                    {update.title}
+                  </h4>
+                  <ExternalLink className={cn("w-2.5 h-2.5 flex-shrink-0 mt-0.5", isDark ? "text-neutral-700" : "text-gray-400")} />
+                </div>
+                <div className={cn("text-[9px] mt-0.5", isDark ? "text-neutral-700" : "text-gray-500")}>
+                  <span className={cn(isDark ? "text-blue-500" : "text-blue-600")}>{AGENCIES.find(a => a.id === update.agency)?.name}</span>
+                  {update.date && (
+                    <>
+                      <span className="mx-1">•</span>
+                      <span>{format(new Date(update.date), 'MMM d')}</span>
+                    </>
+                  )}
+                  {update.type && (
+                    <>
+                      <span className="mx-1">•</span>
+                      <span>{update.type}</span>
+                    </>
+                  )}
+                </div>
+                {update.summary && (
+                  <p className={cn("text-[9px] mt-0.5 line-clamp-1 leading-[1.2]", isDark ? "text-neutral-600" : "text-gray-600")}>
+                    {update.summary}
+                  </p>
                 )}
-                {update.type && (
-                  <>
-                    <span className="mx-1">•</span>
-                    <span>{update.type}</span>
-                  </>
-                )}
-              </div>
-              {update.summary && (
-                <p className={cn("text-[8px] mt-0.5 line-clamp-1 leading-[1.2]", isDark ? "text-neutral-600" : "text-gray-600")}>
-                  {update.summary}
-                </p>
-              )}
-            </a>
-          ))}
+              </a>
+            ))}
           </div>
-        </>
+        </div>
       )}
     </div>
   );
