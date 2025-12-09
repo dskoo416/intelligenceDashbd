@@ -108,7 +108,7 @@ export default function SectorSnapshotStrip({ theme }) {
             isDark ? "text-neutral-600" : "text-gray-500")} />
         </Button>
       </div>
-      <div className={cn("px-3 py-1", 
+      <div className={cn("px-2 py-0.5", 
         isPastel ? "bg-[#32354C]" :
         isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
         {snapshots.length === 0 ? (
@@ -118,22 +118,22 @@ export default function SectorSnapshotStrip({ theme }) {
             Click refresh to load sector snapshots
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-x-6 gap-y-0.5">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-0">
             {snapshots.map((snap, idx) => (
-              <div key={idx} className="flex items-start gap-2">
-                <span className={cn("text-[9px] font-mono", 
+              <div key={idx} className="flex items-start gap-1.5">
+                <span className={cn("text-[8px] font-mono", 
                   isPastel ? "text-[#7B7E9C]" :
                   isDark ? "text-neutral-600" : "text-gray-500")}>{idx + 1})</span>
                 <div className="flex-1 min-w-0">
-                  <span className={cn("text-[9px] font-semibold uppercase mr-1.5", 
+                  <span className={cn("text-[8px] font-semibold uppercase mr-1", 
                     isPastel ? "text-[#A5A8C0]" :
                     isDark ? "text-neutral-400" : "text-gray-700")}>
                     {snap.sector}:
                   </span>
-                  <span className={cn("text-[9px] leading-[1.2]", 
+                  <span className={cn("text-[8px] leading-[1.1] line-clamp-1", 
                     isPastel ? "text-[#D0D2E0]" :
                     isDark ? "text-neutral-500" : "text-gray-600")}>
-                    {snap.summary}
+                    {snap.summary.slice(0, 80)}
                   </span>
                 </div>
               </div>

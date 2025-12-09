@@ -13,6 +13,7 @@ const DEFAULT_TICKER_CONFIG = [
   { label: 'WTI', symbol: 'CL=F' },
   { label: 'Brent', symbol: 'BZ=F' },
   { label: 'Lithium', symbol: 'LTHM' },
+  { label: 'Naphtha', symbol: 'NQ=F' },
   { label: 'USD/KRW', symbol: 'KRW=X' },
   { label: 'USD/CNY', symbol: 'CNY=X' },
   { label: 'Natural Gas', symbol: 'NG=F' },
