@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 
 export default function KeywordHeatmapCard({ theme }) {
   const isDark = theme === 'dark';
+  const isPastel = theme === 'pastel';
   const queryClient = useQueryClient();
   const [keywordData, setKeywordData] = useState([]);
   const [allArticles, setAllArticles] = useState([]);
@@ -145,6 +146,14 @@ export default function KeywordHeatmapCard({ theme }) {
 
   const getBlockColor = (count) => {
     const ratio = count / maxCount;
+    const isPastel = theme === 'pastel';
+    
+    if (isPastel) {
+      if (ratio > 0.7) return 'bg-[#6B9B9B]';
+      if (ratio > 0.4) return 'bg-[#9B8B6B]';
+      return 'bg-[#9B6B7B]';
+    }
+    
     if (ratio > 0.7) return isDark ? 'bg-[#3A5F3A]' : 'bg-green-200';
     if (ratio > 0.4) return isDark ? 'bg-[#5A5A2E]' : 'bg-yellow-200';
     return isDark ? 'bg-[#5A3535]' : 'bg-red-200';
@@ -162,9 +171,16 @@ export default function KeywordHeatmapCard({ theme }) {
 
   return (
     <>
-      <div className={cn("h-full flex flex-col rounded", isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
-        <div className={cn("px-2 py-1 border-b flex items-center justify-between", isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
-          <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>KEYWORD TREEMAP</h3>
+      <div className={cn("h-full flex flex-col rounded", 
+        isPastel ? "bg-[#3A3D5C] border border-[#4A4D6C] shadow-sm" :
+        isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : 
+        "bg-white border border-gray-300 shadow-sm")}>
+        <div className={cn("px-2 py-1 border-b flex items-center justify-between", 
+          isPastel ? "border-[#4A4D6C]" :
+          isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
+          <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
+            isPastel ? "text-[#A5A8C0]" :
+            isDark ? "text-neutral-500" : "text-gray-700")}>KEYWORD TREEMAP</h3>
           <Button 
             size="sm" 
             variant="ghost" 
@@ -172,16 +188,20 @@ export default function KeywordHeatmapCard({ theme }) {
             disabled={isRefreshing}
             className="h-4 w-4 p-0"
           >
-            <RefreshCw className={cn("w-2.5 h-2.5", isRefreshing && "animate-spin", isDark ? "text-neutral-600" : "text-gray-500")} />
+            <RefreshCw className={cn("w-2.5 h-2.5", isRefreshing && "animate-spin", 
+              isPastel ? "text-[#6B6E8C]" :
+              isDark ? "text-neutral-600" : "text-gray-500")} />
           </Button>
-        </div>
-        
-        {isLoading ? (
-          <div className={cn("flex-1 flex items-center justify-center text-[10px]", isDark ? "text-neutral-700" : "text-gray-500")}>
+          </div>
+
+          {isLoading ? (
+          <div className={cn("flex-1 flex items-center justify-center text-[10px]", 
+            isPastel ? "text-[#7B7E9C]" :
+            isDark ? "text-neutral-700" : "text-gray-500")}>
             Loading keywords...
           </div>
-        ) : (
-          <div className="flex-1 p-2">
+          ) : (
+          <div className={cn("flex-1 p-2", isPastel ? "bg-[#32354C]" : "")}>
             <div className="grid grid-cols-6 grid-rows-6 gap-1 h-full">
               {keywordData.map(([keyword, count]) => (
                 <button
@@ -191,12 +211,16 @@ export default function KeywordHeatmapCard({ theme }) {
                     "flex items-center justify-center text-center p-1 transition-all cursor-pointer",
                     getBlockSize(count),
                     getBlockColor(count),
-                    isDark ? "hover:opacity-80" : "hover:opacity-90"
+                    "hover:opacity-80"
                   )}
                 >
                   <div className="overflow-hidden w-full h-full flex flex-col items-center justify-center">
-                    <div className={cn("font-mono font-semibold truncate w-full text-center", isDark ? "text-neutral-200" : "text-gray-900")} style={{ fontSize: keyword.length > 10 ? '7px' : '9px' }}>{keyword}</div>
-                    <div className={cn("text-[8px] font-mono", isDark ? "text-neutral-400" : "text-gray-700")}>{count}</div>
+                    <div className={cn("font-mono font-semibold truncate w-full text-center", 
+                      isPastel ? "text-white" :
+                      isDark ? "text-neutral-200" : "text-gray-900")} style={{ fontSize: keyword.length > 10 ? '7px' : '9px' }}>{keyword}</div>
+                    <div className={cn("text-[8px] font-mono", 
+                      isPastel ? "text-[#D0D2E0]" :
+                      isDark ? "text-neutral-400" : "text-gray-700")}>{count}</div>
                   </div>
                 </button>
               ))}
@@ -206,51 +230,73 @@ export default function KeywordHeatmapCard({ theme }) {
       </div>
 
       <Dialog open={!!selectedKeyword} onOpenChange={() => setSelectedKeyword(null)}>
-        <DialogContent className={cn("max-w-2xl max-h-[80vh] border", isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
-          <div className={cn("flex items-center justify-between px-3 py-2 border-b", isDark ? "border-[#262629]" : "border-gray-300")}>
-            <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", isDark ? "text-neutral-500" : "text-gray-700")}>
+        <DialogContent className={cn("max-w-2xl max-h-[80vh] border", 
+          isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+          isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
+          <div className={cn("flex items-center justify-between px-3 py-2 border-b", 
+            isPastel ? "border-[#4A4D6C]" :
+            isDark ? "border-[#262629]" : "border-gray-300")}>
+            <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
+              isPastel ? "text-[#A5A8C0]" :
+              isDark ? "text-neutral-500" : "text-gray-700")}>
               Articles for "{selectedKeyword}"
             </h3>
             <button
               onClick={() => setSelectedKeyword(null)}
-              className={cn("text-[14px] transition-colors", isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+              className={cn("text-[14px] transition-colors", 
+                isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" :
+                isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
             >
               ×
             </button>
           </div>
           <div className="overflow-y-auto" style={{ maxHeight: 'calc(80vh - 60px)' }}>
             {keywordArticles.length === 0 ? (
-              <div className={cn("text-[10px] text-center py-8", isDark ? "text-neutral-600" : "text-gray-500")}>
+              <div className={cn("text-[10px] text-center py-8", 
+                isPastel ? "text-[#7B7E9C]" :
+                isDark ? "text-neutral-600" : "text-gray-500")}>
                 No articles found
               </div>
             ) : (
-              <div className={cn("divide-y", isDark ? "divide-[#262629]" : "divide-gray-300")}>
+              <div className={cn("divide-y", 
+                isPastel ? "divide-[#4A4D6C]" :
+                isDark ? "divide-[#262629]" : "divide-gray-300")}>
                 {keywordArticles.map((article, idx) => {
                   const isSaved = savedArticles.some(a => a.link === article.link);
                   return (
-                    <div key={idx} className={cn("px-3 py-2 flex items-start justify-between gap-3 transition-colors", isDark ? "hover:bg-[#17181b]" : "hover:bg-gray-50")}>
+                    <div key={idx} className={cn("px-3 py-2 flex items-start justify-between gap-3 transition-colors", 
+                      isPastel ? "hover:bg-[#42456C]" :
+                      isDark ? "hover:bg-[#17181b]" : "hover:bg-gray-50")}>
                       <div className="flex-1 min-w-0">
                         <a
                           href={article.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={cn("text-[11px] font-medium transition-colors block", isDark ? "text-neutral-300 hover:text-orange-500" : "text-gray-900 hover:text-orange-600")}
+                          className={cn("text-[11px] font-medium transition-colors block", 
+                            isPastel ? "text-[#E8E9F0] hover:text-[#9B8B6B]" :
+                            isDark ? "text-neutral-300 hover:text-orange-500" : "text-gray-900 hover:text-orange-600")}
                         >
                           {article.title}
                         </a>
-                        <div className={cn("text-[10px] mt-0.5", isDark ? "text-neutral-600" : "text-gray-600")}>
+                        <div className={cn("text-[10px] mt-0.5", 
+                          isPastel ? "text-[#9B9EBC]" :
+                          isDark ? "text-neutral-600" : "text-gray-600")}>
                           {article.source} • {article.sector}
                           {article.pubDate && <> • {format(new Date(article.pubDate), 'MMM d')}</>}
                         </div>
                         {article.description && (
-                          <p className={cn("text-[10px] mt-0.5 line-clamp-1", isDark ? "text-neutral-700" : "text-gray-500")}>
+                          <p className={cn("text-[10px] mt-0.5 line-clamp-1", 
+                            isPastel ? "text-[#7B7E9C]" :
+                            isDark ? "text-neutral-700" : "text-gray-500")}>
                             {article.description}
                           </p>
                         )}
                       </div>
                       <button
                         onClick={() => saveArticleMutation.mutate(article)}
-                        className={cn("flex-shrink-0 text-[16px] font-bold transition-colors", isDark ? "text-neutral-600 hover:text-orange-500" : "text-gray-500 hover:text-orange-600")}
+                        className={cn("flex-shrink-0 text-[16px] font-bold transition-colors", 
+                          isPastel ? "text-[#7B7E9C] hover:text-[#9B8B6B]" :
+                          isDark ? "text-neutral-600 hover:text-orange-500" : "text-gray-500 hover:text-orange-600")}
                       >
                         {isSaved ? '×' : '+'}
                       </button>

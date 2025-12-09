@@ -335,7 +335,8 @@ export default function SettingsModal({
                 <SegmentedControl
                   options={[
                     { value: 'light', label: 'LIGHT' },
-                    { value: 'dark', label: 'DARK' }
+                    { value: 'dark', label: 'DARK' },
+                    { value: 'pastel', label: 'PASTEL' }
                   ]}
                   value={localSettings?.theme || 'dark'}
                   onChange={(value) => {

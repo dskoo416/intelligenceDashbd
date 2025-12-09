@@ -222,7 +222,9 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className={cn(
       "h-screen flex flex-col",
-      settings.theme === 'dark' ? "bg-neutral-950 text-white" : "bg-gray-50 text-gray-900"
+      settings.theme === 'dark' ? "bg-neutral-950 text-white" : 
+      settings.theme === 'pastel' ? "bg-[#2B2D42] text-white" :
+      "bg-gray-50 text-gray-900"
       )}>
         <style>{`
           * {
