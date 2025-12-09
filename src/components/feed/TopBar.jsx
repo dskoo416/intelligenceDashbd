@@ -10,19 +10,19 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
 
   return (
     <header className={cn(
-      "h-12 border-b flex items-center justify-between px-6",
-      isDark ? "bg-neutral-950 border-neutral-800" : "bg-white border-gray-200"
+      "h-10 border-b flex items-center justify-between px-4",
+      isDark ? "bg-[#0f0f10] border-[#262629]" : "bg-white border-gray-300"
     )}>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0 h-full">
         <Link
           to={createPageUrl('Home')}
           className={cn(
-            "px-3 py-1.5 rounded text-xs font-medium transition-colors",
+            "px-4 h-full flex items-center text-[11px] font-medium uppercase tracking-wide transition-colors border-b-2",
             currentPage === 'Home'
-              ? "bg-orange-500/10 text-orange-500"
+              ? "border-orange-500 text-orange-500"
               : isDark
-                ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                ? "border-transparent text-neutral-500 hover:text-neutral-300"
+                : "border-transparent text-gray-600 hover:text-gray-900"
           )}
         >
           Home
@@ -30,12 +30,12 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
         <Link
           to={createPageUrl('IntelligenceFeed')}
           className={cn(
-            "px-3 py-1.5 rounded text-xs font-medium transition-colors",
+            "px-4 h-full flex items-center text-[11px] font-medium uppercase tracking-wide transition-colors border-b-2",
             currentPage === 'IntelligenceFeed'
-              ? "bg-orange-500/10 text-orange-500"
+              ? "border-orange-500 text-orange-500"
               : isDark
-                ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                ? "border-transparent text-neutral-500 hover:text-neutral-300"
+                : "border-transparent text-gray-600 hover:text-gray-900"
           )}
         >
           Intelligence Feed
@@ -43,47 +43,16 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
         <Link
           to={createPageUrl('Saved')}
           className={cn(
-            "px-3 py-1.5 rounded text-xs font-medium transition-colors",
+            "px-4 h-full flex items-center text-[11px] font-medium uppercase tracking-wide transition-colors border-b-2",
             currentPage === 'Saved'
-              ? "bg-orange-500/10 text-orange-500"
+              ? "border-orange-500 text-orange-500"
               : isDark
-                ? "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                ? "border-transparent text-neutral-500 hover:text-neutral-300"
+                : "border-transparent text-gray-600 hover:text-gray-900"
           )}
         >
           Saved
         </Link>
-      </div>
-      
-      <div className="flex items-center gap-1">
-        {showRefresh && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            className={cn(
-              "text-xs h-8 rounded",
-              isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            )}
-          >
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-          </Button>
-        )}
-        
-        {showRefresh && onExport && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onExport}
-            className={cn(
-              "text-xs h-8 rounded",
-              isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            )}
-          >
-            Export
-          </Button>
-        )}
       </div>
     </header>
   );

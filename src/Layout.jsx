@@ -225,20 +225,23 @@ export default function Layout({ children, currentPageName }) {
       settings.theme === 'dark' ? "bg-neutral-950 text-white" : "bg-gray-50 text-gray-900"
       )}>
         <style>{`
+          * {
+            border-radius: 0 !important;
+          }
           .text-content.text-small,
           .text-content.text-small * { 
             font-size: 0.8125rem !important; 
-            line-height: 1.4 !important;
+            line-height: 1.3 !important;
           }
           .text-content.text-medium,
           .text-content.text-medium * { 
             font-size: 0.875rem !important; 
-            line-height: 1.5 !important;
+            line-height: 1.35 !important;
           }
           .text-content.text-large,
           .text-content.text-large * { 
             font-size: 1rem !important; 
-            line-height: 1.6 !important;
+            line-height: 1.4 !important;
           }
         `}</style>
         <MenuBar
