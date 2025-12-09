@@ -131,7 +131,7 @@ export default function FeaturedArticlesCard({ theme }) {
         </Button>
       </div>
 
-      <div className={cn("flex-1 overflow-y-auto px-3 py-2", isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
+      <div className={cn("flex-1 overflow-y-auto px-3 py-1.5", isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
         {criticalArticles.length === 0 && !isLoading ? (
           <div className={cn("text-[10px]", isDark ? "text-neutral-600" : "text-gray-500")}>
             Click refresh to generate featured articles
@@ -145,7 +145,7 @@ export default function FeaturedArticlesCard({ theme }) {
             }}
           >
             {criticalArticles.map((article, idx) => (
-              <div key={idx} className={cn("pb-1 border-b", isDark ? "border-[#262629]" : "border-gray-300")}>
+              <div key={idx} className="pb-0.5">
                 <a
                   href={article.link}
                   target="_blank"
@@ -153,8 +153,8 @@ export default function FeaturedArticlesCard({ theme }) {
                   className={cn(
                     "block text-[11px] leading-[1.4] transition-colors",
                     isDark 
-                      ? "text-orange-500 hover:text-orange-400" 
-                      : "text-orange-600 hover:text-orange-700"
+                      ? "text-neutral-300 hover:text-white" 
+                      : "text-gray-700 hover:text-gray-900"
                   )}
                   style={{ fontFamily: 'ui-monospace, monospace' }}
                 >
