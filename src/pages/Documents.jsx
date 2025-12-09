@@ -12,7 +12,7 @@ import FoldersModal from '@/components/documents/FoldersModal';
 export default function Documents() {
   const queryClient = useQueryClient();
   const [mode, setMode] = useState('documents'); // 'documents' or 'saved'
-  const [activeView, setActiveView] = useState('all');
+  const [activeView, setActiveView] = useState('main');
   const [selectedIds, setSelectedIds] = useState([]);
   const [foldersModalOpen, setFoldersModalOpen] = useState(false);
   const [reportContent, setReportContent] = useState('');
@@ -182,13 +182,36 @@ Generate the report now:`,
     setIsGenerating(false);
   };
 
+  const handleMoveToFolder = async (documentId, folderId) => {
+    const doc = documents.find(d => d.id === documentId);
+    if (!doc) return;
+    
+    const newFolderIds = folderId ? [folderId] : [];
+    await base44.entities.Document.update(documentId, { folder_ids: newFolderIds });
+    queryClient.invalidateQueries({ queryKey: ['documents'] });
+    toast.success('Document moved');
+  };
+
   const filteredItems = mode === 'documents'
-    ? (activeView === 'all' 
+    ? (activeView === 'main' 
         ? documents 
         : documents.filter(d => d.folder_ids?.includes(activeView)))
-    : (activeView === 'all'
-        ? savedArticles
-        : savedArticles.filter(a => a.collection_ids?.includes(activeView)));
+    : (() => {
+        if (activeView === 'main') return savedArticles;
+        
+        // Check if it's a collection ID
+        const collection = collections.find(c => c.id === activeView);
+        if (collection) {
+          return savedArticles.filter(a => a.collection_ids?.includes(activeView));
+        }
+        
+        // Otherwise it's a month string
+        return savedArticles.filter(article => {
+          if (!article.created_date) return false;
+          const monthKey = new Date(article.created_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+          return monthKey === activeView;
+        });
+      })();
 
   const selectedItems = mode === 'documents'
     ? documents.filter(d => selectedIds.includes(d.id))
@@ -209,7 +232,7 @@ Generate the report now:`,
         <div className="overflow-hidden">
           <DocumentsSidebar
             mode={mode}
-            onModeChange={(newMode) => { setMode(newMode); setActiveView('all'); }}
+            onModeChange={(newMode) => { setMode(newMode); setActiveView('main'); }}
             folders={folders}
             activeView={activeView}
             onSelectView={setActiveView}
@@ -229,6 +252,9 @@ Generate the report now:`,
             items={filteredItems}
             selectedIds={selectedIds}
             onToggleSelect={handleToggleSelect}
+            onMoveToFolder={handleMoveToFolder}
+            folders={folders}
+            mode={mode}
             theme={settings.theme}
             viewMode={viewMode}
           />

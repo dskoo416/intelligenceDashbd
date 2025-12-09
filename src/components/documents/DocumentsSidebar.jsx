@@ -132,10 +132,10 @@ export default function DocumentsSidebar({
         <>
           <div className={cn("p-2 space-y-1 flex-1 overflow-y-auto")}>
             <button
-              onClick={() => onSelectView('all')}
+              onClick={() => onSelectView('main')}
               className={cn(
                 "w-full text-left px-2 py-2 text-[12px] font-semibold uppercase tracking-wide transition-colors flex items-center gap-2",
-                activeView === 'all'
+                activeView === 'main'
                   ? (isPastel ? "bg-[#9B8B6B]/20 text-[#9B8B6B]" :
                      isDark ? "bg-orange-500/20 text-orange-400" : "bg-orange-50 text-orange-600")
                   : (isPastel ? "text-[#D0D2E0] hover:bg-[#42456C]" :
@@ -191,27 +191,27 @@ export default function DocumentsSidebar({
       ) : (
         <div className={cn("p-2 space-y-1 flex-1 overflow-y-auto")}>
           <button
-            onClick={() => onSelectView('all')}
+            onClick={() => onSelectView('main')}
             className={cn(
-              "w-full text-left px-2 py-2 text-[12px] font-semibold uppercase tracking-wide transition-colors flex items-center gap-2",
-              activeView === 'all'
+              "w-full text-left px-2 py-2 text-[12px] font-semibold uppercase tracking-wide transition-colors",
+              activeView === 'main'
                 ? (isPastel ? "bg-[#9B8B6B]/20 text-[#9B8B6B]" :
                    isDark ? "bg-orange-500/20 text-orange-400" : "bg-orange-50 text-orange-600")
                 : (isPastel ? "text-[#D0D2E0] hover:bg-[#42456C]" :
                    isDark ? "text-neutral-400 hover:bg-neutral-800" : "text-gray-600 hover:bg-gray-100")
             )}
           >
-            All
+            Main
           </button>
 
-          {Object.keys(articlesByMonth).length > 0 && (
+          {Object.keys(articlesByMonth).sort((a, b) => new Date(b) - new Date(a)).length > 0 && (
             <>
-              <div className={cn("px-2 py-1 text-[9px] uppercase tracking-wider font-semibold",
+              <div className={cn("px-2 py-1 mt-2 text-[9px] uppercase tracking-wider font-semibold",
                 isPastel ? "text-[#7B7E9C]" :
                 isDark ? "text-neutral-600" : "text-gray-500")}>
                 By Month
               </div>
-              {Object.entries(articlesByMonth).map(([month, articles]) => (
+              {Object.keys(articlesByMonth).sort((a, b) => new Date(b) - new Date(a)).map(month => (
                 <button
                   key={month}
                   onClick={() => onSelectView(month)}
@@ -224,7 +224,7 @@ export default function DocumentsSidebar({
                          isDark ? "text-neutral-400 hover:bg-neutral-800" : "text-gray-600 hover:bg-gray-100")
                   )}
                 >
-                  {month} ({articles.length})
+                  {month} ({articlesByMonth[month].length})
                 </button>
               ))}
             </>
@@ -232,7 +232,7 @@ export default function DocumentsSidebar({
 
           {collections.length > 0 && (
             <>
-              <div className={cn("px-2 py-1 text-[9px] uppercase tracking-wider font-semibold",
+              <div className={cn("px-2 py-1 mt-2 text-[9px] uppercase tracking-wider font-semibold",
                 isPastel ? "text-[#7B7E9C]" :
                 isDark ? "text-neutral-600" : "text-gray-500")}>
                 Collections

@@ -1,14 +1,24 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
 import { format } from 'date-fns';
-import { FileText, Trash2 } from 'lucide-react';
+import { FileText, Trash2, FolderInput } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export default function FileList({ 
   items, 
   selectedIds, 
   onToggleSelect,
   onDelete,
+  onMoveToFolder,
+  folders,
+  mode,
   theme,
   viewMode = 'compact'
 }) {
@@ -69,6 +79,31 @@ export default function FileList({
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {mode === 'documents' && folders && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn("h-6 w-6 p-0",
+                        isPastel ? "text-[#9B9EBC] hover:bg-[#42456C]" :
+                        isDark ? "text-neutral-500 hover:bg-neutral-800" : "text-gray-500 hover:bg-gray-100")}
+                    >
+                      <FolderInput className="w-3 h-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className={isDark ? "bg-neutral-800 border-neutral-700" : ""}>
+                    <DropdownMenuItem onClick={() => onMoveToFolder(item.id, null)}>
+                      Remove from folders
+                    </DropdownMenuItem>
+                    {folders.map(folder => (
+                      <DropdownMenuItem key={folder.id} onClick={() => onMoveToFolder(item.id, folder.id)}>
+                        {folder.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               <Checkbox
                 checked={isSelected}
                 onCheckedChange={() => onToggleSelect(item.id)}
