@@ -7,8 +7,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const CATEGORIES = [
   { id: 'ev_oems', label: 'EV OEMs', cacheKey: 'market_share_ev_oems' },
-  { id: 'batteries', label: 'Battery Makers', cacheKey: 'market_share_batteries' },
-  { id: 'abs', label: 'ABS', cacheKey: 'market_share_abs' }
+  { id: 'batteries', label: 'Battery Makers', cacheKey: 'market_share_batteries' }
 ];
 
 export default function MarketShareCard({ theme }) {
@@ -41,10 +40,6 @@ Return the top 8-10 EV manufacturers with their market share percentages. Use re
         prompt = `Search for the most recent battery manufacturer market share data from sources like SNE Research, CleanTechnica, Reuters, or Korea Times.
 
 Return the top 8-10 battery manufacturers (CATL, BYD, LGES, Panasonic, SK On, Samsung SDI, etc.) with their market share percentages. Use real data from cited sources only.`;
-      } else if (activeCategory.id === 'abs') {
-        prompt = `Search for the most recent Acrylonitrile Butadiene Styrene (ABS) resin market share data from sources like Reuters, ICIS, PlasticsToday, or Statista.
-
-Return the top 8-10 ABS resin producers with their market share percentages. Use real data from cited sources only.`;
       }
 
       prompt += `\n\nCritical constraints:

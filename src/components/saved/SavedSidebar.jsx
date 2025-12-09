@@ -123,24 +123,32 @@ export default function SavedSidebar({
           
           {expandedCollections && (
             <div className="ml-4 mt-1 space-y-0.5">
-              {collections.map(collection => (
-                <button
-                  key={collection.id}
-                  onClick={() => onSelectView(`collection-${collection.id}`)}
-                  className={cn(
-                    "w-full text-left px-3 py-1.5 rounded transition-all duration-150 text-xs",
-                    activeView === `collection-${collection.id}`
-                      ? "bg-orange-500/10 text-orange-500"
-                      : isPastel
-                        ? "text-[#9B9EBC] hover:text-white hover:bg-[#3A3D5C]/50"
-                        : isDark
-                          ? "text-neutral-500 hover:text-white hover:bg-neutral-800/50"
-                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-                  )}
-                >
-                  {collection.name}
-                </button>
-              ))}
+              {collections.map(collection => {
+                const collectionArticles = savedArticles.filter(a => a.collection_ids?.includes(collection.id));
+                return (
+                  <button
+                    key={collection.id}
+                    onClick={() => onSelectView(`collection-${collection.id}`)}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 rounded transition-all duration-150 text-xs flex items-center justify-between",
+                      activeView === `collection-${collection.id}`
+                        ? "bg-orange-500/10 text-orange-500"
+                        : isPastel
+                          ? "text-[#9B9EBC] hover:text-white hover:bg-[#3A3D5C]/50"
+                          : isDark
+                            ? "text-neutral-500 hover:text-white hover:bg-neutral-800/50"
+                            : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                    )}
+                  >
+                    <span>{collection.name}</span>
+                    <span className={cn("text-xs", 
+                      isPastel ? "text-[#7B7E9C]" :
+                      isDark ? "text-neutral-600" : "text-gray-400")}>
+                      {collectionArticles.length}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

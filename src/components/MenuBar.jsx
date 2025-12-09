@@ -69,9 +69,14 @@ export default function MenuBar({
   const getTimezoneAbbr = (timezone) => {
     if (timezone === 'Asia/Seoul') return 'KST';
     if (timezone === 'America/New_York') return 'EST';
+    if (timezone === 'America/Chicago') return 'CST';
+    if (timezone === 'America/Denver') return 'MST';
     if (timezone === 'America/Los_Angeles') return 'PST';
+    if (timezone === 'America/Anchorage') return 'AKST';
+    if (timezone === 'Pacific/Honolulu') return 'HST';
     if (timezone === 'Europe/London') return 'GMT';
     if (timezone === 'Asia/Tokyo') return 'JST';
+    if (timezone === 'Asia/Shanghai') return 'CST';
     return timezone.split('/')[1] || timezone;
   };
 

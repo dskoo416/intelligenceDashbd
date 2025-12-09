@@ -343,6 +343,7 @@ export default function SettingsModal({
                     const newSettings = { ...localSettings, theme: value };
                     setLocalSettings(newSettings);
                     onUpdateSettings(newSettings);
+                    window.location.reload();
                   }}
                 />
               </SettingRow>
@@ -436,7 +437,11 @@ export default function SettingsModal({
                     className="bg-[#0D0D0D] border border-neutral-700 text-white text-[10px] px-2 py-1 uppercase"
                   >
                     <option value="America/New_York">EST (NEW YORK)</option>
+                    <option value="America/Chicago">CST (CHICAGO)</option>
+                    <option value="America/Denver">MST (DENVER)</option>
                     <option value="America/Los_Angeles">PST (LOS ANGELES)</option>
+                    <option value="America/Anchorage">AKST (ANCHORAGE)</option>
+                    <option value="Pacific/Honolulu">HST (HONOLULU)</option>
                     <option value="Europe/London">GMT (LONDON)</option>
                     <option value="Asia/Seoul">KST (SEOUL)</option>
                     <option value="Asia/Tokyo">JST (TOKYO)</option>
@@ -457,7 +462,11 @@ export default function SettingsModal({
                     className="bg-[#0D0D0D] border border-neutral-700 text-white text-[10px] px-2 py-1 uppercase"
                   >
                     <option value="America/New_York">EST (NEW YORK)</option>
+                    <option value="America/Chicago">CST (CHICAGO)</option>
+                    <option value="America/Denver">MST (DENVER)</option>
                     <option value="America/Los_Angeles">PST (LOS ANGELES)</option>
+                    <option value="America/Anchorage">AKST (ANCHORAGE)</option>
+                    <option value="Pacific/Honolulu">HST (HONOLULU)</option>
                     <option value="Europe/London">GMT (LONDON)</option>
                     <option value="Asia/Seoul">KST (SEOUL)</option>
                     <option value="Asia/Tokyo">JST (TOKYO)</option>

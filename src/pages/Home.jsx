@@ -23,6 +23,7 @@ export default function Home({ sidebarOpen }) {
     <main className={cn(
       "flex-1 overflow-y-auto p-3 text-content",
       `text-${textSize}`,
+      settings.theme === 'pastel' ? "bg-[#2B2D42]" :
       isDark ? "bg-[#0A0A0A]" : "bg-gray-50"
     )}>
       <div 
@@ -31,7 +32,7 @@ export default function Home({ sidebarOpen }) {
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1.5fr)',
           gridAutoRows: 'auto',
-          gap: '12px'
+          gap: settings.theme === 'pastel' ? '8px' : '12px'
         }}
       >
         {/* Top Row */}

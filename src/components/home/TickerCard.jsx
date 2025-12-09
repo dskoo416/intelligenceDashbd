@@ -6,6 +6,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 
 const DEFAULT_TICKER_CONFIG = [
   { label: 'WTI', symbol: 'CL=F' },
@@ -15,10 +17,19 @@ const DEFAULT_TICKER_CONFIG = [
   { label: 'Natural Gas', symbol: 'NG=F' },
 ];
 
-const fetchQuote = async (symbol) => {
+const fetchQuote = async (symbol, duration = '30') => {
   try {
     const corsProxy = 'https://api.allorigins.win/raw?url=';
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=5m&range=1d`;
+    const rangeMap = {
+      '1': '1d',
+      '7': '5d',
+      '30': '1mo',
+      '365': '1y',
+      'ytd': 'ytd'
+    };
+    const range = rangeMap[duration] || '1mo';
+    const interval = duration === '1' ? '5m' : duration === '7' ? '30m' : '1d';
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${interval}&range=${range}`;
     const response = await fetch(corsProxy + encodeURIComponent(url));
     const data = await response.json();
     
@@ -65,19 +76,30 @@ export default function TickerCard({ theme }) {
   const [tickerData, setTickerData] = useState({});
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedTicker, setSelectedTicker] = useState(DEFAULT_TICKER_CONFIG[0]);
+  const [chartDuration, setChartDuration] = useState(() => localStorage.getItem('ticker_chart_duration') || '30');
+
+  const { data: settingsData = [] } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: () => base44.entities.AppSettings.list(),
+  });
+
+  useEffect(() => {
+    const duration = settingsData[0]?.ticker_chart_duration || localStorage.getItem('ticker_chart_duration') || '30';
+    setChartDuration(duration);
+  }, [settingsData]);
 
   useEffect(() => {
     refreshTickers();
     const interval = setInterval(refreshTickers, 60000);
     return () => clearInterval(interval);
-  }, [tickerConfig]);
+  }, [tickerConfig, chartDuration]);
 
   const refreshTickers = async () => {
     setIsRefreshing(true);
     const newData = {};
     
     for (const config of tickerConfig) {
-      const quote = await fetchQuote(config.symbol);
+      const quote = await fetchQuote(config.symbol, chartDuration);
       if (quote) {
         newData[config.symbol] = quote;
       }
@@ -125,103 +147,69 @@ export default function TickerCard({ theme }) {
                   isDark ? "text-neutral-600" : "text-gray-500")} />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className={cn("w-96", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
-              <div className="space-y-3">
-                <h4 className={cn("font-medium text-xs", isDark ? "text-white" : "text-gray-900")}>Configure Tickers</h4>
+            <PopoverContent className={cn("w-80", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
+              <div className="space-y-2">
+                <h4 className={cn("font-medium text-[10px] uppercase", isDark ? "text-white" : "text-gray-900")}>Tickers</h4>
                 {editingConfig.map((config, idx) => (
-                  <div key={idx} className="flex gap-2">
-                    <div className="flex-1">
-                      <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Label</Label>
-                      <Input
-                        value={config.label}
-                        onChange={(e) => {
-                          const newConfig = [...editingConfig];
-                          newConfig[idx] = { ...newConfig[idx], label: e.target.value };
-                          setEditingConfig(newConfig);
-                        }}
-                        className={cn("mt-1 h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Symbol</Label>
-                      <Input
-                        value={config.symbol}
-                        onChange={(e) => {
-                          const newConfig = [...editingConfig];
-                          newConfig[idx] = { ...newConfig[idx], symbol: e.target.value };
-                          setEditingConfig(newConfig);
-                        }}
-                        placeholder="e.g. CL=F"
-                        className={cn("mt-1 h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
-                      />
-                    </div>
-                    <div className="flex items-end gap-1">
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        onClick={() => {
-                          if (idx > 0) {
-                            const newConfig = [...editingConfig];
-                            [newConfig[idx], newConfig[idx-1]] = [newConfig[idx-1], newConfig[idx]];
-                            setEditingConfig(newConfig);
-                          }
-                        }}
-                        disabled={idx === 0}
-                        className="h-7 w-7 p-0 text-xs"
-                      >
-                        ↑
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        onClick={() => {
-                          if (idx < editingConfig.length - 1) {
-                            const newConfig = [...editingConfig];
-                            [newConfig[idx], newConfig[idx+1]] = [newConfig[idx+1], newConfig[idx]];
-                            setEditingConfig(newConfig);
-                          }
-                        }}
-                        disabled={idx === editingConfig.length - 1}
-                        className="h-7 w-7 p-0 text-xs"
-                      >
-                        ↓
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        onClick={() => {
-                          const newConfig = editingConfig.filter((_, i) => i !== idx);
-                          setEditingConfig(newConfig);
-                        }}
-                        className="h-7 w-7 p-0 text-xs text-red-500"
-                      >
-                        ×
-                      </Button>
-                    </div>
+                  <div key={idx} className="flex gap-1 items-center">
+                    <Input
+                      value={config.label}
+                      onChange={(e) => {
+                        const newConfig = [...editingConfig];
+                        newConfig[idx] = { ...newConfig[idx], label: e.target.value };
+                        setEditingConfig(newConfig);
+                      }}
+                      className={cn("h-6 text-[10px] flex-1", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
+                      placeholder="Label"
+                    />
+                    <Input
+                      value={config.symbol}
+                      onChange={(e) => {
+                        const newConfig = [...editingConfig];
+                        newConfig[idx] = { ...newConfig[idx], symbol: e.target.value };
+                        setEditingConfig(newConfig);
+                      }}
+                      placeholder="Symbol"
+                      className={cn("h-6 text-[10px] flex-1", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
+                    />
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        const newConfig = editingConfig.filter((_, i) => i !== idx);
+                        setEditingConfig(newConfig);
+                      }}
+                      className="h-6 w-6 p-0 text-[10px] text-red-500"
+                    >
+                      ×
+                    </Button>
                   </div>
                 ))}
                 <Button 
                   size="sm" 
                   variant="outline"
                   onClick={() => {
-                    setEditingConfig([...editingConfig, { label: 'New Ticker', symbol: 'CL=F' }]);
+                    setEditingConfig([...editingConfig, { label: 'New', symbol: 'CL=F' }]);
                   }}
-                  className="w-full text-xs"
+                  className="w-full h-6 text-[10px]"
                 >
-                  + Add Ticker
+                  + Add
                 </Button>
-                <div className="space-y-2 border-t border-neutral-700 pt-3">
-                  <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Chart Duration</Label>
+                <div className="space-y-1 border-t border-neutral-700 pt-2">
+                  <Label className={cn("text-[10px] uppercase", isDark ? "text-neutral-400" : "text-gray-600")}>Duration</Label>
                   <div className="grid grid-cols-5 gap-1">
                     {['1', '7', '30', '365', 'ytd'].map(days => (
                       <button
                         key={days}
                         onClick={() => {
+                          const newSettings = { ...settingsData[0], ticker_chart_duration: days };
+                          base44.entities.AppSettings.update(settingsData[0]?.id, newSettings);
                           localStorage.setItem('ticker_chart_duration', days);
+                          window.location.reload();
                         }}
                         className={cn(
-                          "text-[9px] uppercase px-2 py-1 transition-colors border",
-                          localStorage.getItem('ticker_chart_duration') === days || (!localStorage.getItem('ticker_chart_duration') && days === '30')
+                          "text-[9px] uppercase px-1 py-0.5 transition-colors border",
+                          (settingsData[0]?.ticker_chart_duration || localStorage.getItem('ticker_chart_duration') || '30') === days
                             ? (isDark ? "bg-[#1E1E1E] text-neutral-300 border-neutral-600" : "bg-gray-200 text-gray-900 border-gray-400")
                             : (isDark ? "bg-[#0D0D0D] text-neutral-600 hover:text-neutral-400 border-neutral-700" : "bg-white text-gray-600 hover:text-gray-900 border-gray-300")
                         )}
@@ -234,9 +222,9 @@ export default function TickerCard({ theme }) {
                 <Button 
                   size="sm" 
                   onClick={() => setTickerConfig(editingConfig)}
-                  className="w-full text-xs"
+                  className="w-full h-6 text-[10px]"
                 >
-                  Save Changes
+                  Save
                 </Button>
               </div>
             </PopoverContent>

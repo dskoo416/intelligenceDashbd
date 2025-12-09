@@ -18,6 +18,7 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
       <div className="flex items-center gap-0 h-full">
         <Link
           to={createPageUrl('Home')}
+          onClick={() => window.location.href = '/'}
           className={cn(
             "px-4 h-full flex items-center text-[11px] font-medium uppercase tracking-wide transition-colors border-b-2",
             currentPage === 'Home'

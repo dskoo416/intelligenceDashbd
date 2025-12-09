@@ -18,6 +18,7 @@ export default function KeywordHeatmapCard({ theme }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedKeyword, setSelectedKeyword] = useState(null);
   const [keywordArticles, setKeywordArticles] = useState([]);
+  const [viewBySector, setViewBySector] = useState(false);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -52,7 +53,7 @@ export default function KeywordHeatmapCard({ theme }) {
 
   const analyzeKeywords = async (forceRefresh = false) => {
     // Check cache first
-    if (!forceRefresh) {
+    if (!forceRefresh && !viewBySector) {
       const cached = localStorage.getItem('home_keyword_treemap');
       if (cached) {
         const data = JSON.parse(cached);
@@ -65,6 +66,7 @@ export default function KeywordHeatmapCard({ theme }) {
 
     setIsLoading(true);
     const keywordCounts = {};
+    const sectorCounts = {};
     const articles = [];
 
     for (const sector of sectors.slice(0, 4)) {
@@ -95,6 +97,8 @@ export default function KeywordHeatmapCard({ theme }) {
                 sector: sector.name
               });
 
+              sectorCounts[sector.name] = (sectorCounts[sector.name] || 0) + 1;
+
               const words = title.toLowerCase().split(/\s+/).filter(w => w.length > 4);
               words.forEach(word => {
                 keywordCounts[word] = (keywordCounts[word] || 0) + 1;
@@ -107,19 +111,28 @@ export default function KeywordHeatmapCard({ theme }) {
       }
     }
 
-    const sortedKeywords = Object.entries(keywordCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 16);
+    if (viewBySector) {
+      const sortedSectors = Object.entries(sectorCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 16);
+      setKeywordData(sortedSectors);
+    } else {
+      const sortedKeywords = Object.entries(keywordCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 16);
+      setKeywordData(sortedKeywords);
+    }
 
-    setKeywordData(sortedKeywords);
     setAllArticles(articles);
-    
+
     // Cache the data
-    localStorage.setItem('home_keyword_treemap', JSON.stringify({
-      keywords: sortedKeywords,
-      articles: articles
-    }));
-    
+    if (!viewBySector) {
+      localStorage.setItem('home_keyword_treemap', JSON.stringify({
+        keywords: Object.entries(keywordCounts).sort((a, b) => b[1] - a[1]).slice(0, 16),
+        articles: articles
+      }));
+    }
+
     setIsLoading(false);
   };
 
@@ -127,7 +140,7 @@ export default function KeywordHeatmapCard({ theme }) {
     if (sectors.length > 0 && rssSources.length > 0) {
       analyzeKeywords();
     }
-  }, [sectors, rssSources]);
+  }, [sectors, rssSources, viewBySector]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -160,9 +173,9 @@ export default function KeywordHeatmapCard({ theme }) {
   };
 
   const handleKeywordClick = (keyword) => {
-    const filtered = allArticles.filter(article => 
-      article.title.toLowerCase().includes(keyword.toLowerCase())
-    );
+    const filtered = viewBySector 
+      ? allArticles.filter(article => article.sector === keyword)
+      : allArticles.filter(article => article.title.toLowerCase().includes(keyword.toLowerCase()));
     setKeywordArticles(filtered);
     setSelectedKeyword(keyword);
   };
@@ -180,18 +193,30 @@ export default function KeywordHeatmapCard({ theme }) {
           isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
           <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
             isPastel ? "text-[#A5A8C0]" :
-            isDark ? "text-neutral-500" : "text-gray-700")}>KEYWORD TREEMAP</h3>
-          <Button 
-            size="sm" 
-            variant="ghost" 
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="h-4 w-4 p-0"
-          >
-            <RefreshCw className={cn("w-2.5 h-2.5", isRefreshing && "animate-spin", 
-              isPastel ? "text-[#6B6E8C]" :
-              isDark ? "text-neutral-600" : "text-gray-500")} />
-          </Button>
+            isDark ? "text-neutral-500" : "text-gray-700")}>
+            {viewBySector ? 'SECTOR TREEMAP' : 'KEYWORD TREEMAP'}
+          </h3>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setViewBySector(!viewBySector)}
+              className={cn("text-[9px] uppercase px-2 py-0.5 border transition-colors",
+                isPastel ? "border-[#4A4D6C] text-[#9B9EBC] hover:text-white hover:border-[#6B6E8C]" :
+                isDark ? "border-[#262629] text-neutral-500 hover:text-neutral-300 hover:border-neutral-600" : "border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400")}
+            >
+              {viewBySector ? 'Keywords' : 'Sectors'}
+            </button>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="h-4 w-4 p-0"
+            >
+              <RefreshCw className={cn("w-2.5 h-2.5", isRefreshing && "animate-spin", 
+                isPastel ? "text-[#6B6E8C]" :
+                isDark ? "text-neutral-600" : "text-gray-500")} />
+            </Button>
+          </div>
           </div>
 
           {isLoading ? (
