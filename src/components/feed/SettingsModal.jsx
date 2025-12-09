@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, ChevronUp, ChevronDown, Mail } from 'lucide-react';
+import { X, Plus, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 export default function SettingsModal({ 
@@ -28,7 +26,7 @@ export default function SettingsModal({
   onSaveCollection,
   onDeleteCollection,
   onReorderCollections,
-  initialTab = 'appearance'
+  initialTab = 'general'
 }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [editingSector, setEditingSector] = useState(null);
@@ -44,6 +42,7 @@ export default function SettingsModal({
   const [bulkRSSText, setBulkRSSText] = useState('');
   const [bulkErrors, setBulkErrors] = useState([]);
   const [bulkSuccess, setBulkSuccess] = useState(null);
+  const [editingRSS, setEditingRSS] = useState(null);
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -131,7 +130,6 @@ export default function SettingsModal({
 
   const handleSaveRSSSource = async () => {
     if (newRSSSource.name && newRSSSource.url && newRSSSource.sector_id) {
-      // Check for duplicate URL
       const isDuplicate = rssSources.some(s => s.url === newRSSSource.url);
       if (isDuplicate) {
         setBulkErrors(['This RSS URL is already added.']);
@@ -156,13 +154,11 @@ export default function SettingsModal({
     lines.forEach((line, index) => {
       const trimmedLine = line.trim();
       
-      // Skip header row
       if (trimmedLine.toLowerCase().startsWith('source name,')) {
         processedLineIndices.push(index);
         return;
       }
       
-      // Skip empty lines
       if (!trimmedLine) {
         processedLineIndices.push(index);
         return;
@@ -171,27 +167,23 @@ export default function SettingsModal({
       const parts = trimmedLine.split(',').map(p => p.trim());
       const [sourceName, rssUrl, sectorName, subsectorName, subSubsectorName] = parts;
 
-      // Validate required fields
       if (!sourceName || !rssUrl || !sectorName) {
         errors.push(`Line ${index + 1}: Missing required fields (name, url, or sector) - "${trimmedLine}"`);
         return;
       }
 
-      // Check for duplicate URL (existing or within current batch)
       if (existingUrls.includes(rssUrl) || newUrls.has(rssUrl)) {
         errors.push(`Line ${index + 1}: Duplicate URL already exists - "${rssUrl}"`);
         processedLineIndices.push(index);
         return;
       }
 
-      // Find matching sector
       const sector = sectors.find(s => s.name.toLowerCase() === sectorName.toLowerCase());
       if (!sector) {
         errors.push(`Line ${index + 1}: Sector "${sectorName}" not found - "${trimmedLine}"`);
         return;
       }
 
-      // Valid source
       newUrls.add(rssUrl);
       validSources.push({
         name: sourceName,
@@ -203,16 +195,13 @@ export default function SettingsModal({
       processedLineIndices.push(index);
     });
 
-    // Create valid sources
     for (const source of validSources) {
       await onSaveRSSSource(source);
     }
 
-    // Update summary
     setBulkSuccess(`${validSources.length} sources added, ${errors.length} lines skipped.`);
     setBulkErrors(errors);
 
-    // Remove successfully processed lines
     if (errors.length === 0) {
       setBulkRSSText('');
     } else {
@@ -220,7 +209,6 @@ export default function SettingsModal({
       setBulkRSSText(remainingLines.join('\n'));
     }
 
-    // Clear success message after 5 seconds
     setTimeout(() => {
       setBulkSuccess(null);
     }, 5000);
@@ -251,12 +239,6 @@ export default function SettingsModal({
     }
   };
 
-  const handleRSSCategoryChange = async (sourceId, newSectorId) => {
-    await onUpdateRSSSource(sourceId, { sector_id: newSectorId, subsector: '', subsubsector: '' });
-  };
-
-  const [editingRSS, setEditingRSS] = useState(null);
-
   const handleMoveUp = (index) => {
     if (index === 0) return;
     onReorderSectors(index, index - 1);
@@ -268,346 +250,229 @@ export default function SettingsModal({
   };
 
   const currentTarget = editingSector || newSector;
-
   const isDark = settings?.theme === 'dark';
+
+  const SegmentedControl = ({ options, value, onChange }) => (
+    <div className="flex border border-neutral-700">
+      {options.map((opt, idx) => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={cn(
+            "flex-1 px-3 py-1 text-[10px] uppercase tracking-wide transition-colors",
+            value === opt.value
+              ? "bg-[#1E1E1E] text-white border-r border-neutral-600"
+              : "bg-[#0D0D0D] text-neutral-500 hover:text-neutral-300",
+            idx < options.length - 1 && value !== opt.value && "border-r border-neutral-700"
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  const SettingRow = ({ label, children, divider = true }) => (
+    <>
+      <div className="flex items-center justify-between py-2">
+        <span className="text-[11px] text-neutral-300 uppercase tracking-wide">{label}</span>
+        {children}
+      </div>
+      {divider && <div className="border-b border-neutral-800" />}
+    </>
+  );
+
+  const SectionHeader = ({ children }) => (
+    <div className="flex items-center gap-2 mb-3 mt-4">
+      <div className="h-[1px] w-1 bg-orange-500" />
+      <h3 className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">{children}</h3>
+      <div className="h-[1px] flex-1 bg-neutral-800" />
+    </div>
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={cn("max-w-2xl max-h-[85vh] overflow-hidden rounded", isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-white border-gray-200 text-gray-900")}>
-        <DialogHeader>
-          <DialogTitle className={cn("text-lg font-semibold", isDark ? "text-white" : "text-gray-900")}>Settings</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden bg-[#0A0A0A] border border-neutral-800 text-white p-0">
+        <div className="border-b border-neutral-800 px-4 py-3">
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-neutral-300">SYSTEM SETTINGS</h2>
+        </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden">
-          <TabsList className={cn("grid grid-cols-6 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-100")}>
-            <TabsTrigger value="general" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>General</TabsTrigger>
-            <TabsTrigger value="sectors" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Sectors</TabsTrigger>
-            <TabsTrigger value="collections" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Collections</TabsTrigger>
-            <TabsTrigger value="rss" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>RSS Sources</TabsTrigger>
-            <TabsTrigger value="ai" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>AI Settings</TabsTrigger>
-            <TabsTrigger value="export" className={cn("rounded text-xs", isDark ? "data-[state=active]:bg-neutral-700" : "data-[state=active]:bg-white")}>Export</TabsTrigger>
-          </TabsList>
-          
-          <div className="mt-4 overflow-y-auto max-h-[55vh] pr-2 custom-scrollbar">
-            <TabsContent value="general" className="space-y-4 mt-0">
-              <div className="space-y-4">
-                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
-                  <div>
-                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Theme</p>
-                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Toggle dark/light mode</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={cn("text-xs", localSettings?.theme === 'light' ? (isDark ? "text-white" : "text-gray-900") : (isDark ? "text-neutral-500" : "text-gray-400"))}>Light</span>
-                    <Switch
-                      checked={localSettings?.theme === 'dark'}
-                      onCheckedChange={(checked) => {
-                        const newSettings = { ...localSettings, theme: checked ? 'dark' : 'light' };
-                        setLocalSettings(newSettings);
-                        onUpdateSettings(newSettings);
-                      }}
-                      className="data-[state=unchecked]:bg-gray-300"
-                    />
-                    <span className={cn("text-xs", localSettings?.theme === 'dark' ? (isDark ? "text-white" : "text-gray-900") : (isDark ? "text-neutral-500" : "text-gray-400"))}>Dark</span>
-                  </div>
-                </div>
+        {/* Tabs */}
+        <div className="border-b border-neutral-800 px-4">
+          <div className="flex gap-6">
+            {[
+              { id: 'general', label: 'GENERAL' },
+              { id: 'sectors', label: 'SECTORS' },
+              { id: 'collections', label: 'COLLECTIONS' },
+              { id: 'rss', label: 'RSS SOURCES' },
+              { id: 'ai', label: 'AI CONFIG' },
+              { id: 'export', label: 'EXPORT' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "pb-2 text-[10px] uppercase tracking-widest font-medium transition-colors relative",
+                  activeTab === tab.id
+                    ? "text-white"
+                    : "text-neutral-600 hover:text-neutral-400"
+                )}
+              >
+                {tab.label}
+                {activeTab === tab.id && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-orange-500" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        <div className="overflow-y-auto max-h-[calc(90vh-100px)] px-4 pb-4 custom-scrollbar">
+          {activeTab === 'general' && (
+            <div>
+              <SectionHeader>APPEARANCE</SectionHeader>
+              <SettingRow label="THEME">
+                <SegmentedControl
+                  options={[
+                    { value: 'light', label: 'LIGHT' },
+                    { value: 'dark', label: 'DARK' }
+                  ]}
+                  value={localSettings?.theme || 'dark'}
+                  onChange={(value) => {
+                    const newSettings = { ...localSettings, theme: value };
+                    setLocalSettings(newSettings);
+                    onUpdateSettings(newSettings);
+                  }}
+                />
+              </SettingRow>
 
-                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
-                  <div>
-                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Auto-reload Gist</p>
-                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Automatically generate gist on sector change</p>
-                  </div>
-                  <Switch
-                    checked={localSettings?.auto_reload_gist || false}
-                    onCheckedChange={(checked) => {
-                      const newSettings = { ...localSettings, auto_reload_gist: checked };
+              <SettingRow label="TEXT SIZE">
+                <SegmentedControl
+                  options={[
+                    { value: 'small', label: 'S' },
+                    { value: 'medium', label: 'M' },
+                    { value: 'large', label: 'L' }
+                  ]}
+                  value={localStorage.getItem('textSize') || 'medium'}
+                  onChange={(value) => {
+                    localStorage.setItem('textSize', value);
+                    window.location.reload();
+                  }}
+                />
+              </SettingRow>
+
+              <SectionHeader>AUTO-REFRESH</SectionHeader>
+              <SettingRow label="AUTO-RELOAD GIST">
+                <Checkbox
+                  checked={localSettings?.auto_reload_gist || false}
+                  onCheckedChange={(checked) => {
+                    const newSettings = { ...localSettings, auto_reload_gist: checked };
+                    setLocalSettings(newSettings);
+                    onUpdateSettings(newSettings);
+                  }}
+                />
+              </SettingRow>
+
+              <SettingRow label="AUTO-RELOAD FEATURED">
+                <Checkbox
+                  checked={localSettings?.auto_reload_critical || false}
+                  onCheckedChange={(checked) => {
+                    const newSettings = { ...localSettings, auto_reload_critical: checked };
+                    setLocalSettings(newSettings);
+                    onUpdateSettings(newSettings);
+                  }}
+                />
+              </SettingRow>
+
+              <SettingRow label="AUTO-RELOAD NEWS">
+                <Checkbox
+                  checked={localSettings?.auto_reload_news || false}
+                  onCheckedChange={(checked) => {
+                    const newSettings = { ...localSettings, auto_reload_news: checked };
+                    setLocalSettings(newSettings);
+                    onUpdateSettings(newSettings);
+                  }}
+                />
+              </SettingRow>
+
+              <SettingRow label="CACHE AI CONTENT" divider={false}>
+                <Checkbox
+                  checked={localSettings?.cache_ai_content !== false}
+                  onCheckedChange={(checked) => {
+                    const newSettings = { ...localSettings, cache_ai_content: checked };
+                    setLocalSettings(newSettings);
+                    onUpdateSettings(newSettings);
+                  }}
+                />
+              </SettingRow>
+
+              <SectionHeader>CLOCK DISPLAY</SectionHeader>
+              <SettingRow label="DISPLAY MODE">
+                <SegmentedControl
+                  options={[
+                    { value: 'none', label: 'NONE' },
+                    { value: 'single', label: 'SINGLE' },
+                    { value: 'dual', label: 'DUAL' }
+                  ]}
+                  value={localSettings?.clock_display || 'dual'}
+                  onChange={(value) => {
+                    const newSettings = { ...localSettings, clock_display: value };
+                    setLocalSettings(newSettings);
+                    onUpdateSettings(newSettings);
+                  }}
+                />
+              </SettingRow>
+
+              {localSettings?.clock_display !== 'none' && (
+                <SettingRow label={localSettings?.clock_display === 'dual' ? 'PRIMARY TZ' : 'TIMEZONE'}>
+                  <select
+                    value={localSettings?.clock_timezone_1 || 'America/New_York'}
+                    onChange={(e) => {
+                      const newSettings = { ...localSettings, clock_timezone_1: e.target.value };
                       setLocalSettings(newSettings);
                       onUpdateSettings(newSettings);
                     }}
-                    className={cn(isDark ? "data-[state=unchecked]:bg-neutral-700" : "data-[state=unchecked]:bg-gray-300")}
-                  />
-                </div>
+                    className="bg-[#0D0D0D] border border-neutral-700 text-white text-[10px] px-2 py-1 uppercase"
+                  >
+                    <option value="America/New_York">EST (NEW YORK)</option>
+                    <option value="America/Los_Angeles">PST (LOS ANGELES)</option>
+                    <option value="Europe/London">GMT (LONDON)</option>
+                    <option value="Asia/Seoul">KST (SEOUL)</option>
+                    <option value="Asia/Tokyo">JST (TOKYO)</option>
+                    <option value="Asia/Shanghai">CST (SHANGHAI)</option>
+                  </select>
+                </SettingRow>
+              )}
 
-                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
-                  <div>
-                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Auto-reload Featured</p>
-                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Automatically generate featured articles on sector change</p>
-                  </div>
-                  <Switch
-                    checked={localSettings?.auto_reload_critical || false}
-                    onCheckedChange={(checked) => {
-                      const newSettings = { ...localSettings, auto_reload_critical: checked };
+              {localSettings?.clock_display === 'dual' && (
+                <SettingRow label="SECONDARY TZ" divider={false}>
+                  <select
+                    value={localSettings?.clock_timezone_2 || 'Asia/Seoul'}
+                    onChange={(e) => {
+                      const newSettings = { ...localSettings, clock_timezone_2: e.target.value };
                       setLocalSettings(newSettings);
                       onUpdateSettings(newSettings);
                     }}
-                    className={cn(isDark ? "data-[state=unchecked]:bg-neutral-700" : "data-[state=unchecked]:bg-gray-300")}
-                  />
-                </div>
+                    className="bg-[#0D0D0D] border border-neutral-700 text-white text-[10px] px-2 py-1 uppercase"
+                  >
+                    <option value="America/New_York">EST (NEW YORK)</option>
+                    <option value="America/Los_Angeles">PST (LOS ANGELES)</option>
+                    <option value="Europe/London">GMT (LONDON)</option>
+                    <option value="Asia/Seoul">KST (SEOUL)</option>
+                    <option value="Asia/Tokyo">JST (TOKYO)</option>
+                    <option value="Asia/Shanghai">CST (SHANGHAI)</option>
+                  </select>
+                </SettingRow>
+              )}
+            </div>
+          )}
 
-                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
-                  <div>
-                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Auto-reload News</p>
-                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Automatically fetch news feed on sector change</p>
-                  </div>
-                  <Switch
-                    checked={localSettings?.auto_reload_news || false}
-                    onCheckedChange={(checked) => {
-                      const newSettings = { ...localSettings, auto_reload_news: checked };
-                      setLocalSettings(newSettings);
-                      onUpdateSettings(newSettings);
-                    }}
-                    className={cn(isDark ? "data-[state=unchecked]:bg-neutral-700" : "data-[state=unchecked]:bg-gray-300")}
-                  />
-                </div>
-
-                <div className={cn("flex items-center justify-between p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
-                  <div>
-                    <p className={cn("font-medium text-sm", isDark ? "text-white" : "text-gray-900")}>Cache AI Content</p>
-                    <p className={cn("text-xs mt-0.5", isDark ? "text-neutral-400" : "text-gray-500")}>Save AI-generated content for quick access</p>
-                  </div>
-                  <Switch
-                    checked={localSettings?.cache_ai_content !== false}
-                    onCheckedChange={(checked) => {
-                      const newSettings = { ...localSettings, cache_ai_content: checked };
-                      setLocalSettings(newSettings);
-                      onUpdateSettings(newSettings);
-                    }}
-                    className={cn(isDark ? "data-[state=unchecked]:bg-neutral-700" : "data-[state=unchecked]:bg-gray-300")}
-                  />
-                </div>
-
-                <div className={cn("p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
-                  <p className={cn("font-medium text-sm mb-2", isDark ? "text-white" : "text-gray-900")}>Text Size</p>
-                  <p className={cn("text-xs mb-3", isDark ? "text-neutral-400" : "text-gray-500")}>Adjust content text size (excludes menu and navigation bars)</p>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => {
-                        localStorage.setItem('textSize', 'small');
-                        window.location.reload();
-                      }}
-                      className={cn("px-3 py-1.5 text-xs rounded", 
-                        localStorage.getItem('textSize') === 'small' 
-                          ? "bg-orange-500 text-white" 
-                          : isDark ? "bg-neutral-700 text-neutral-300 hover:bg-neutral-600" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      )}
-                    >
-                      Small
-                    </button>
-                    <button
-                      onClick={() => {
-                        localStorage.setItem('textSize', 'medium');
-                        window.location.reload();
-                      }}
-                      className={cn("px-3 py-1.5 text-xs rounded", 
-                        (localStorage.getItem('textSize') || 'medium') === 'medium' 
-                          ? "bg-orange-500 text-white" 
-                          : isDark ? "bg-neutral-700 text-neutral-300 hover:bg-neutral-600" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      )}
-                    >
-                      Medium
-                    </button>
-                    <button
-                      onClick={() => {
-                        localStorage.setItem('textSize', 'large');
-                        window.location.reload();
-                      }}
-                      className={cn("px-3 py-1.5 text-xs rounded", 
-                        localStorage.getItem('textSize') === 'large' 
-                          ? "bg-orange-500 text-white" 
-                          : isDark ? "bg-neutral-700 text-neutral-300 hover:bg-neutral-600" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      )}
-                    >
-                      Large
-                    </button>
-                  </div>
-                </div>
-
-                <div className={cn("p-4 rounded", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
-                  <p className={cn("font-medium text-sm mb-2", isDark ? "text-white" : "text-gray-900")}>Clock Display</p>
-                  <p className={cn("text-xs mb-3", isDark ? "text-neutral-400" : "text-gray-500")}>Configure time zone clocks in menu bar</p>
-
-                  <div className="space-y-3">
-                    <div>
-                      <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Display Mode</Label>
-                      <Select
-                        value={localSettings?.clock_display || 'dual'}
-                        onValueChange={(value) => setLocalSettings({ ...localSettings, clock_display: value })}
-                      >
-                        <SelectTrigger className={cn("mt-1 rounded", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300")}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className={cn("rounded", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
-                          <SelectItem value="none" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>No Clock</SelectItem>
-                          <SelectItem value="single" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>Single Clock</SelectItem>
-                          <SelectItem value="dual" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>Dual Clocks</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {localSettings?.clock_display !== 'none' && (
-                      <div>
-                        <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>
-                          {localSettings?.clock_display === 'dual' ? 'Primary Timezone' : 'Timezone'}
-                        </Label>
-                        <Select
-                          value={localSettings?.clock_timezone_1 || 'America/New_York'}
-                          onValueChange={(value) => setLocalSettings({ ...localSettings, clock_timezone_1: value })}
-                        >
-                          <SelectTrigger className={cn("mt-1 rounded", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300")}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className={cn("rounded", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
-                            <SelectItem value="America/New_York" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>EST (New York)</SelectItem>
-                            <SelectItem value="America/Los_Angeles" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>PST (Los Angeles)</SelectItem>
-                            <SelectItem value="Europe/London" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>GMT (London)</SelectItem>
-                            <SelectItem value="Asia/Seoul" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>KST (Seoul)</SelectItem>
-                            <SelectItem value="Asia/Tokyo" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>JST (Tokyo)</SelectItem>
-                            <SelectItem value="Asia/Shanghai" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>CST (Shanghai)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-
-                    {localSettings?.clock_display === 'dual' && (
-                      <div>
-                        <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Secondary Timezone</Label>
-                        <Select
-                          value={localSettings?.clock_timezone_2 || 'Asia/Seoul'}
-                          onValueChange={(value) => setLocalSettings({ ...localSettings, clock_timezone_2: value })}
-                        >
-                          <SelectTrigger className={cn("mt-1 rounded", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300")}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className={cn("rounded", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
-                            <SelectItem value="America/New_York" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>EST (New York)</SelectItem>
-                            <SelectItem value="America/Los_Angeles" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>PST (Los Angeles)</SelectItem>
-                            <SelectItem value="Europe/London" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>GMT (London)</SelectItem>
-                            <SelectItem value="Asia/Seoul" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>KST (Seoul)</SelectItem>
-                            <SelectItem value="Asia/Tokyo" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>JST (Tokyo)</SelectItem>
-                            <SelectItem value="Asia/Shanghai" className={cn(isDark ? "text-white focus:bg-neutral-700 focus:text-white" : "focus:bg-gray-100")}>CST (Shanghai)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                </div>
-
-                <div className={cn("p-4 rounded space-y-4", isDark ? "bg-neutral-800/50" : "bg-gray-50")}>
-                <h4 className={cn("font-medium text-xs", isDark ? "text-neutral-300" : "text-gray-700")}>Keyword Filters</h4>
-                <p className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-500")}>Control how articles with specific keywords are displayed</p>
-                
+          {activeTab === 'sectors' && (
+            <div>
+              <SectionHeader>{editingSector ? 'EDIT SECTOR' : 'ADD NEW SECTOR'}</SectionHeader>
+              <div className="space-y-3 mb-4">
                 <div>
-                  <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Show More (prioritize articles with these keywords)</Label>
-                  <Input
-                    value={newKeyword}
-                    onChange={(e) => setNewKeyword(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newKeyword.trim()) {
-                        e.preventDefault();
-                        setLocalSettings({
-                          ...localSettings,
-                          keywords_show_more: [...(localSettings?.keywords_show_more || []), newKeyword.trim()]
-                        });
-                        setNewKeyword('');
-                      }
-                    }}
-                    placeholder="Press Enter to add keyword"
-                    className={cn("mt-1 rounded", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300")}
-                  />
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {(localSettings?.keywords_show_more || []).map((kw, idx) => (
-                      <Badge key={idx} className={cn("rounded", isDark ? "bg-green-900 text-green-300" : "bg-green-100 text-green-800")}>
-                        {kw}
-                        <button onClick={() => setLocalSettings({
-                          ...localSettings,
-                          keywords_show_more: localSettings.keywords_show_more.filter((_, i) => i !== idx)
-                        })} className="ml-1">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Show Less (de-prioritize articles with these keywords)</Label>
-                  <Input
-                    placeholder="Press Enter to add keyword"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && e.target.value.trim()) {
-                        e.preventDefault();
-                        setLocalSettings({
-                          ...localSettings,
-                          keywords_show_less: [...(localSettings?.keywords_show_less || []), e.target.value.trim()]
-                        });
-                        e.target.value = '';
-                      }
-                    }}
-                    className={cn("mt-1 rounded", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300")}
-                  />
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {(localSettings?.keywords_show_less || []).map((kw, idx) => (
-                      <Badge key={idx} className={cn("rounded", isDark ? "bg-yellow-900 text-yellow-300" : "bg-yellow-100 text-yellow-800")}>
-                        {kw}
-                        <button onClick={() => setLocalSettings({
-                          ...localSettings,
-                          keywords_show_less: localSettings.keywords_show_less.filter((_, i) => i !== idx)
-                        })} className="ml-1">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <Label className={cn("text-xs", isDark ? "text-neutral-400" : "text-gray-600")}>Hide (completely hide articles with these keywords)</Label>
-                  <Input
-                    placeholder="Press Enter to add keyword"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && e.target.value.trim()) {
-                        e.preventDefault();
-                        setLocalSettings({
-                          ...localSettings,
-                          keywords_hide: [...(localSettings?.keywords_hide || []), e.target.value.trim()]
-                        });
-                        e.target.value = '';
-                      }
-                    }}
-                    className={cn("mt-1 rounded", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300")}
-                  />
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {(localSettings?.keywords_hide || []).map((kw, idx) => (
-                      <Badge key={idx} className={cn("rounded", isDark ? "bg-red-900 text-red-300" : "bg-red-100 text-red-800")}>
-                        {kw}
-                        <button onClick={() => setLocalSettings({
-                          ...localSettings,
-                          keywords_hide: localSettings.keywords_hide.filter((_, i) => i !== idx)
-                        })} className="ml-1">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={() => onUpdateSettings(localSettings)}
-                  size="sm"
-                  className={cn("rounded text-xs", isDark ? "bg-neutral-700 hover:bg-neutral-600" : "bg-gray-800 hover:bg-gray-700 text-white")}
-                >
-                  Save General Settings
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="sectors" className="space-y-4 mt-0">
-              <div className="p-4 bg-neutral-800/50 rounded space-y-4">
-                <h4 className="font-medium text-xs text-neutral-300">
-                  {editingSector ? 'Edit Sector' : 'Add New Sector'}
-                </h4>
-                <div>
-                  <Label className="text-neutral-400 text-xs">Name</Label>
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">NAME</Label>
                   <Input
                     value={currentTarget.name}
                     onChange={(e) => editingSector 
@@ -615,58 +480,32 @@ export default function SettingsModal({
                       : setNewSector({ ...newSector, name: e.target.value })
                     }
                     placeholder="e.g., Advanced Materials"
-                    className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
+                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
                   />
                 </div>
                 
-                {/* Subsectors */}
                 <div>
-                  <Label className="text-neutral-400 text-xs">Subsectors</Label>
-                  <div className="flex gap-2 mt-1">
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">SUBSECTORS</Label>
+                  <div className="flex gap-1 mt-1">
                     <Input
                       value={newSubsector}
                       onChange={(e) => setNewSubsector(e.target.value)}
                       placeholder="Add subsector"
-                      className="bg-neutral-900 border-neutral-700 rounded text-white"
+                      className="bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSubsector(!!editingSector))}
                     />
-                    <Button size="sm" onClick={() => handleAddSubsector(!!editingSector)} className="bg-neutral-700 hover:bg-neutral-600">
-                      <Plus className="w-4 h-4" />
+                    <Button size="sm" onClick={() => handleAddSubsector(!!editingSector)} className="bg-neutral-700 hover:bg-neutral-600 h-7 px-2">
+                      <Plus className="w-3 h-3" />
                     </Button>
                   </div>
-                  <div className="space-y-2 mt-2">
+                  <div className="space-y-1 mt-2">
                     {(currentTarget.subsectors || []).map((sub, idx) => (
-                      <div key={idx} className="p-2 bg-neutral-800 rounded">
+                      <div key={idx} className="p-2 bg-[#0D0D0D] border border-neutral-800">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-white">{sub.name}</span>
-                          <button onClick={() => handleRemoveSubsector(idx, !!editingSector)} className="text-red-400 hover:text-red-300">
+                          <span className="text-[10px] text-white">{sub.name}</span>
+                          <button onClick={() => handleRemoveSubsector(idx, !!editingSector)} className="text-red-500 hover:text-red-400">
                             <X className="w-3 h-3" />
                           </button>
-                        </div>
-                        {/* Sub-subsectors */}
-                        <div className="mt-2 ml-3">
-                          <div className="flex gap-2">
-                            <Input
-                              value={newSubsubsector.subsectorIdx === idx ? newSubsubsector.value : ''}
-                              onChange={(e) => setNewSubsubsector({ subsectorIdx: idx, value: e.target.value })}
-                              placeholder="Add sub-subsector"
-                              className="bg-neutral-900 border-neutral-700 rounded text-white text-xs h-7"
-                              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSubsubsector(idx, !!editingSector))}
-                            />
-                            <Button size="sm" className="h-7 bg-neutral-700 hover:bg-neutral-600" onClick={() => handleAddSubsubsector(idx, !!editingSector)}>
-                              <Plus className="w-3 h-3" />
-                            </Button>
-                          </div>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {(sub.subsubsectors || []).map((subsub, ssIdx) => (
-                              <Badge key={ssIdx} variant="secondary" className="bg-neutral-700 text-neutral-300 rounded text-xs">
-                                {subsub}
-                                <button onClick={() => handleRemoveSubsubsector(idx, ssIdx, !!editingSector)} className="ml-1">
-                                  <X className="w-2 h-2" />
-                                </button>
-                              </Badge>
-                            ))}
-                          </div>
                         </div>
                       </div>
                     ))}
@@ -674,87 +513,81 @@ export default function SettingsModal({
                 </div>
 
                 <div>
-                  <Label className="text-neutral-400 text-xs">Keywords (for critical articles)</Label>
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">KEYWORDS</Label>
                   <Input
                     value={newKeyword}
                     onChange={(e) => setNewKeyword(e.target.value)}
                     onKeyDown={handleAddKeyword}
-                    placeholder="Press Enter to add keyword"
-                    className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
+                    placeholder="Press Enter to add"
+                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
                   />
-                  <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="flex flex-wrap gap-1 mt-2">
                     {(currentTarget.keywords || []).map((kw, idx) => (
-                      <Badge key={idx} variant="secondary" className="bg-neutral-700 text-neutral-300 rounded">
+                      <Badge key={idx} className="bg-neutral-800 text-neutral-300 text-[9px]">
                         {kw}
                         <button onClick={() => handleRemoveKeyword(idx, !!editingSector)} className="ml-1">
-                          <X className="w-3 h-3" />
+                          <X className="w-2 h-2" />
                         </button>
                       </Badge>
                     ))}
                   </div>
                 </div>
+
                 <div className="flex gap-2">
-                  <Button onClick={handleSaveSector} size="sm" className="bg-neutral-700 hover:bg-neutral-600 rounded text-xs">
-                    {editingSector ? 'Update' : 'Add'} Sector
+                  <Button onClick={handleSaveSector} size="sm" className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7">
+                    {editingSector ? 'UPDATE' : 'ADD'} SECTOR
                   </Button>
                   {editingSector && (
-                    <Button variant="ghost" size="sm" onClick={() => setEditingSector(null)} className="text-xs">
-                      Cancel
+                    <Button variant="ghost" size="sm" onClick={() => setEditingSector(null)} className="text-[10px] h-7">
+                      CANCEL
                     </Button>
                   )}
                 </div>
               </div>
               
+              <SectionHeader>EXISTING SECTORS</SectionHeader>
               <div className="space-y-1">
-                <h4 className="font-medium text-xs text-neutral-400 mb-2">Existing Sectors</h4>
                 {sectors.map((sector, index) => (
-                  <div key={sector.id} className="flex items-center justify-between p-3 bg-neutral-800/30 rounded gap-2">
+                  <div key={sector.id} className="flex items-center justify-between py-2 border-b border-neutral-800">
                     <div className="flex items-center gap-2">
                       <div className="flex flex-col gap-0.5">
                         <button 
                           onClick={() => handleMoveUp(index)} 
                           disabled={index === 0}
-                          className={cn("p-0.5", index === 0 ? "text-neutral-700" : "text-neutral-500 hover:text-white")}
+                          className={cn("p-0.5", index === 0 ? "text-neutral-800" : "text-neutral-600 hover:text-white")}
                         >
                           <ChevronUp className="w-3 h-3" />
                         </button>
                         <button 
                           onClick={() => handleMoveDown(index)} 
                           disabled={index === sectors.length - 1}
-                          className={cn("p-0.5", index === sectors.length - 1 ? "text-neutral-700" : "text-neutral-500 hover:text-white")}
+                          className={cn("p-0.5", index === sectors.length - 1 ? "text-neutral-800" : "text-neutral-600 hover:text-white")}
                         >
                           <ChevronDown className="w-3 h-3" />
                         </button>
                       </div>
-                      <div>
-                        <span className="text-sm text-white">{sector.name}</span>
-                        {sector.subsectors?.length > 0 && (
-                          <span className="text-xs text-neutral-500 ml-2">
-                            ({sector.subsectors.length} subsectors)
-                          </span>
-                        )}
-                      </div>
+                      <span className="text-[11px] text-white">{sector.name}</span>
                     </div>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => setEditingSector(sector)} className="text-xs h-7 text-neutral-300">
-                        Edit
+                      <Button size="sm" variant="ghost" onClick={() => setEditingSector(sector)} className="text-[10px] h-6 text-neutral-400">
+                        EDIT
                       </Button>
-                      <Button size="sm" variant="ghost" className="text-red-400 text-xs h-7" onClick={() => onDeleteSector(sector.id)}>
-                        Delete
+                      <Button size="sm" variant="ghost" className="text-red-500 text-[10px] h-6" onClick={() => onDeleteSector(sector.id)}>
+                        DELETE
                       </Button>
                     </div>
                   </div>
                 ))}
               </div>
-            </TabsContent>
+            </div>
+          )}
 
-            <TabsContent value="collections" className="space-y-4 mt-0">
-              <div className="p-4 bg-neutral-800/50 rounded space-y-4">
-                <h4 className="font-medium text-xs text-neutral-300">
-                  {editingCollection ? 'Edit Collection' : 'Add New Collection'}
-                </h4>
+          {activeTab === 'collections' && (
+            <div>
+              <SectionHeader>{editingCollection ? 'EDIT COLLECTION' : 'ADD NEW COLLECTION'}</SectionHeader>
+              <div className="space-y-3 mb-4">
                 <div>
-                  <Label className="text-neutral-400 text-xs">Name</Label>
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">NAME</Label>
                   <Input
                     value={editingCollection ? editingCollection.name : newCollection.name}
                     onChange={(e) => editingCollection 
@@ -762,7 +595,7 @@ export default function SettingsModal({
                       : setNewCollection({ name: e.target.value })
                     }
                     placeholder="e.g., Important Articles"
-                    className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
+                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -777,448 +610,297 @@ export default function SettingsModal({
                       }
                     }} 
                     size="sm" 
-                    className="bg-neutral-700 hover:bg-neutral-600 rounded text-xs"
+                    className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7"
                   >
-                    {editingCollection ? 'Update' : 'Add'} Collection
+                    {editingCollection ? 'UPDATE' : 'ADD'} COLLECTION
                   </Button>
                   {editingCollection && (
-                    <Button variant="ghost" size="sm" onClick={() => setEditingCollection(null)} className="text-xs">
-                      Cancel
+                    <Button variant="ghost" size="sm" onClick={() => setEditingCollection(null)} className="text-[10px] h-7">
+                      CANCEL
                     </Button>
                   )}
                 </div>
               </div>
 
+              <SectionHeader>EXISTING COLLECTIONS</SectionHeader>
               <div className="space-y-1">
-                <h4 className="font-medium text-xs text-neutral-400 mb-2">Existing Collections</h4>
                 {collections?.length === 0 ? (
-                  <p className="text-neutral-500 text-sm p-4 text-center">No collections created yet.</p>
+                  <p className="text-neutral-600 text-[10px] py-4 text-center">NO COLLECTIONS CREATED YET</p>
                 ) : (
                   collections?.map((collection, index) => (
-                    <div key={collection.id} className="flex items-center justify-between p-3 bg-neutral-800/30 rounded gap-2">
+                    <div key={collection.id} className="flex items-center justify-between py-2 border-b border-neutral-800">
                       <div className="flex items-center gap-2">
                         <div className="flex flex-col gap-0.5">
                           <button 
                             onClick={() => onReorderCollections(index, Math.max(0, index - 1))} 
                             disabled={index === 0}
-                            className={cn("p-0.5", index === 0 ? "text-neutral-700" : "text-neutral-500 hover:text-white")}
+                            className={cn("p-0.5", index === 0 ? "text-neutral-800" : "text-neutral-600 hover:text-white")}
                           >
                             <ChevronUp className="w-3 h-3" />
                           </button>
                           <button 
                             onClick={() => onReorderCollections(index, Math.min(collections.length - 1, index + 1))} 
                             disabled={index === collections.length - 1}
-                            className={cn("p-0.5", index === collections.length - 1 ? "text-neutral-700" : "text-neutral-500 hover:text-white")}
+                            className={cn("p-0.5", index === collections.length - 1 ? "text-neutral-800" : "text-neutral-600 hover:text-white")}
                           >
                             <ChevronDown className="w-3 h-3" />
                           </button>
                         </div>
-                        <span className="text-sm text-white">{collection.name}</span>
+                        <span className="text-[11px] text-white">{collection.name}</span>
                       </div>
                       <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => setEditingCollection(collection)} className="text-xs h-7 text-neutral-300">
-                          Edit
+                        <Button size="sm" variant="ghost" onClick={() => setEditingCollection(collection)} className="text-[10px] h-6 text-neutral-400">
+                          EDIT
                         </Button>
-                        <Button size="sm" variant="ghost" className="text-red-400 text-xs h-7" onClick={() => onDeleteCollection(collection.id)}>
-                          Delete
+                        <Button size="sm" variant="ghost" className="text-red-500 text-[10px] h-6" onClick={() => onDeleteCollection(collection.id)}>
+                          DELETE
                         </Button>
                       </div>
                     </div>
                   ))
                 )}
               </div>
-            </TabsContent>
+            </div>
+          )}
 
-            <TabsContent value="rss" className="space-y-4 mt-0">
-              <div className="p-4 bg-neutral-800/50 rounded space-y-4">
-                <h4 className="font-medium text-xs text-neutral-300">Add Single RSS Source</h4>
-                <div className="grid grid-cols-1 gap-3">
-                  <div>
-                    <Label className="text-neutral-400 text-xs">Source Name</Label>
-                    <Input
-                      value={newRSSSource.name}
-                      onChange={(e) => setNewRSSSource({ ...newRSSSource, name: e.target.value })}
-                      placeholder="e.g., Reuters"
-                      className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-neutral-400 text-xs">RSS Feed URL</Label>
-                    <Input
-                      value={newRSSSource.url}
-                      onChange={(e) => setNewRSSSource({ ...newRSSSource, url: e.target.value })}
-                      placeholder="https://example.com/rss"
-                      className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-neutral-400 text-xs">Sector</Label>
-                    <Select
-                      value={newRSSSource.sector_id}
-                      onValueChange={(value) => {
-                        setNewRSSSource({ ...newRSSSource, sector_id: value, subsector: '', subsubsector: '' });
-                        setSelectedSectorForRSS(sectors.find(s => s.id === value));
-                      }}
-                    >
-                      <SelectTrigger className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white">
-                        <SelectValue placeholder="Select sector" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
-                        {sectors.map((sector) => (
-                          <SelectItem key={sector.id} value={sector.id} className="text-white focus:bg-neutral-700 focus:text-white">
-                            {sector.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {selectedSectorForRSS?.subsectors?.length > 0 && (
-                    <div>
-                      <Label className="text-neutral-400 text-xs">Subsector (optional)</Label>
-                      <Select
-                        value={newRSSSource.subsector}
-                        onValueChange={(value) => setNewRSSSource({ ...newRSSSource, subsector: value, subsubsector: '' })}
-                      >
-                        <SelectTrigger className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white">
-                          <SelectValue placeholder="Select subsector" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
-                          <SelectItem value={null} className="text-white focus:bg-neutral-700 focus:text-white">None</SelectItem>
-                          {selectedSectorForRSS.subsectors.map((sub, idx) => (
-                            <SelectItem key={idx} value={sub.name} className="text-white focus:bg-neutral-700 focus:text-white">
-                              {sub.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  {newRSSSource.subsector && selectedSectorForRSS?.subsectors?.find(s => s.name === newRSSSource.subsector)?.subsubsectors?.length > 0 && (
-                    <div>
-                      <Label className="text-neutral-400 text-xs">Sub-subsector (optional)</Label>
-                      <Select
-                        value={newRSSSource.subsubsector}
-                        onValueChange={(value) => setNewRSSSource({ ...newRSSSource, subsubsector: value })}
-                      >
-                        <SelectTrigger className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white">
-                          <SelectValue placeholder="Select sub-subsector" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
-                          <SelectItem value={null} className="text-white focus:bg-neutral-700 focus:text-white">None</SelectItem>
-                          {selectedSectorForRSS.subsectors.find(s => s.name === newRSSSource.subsector).subsubsectors.map((subsub, idx) => (
-                            <SelectItem key={idx} value={subsub} className="text-white focus:bg-neutral-700 focus:text-white">
-                              {subsub}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
+          {activeTab === 'rss' && (
+            <div>
+              <SectionHeader>ADD SINGLE RSS SOURCE</SectionHeader>
+              <div className="space-y-2 mb-4">
+                <div>
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">SOURCE NAME</Label>
+                  <Input
+                    value={newRSSSource.name}
+                    onChange={(e) => setNewRSSSource({ ...newRSSSource, name: e.target.value })}
+                    placeholder="e.g., Reuters"
+                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
+                  />
                 </div>
-                <Button onClick={handleSaveRSSSource} size="sm" className="bg-neutral-700 hover:bg-neutral-600 rounded text-xs">
-                  Add RSS Source
+                <div>
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">RSS FEED URL</Label>
+                  <Input
+                    value={newRSSSource.url}
+                    onChange={(e) => setNewRSSSource({ ...newRSSSource, url: e.target.value })}
+                    placeholder="https://example.com/rss"
+                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">SECTOR</Label>
+                  <select
+                    value={newRSSSource.sector_id}
+                    onChange={(e) => {
+                      setNewRSSSource({ ...newRSSSource, sector_id: e.target.value, subsector: '', subsubsector: '' });
+                      setSelectedSectorForRSS(sectors.find(s => s.id === e.target.value));
+                    }}
+                    className="mt-1 w-full bg-[#0D0D0D] border border-neutral-700 text-white text-[11px] px-2 py-1"
+                  >
+                    <option value="">SELECT SECTOR</option>
+                    {sectors.map((sector) => (
+                      <option key={sector.id} value={sector.id}>
+                        {sector.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button onClick={handleSaveRSSSource} size="sm" className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7">
+                  ADD RSS SOURCE
                 </Button>
-                </div>
+              </div>
 
-                <div className="p-4 bg-neutral-800/50 rounded space-y-4">
-                <h4 className="font-medium text-xs text-neutral-300">Bulk Add RSS Sources</h4>
-                <p className="text-xs text-neutral-400">
-                  Paste multiple sources here, one per line: Source Name, RSS URL, Sector, Subsector (optional), Sub-subsector (optional).
+              <SectionHeader>BULK ADD RSS SOURCES</SectionHeader>
+              <div className="space-y-2 mb-4">
+                <p className="text-[10px] text-neutral-500">
+                  Format: Source Name, RSS URL, Sector, Subsector (optional)
                 </p>
                 <Textarea
                   value={bulkRSSText}
                   onChange={(e) => setBulkRSSText(e.target.value)}
-                  placeholder="Example:
-                Reuters Tech, https://example.com/rss, Technology, AI
-                Bloomberg Markets, https://example.com/markets, Finance"
-                  className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white min-h-[120px] font-mono text-xs"
+                  placeholder="Reuters Tech, https://example.com/rss, Technology, AI"
+                  className="bg-[#0D0D0D] border-neutral-700 text-white min-h-[100px] font-mono text-[10px]"
                 />
-                <Button onClick={handleBulkAddRSS} size="sm" className="bg-orange-600 hover:bg-orange-700 rounded text-xs">
-                  Add Sources in Bulk
+                <Button onClick={handleBulkAddRSS} size="sm" className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7">
+                  ADD SOURCES IN BULK
                 </Button>
 
                 {bulkSuccess && (
-                  <div className="p-3 bg-green-900/30 border border-green-700 rounded">
-                    <p className="text-xs text-green-300">{bulkSuccess}</p>
+                  <div className="p-2 bg-green-900/30 border border-green-700">
+                    <p className="text-[10px] text-green-300">{bulkSuccess}</p>
                   </div>
                 )}
 
                 {bulkErrors.length > 0 && (
-                  <div className="p-3 bg-red-900/30 border border-red-700 rounded space-y-1">
-                    <p className="text-xs font-medium text-red-300">Errors:</p>
-                    {bulkErrors.map((error, idx) => (
-                      <p key={idx} className="text-xs text-red-400">{error}</p>
+                  <div className="p-2 bg-red-900/30 border border-red-700 space-y-1">
+                    <p className="text-[10px] font-medium text-red-300">ERRORS:</p>
+                    {bulkErrors.slice(0, 3).map((error, idx) => (
+                      <p key={idx} className="text-[9px] text-red-400">{error}</p>
                     ))}
                   </div>
                 )}
-                </div>
+              </div>
 
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-xs text-neutral-400">Existing RSS Sources</h4>
-                    <Button 
-                      onClick={removeDuplicateRSS} 
-                      size="sm" 
-                      variant="ghost"
-                      className="text-xs h-6 text-neutral-400 hover:text-white"
-                    >
-                      Remove Duplicates
-                    </Button>
-                  </div>
+              <SectionHeader>
+                EXISTING RSS SOURCES
+                <Button 
+                  onClick={removeDuplicateRSS} 
+                  size="sm" 
+                  variant="ghost"
+                  className="text-[9px] h-5 text-neutral-500 hover:text-white ml-auto"
+                >
+                  REMOVE DUPLICATES
+                </Button>
+              </SectionHeader>
+              <div className="space-y-1">
                 {rssSources.length === 0 ? (
-                  <p className="text-neutral-500 text-sm p-4 text-center">No RSS sources added yet.</p>
+                  <p className="text-neutral-600 text-[10px] py-4 text-center">NO RSS SOURCES ADDED YET</p>
                 ) : (
                   rssSources.map((source) => {
                     const sector = sectors.find(s => s.id === source.sector_id);
-                    const isEditing = editingRSS?.id === source.id;
                     return (
-                      <div key={source.id} className="p-3 bg-neutral-800/30 rounded space-y-2">
-                        <div className="flex items-center justify-between gap-3">
+                      <div key={source.id} className="py-2 border-b border-neutral-800">
+                        <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
-                            <span className="text-sm text-white">{source.name}</span>
-                            <p className="text-xs text-neutral-500 truncate">{source.url}</p>
-                            {!isEditing && (source.subsector || source.subsubsector) && (
-                              <p className="text-xs text-neutral-600 mt-0.5">
-                                {sector?.name}{source.subsector ? ` → ${source.subsector}` : ''}{source.subsubsector ? ` → ${source.subsubsector}` : ''}
-                              </p>
-                            )}
+                            <span className="text-[11px] text-white">{source.name}</span>
+                            <p className="text-[9px] text-neutral-600 truncate">{source.url}</p>
                           </div>
                           <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => setEditingRSS(isEditing ? null : source)}>
-                              {isEditing ? 'Cancel' : 'Edit'}
-                            </Button>
-                            <Button size="sm" variant="ghost" className="text-red-400 text-xs h-7" onClick={() => onDeleteRSSSource(source.id)}>
-                              Delete
+                            <Button size="sm" variant="ghost" className="text-red-500 text-[10px] h-6" onClick={() => onDeleteRSSSource(source.id)}>
+                              DELETE
                             </Button>
                           </div>
                         </div>
-                        {isEditing && (
-                          <div className="space-y-2 pt-2 border-t border-neutral-700">
-                            <Select
-                              value={editingRSS.sector_id}
-                              onValueChange={(value) => setEditingRSS({ ...editingRSS, sector_id: value, subsector: '', subsubsector: '' })}
-                            >
-                              <SelectTrigger className="bg-neutral-900 border-neutral-700 rounded text-white text-xs">
-                                <SelectValue>{sectors.find(s => s.id === editingRSS.sector_id)?.name || 'Select sector'}</SelectValue>
-                              </SelectTrigger>
-                              <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
-                                {sectors.map((s) => (
-                                  <SelectItem key={s.id} value={s.id} className="text-xs text-white focus:bg-neutral-700 focus:text-white">
-                                    {s.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {sectors.find(s => s.id === editingRSS.sector_id)?.subsectors?.length > 0 && (
-                              <Select
-                                value={editingRSS.subsector || ''}
-                                onValueChange={(value) => setEditingRSS({ ...editingRSS, subsector: value, subsubsector: '' })}
-                              >
-                                <SelectTrigger className="bg-neutral-900 border-neutral-700 rounded text-white text-xs">
-                                  <SelectValue placeholder="Select subsector" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
-                                  <SelectItem value={null} className="text-xs text-white focus:bg-neutral-700 focus:text-white">None</SelectItem>
-                                  {sectors.find(s => s.id === editingRSS.sector_id).subsectors.map((sub, idx) => (
-                                    <SelectItem key={idx} value={sub.name} className="text-xs text-white focus:bg-neutral-700 focus:text-white">
-                                      {sub.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                            {editingRSS.subsector && sectors.find(s => s.id === editingRSS.sector_id)?.subsectors?.find(s => s.name === editingRSS.subsector)?.subsubsectors?.length > 0 && (
-                              <Select
-                                value={editingRSS.subsubsector || ''}
-                                onValueChange={(value) => setEditingRSS({ ...editingRSS, subsubsector: value })}
-                              >
-                                <SelectTrigger className="bg-neutral-900 border-neutral-700 rounded text-white text-xs">
-                                  <SelectValue placeholder="Select sub-subsector" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
-                                  <SelectItem value={null} className="text-xs text-white focus:bg-neutral-700 focus:text-white">None</SelectItem>
-                                  {sectors.find(s => s.id === editingRSS.sector_id).subsectors.find(s => s.name === editingRSS.subsector).subsubsectors.map((subsub, idx) => (
-                                    <SelectItem key={idx} value={subsub} className="text-xs text-white focus:bg-neutral-700 focus:text-white">
-                                      {subsub}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                            <Button 
-                              size="sm" 
-                              onClick={() => {
-                                onUpdateRSSSource(source.id, { 
-                                  sector_id: editingRSS.sector_id, 
-                                  subsector: editingRSS.subsector || '', 
-                                  subsubsector: editingRSS.subsubsector || '' 
-                                });
-                                setEditingRSS(null);
-                              }}
-                              className="bg-neutral-700 hover:bg-neutral-600 text-xs"
-                            >
-                              Save Changes
-                            </Button>
-                          </div>
-                        )}
                       </div>
                     );
                   })
                 )}
               </div>
-            </TabsContent>
-            
-            <TabsContent value="ai" className="space-y-4 mt-0">
-              <div className="space-y-4">
-                <div className="p-4 bg-neutral-800/50 rounded space-y-4">
-                  <h4 className="font-medium text-xs text-neutral-300">API Configuration</h4>
-                  <div>
-                    <Label className="text-neutral-400 text-xs">AI Provider</Label>
-                    <Select
-                      value={localSettings?.api_provider || 'default'}
-                      onValueChange={(value) => setLocalSettings({ ...localSettings, api_provider: value })}
-                    >
-                      <SelectTrigger className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
-                        <SelectItem value="default" className="text-white focus:bg-neutral-700 focus:text-white">Default (Built-in)</SelectItem>
-                        <SelectItem value="openai" className="text-white focus:bg-neutral-700 focus:text-white">OpenAI</SelectItem>
-                        <SelectItem value="gemini" className="text-white focus:bg-neutral-700 focus:text-white">Google Gemini</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {localSettings?.api_provider && localSettings.api_provider !== 'default' && (
-                    <div>
-                      <Label className="text-neutral-400 text-xs">API Key</Label>
-                      <Input
-                        type="password"
-                        value={localSettings?.custom_api_key || ''}
-                        onChange={(e) => setLocalSettings({ ...localSettings, custom_api_key: e.target.value })}
-                        placeholder={`Enter your ${localSettings.api_provider === 'openai' ? 'OpenAI' : 'Gemini'} API key`}
-                        className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
-                      />
-                      <p className="text-xs text-neutral-500 mt-1">
-                        Your API key is stored securely and used only for generating summaries.
-                      </p>
-                    </div>
-                  )}
-                </div>
+            </div>
+          )}
 
+          {activeTab === 'ai' && (
+            <div>
+              <SectionHeader>API CONFIGURATION</SectionHeader>
+              <SettingRow label="AI PROVIDER">
+                <SegmentedControl
+                  options={[
+                    { value: 'default', label: 'DEFAULT' },
+                    { value: 'openai', label: 'OPENAI' },
+                    { value: 'gemini', label: 'GEMINI' }
+                  ]}
+                  value={localSettings?.api_provider || 'default'}
+                  onChange={(value) => setLocalSettings({ ...localSettings, api_provider: value })}
+                />
+              </SettingRow>
+              
+              {localSettings?.api_provider && localSettings.api_provider !== 'default' && (
+                <div className="py-2">
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">API KEY</Label>
+                  <Input
+                    type="password"
+                    value={localSettings?.custom_api_key || ''}
+                    onChange={(e) => setLocalSettings({ ...localSettings, custom_api_key: e.target.value })}
+                    placeholder="Enter your API key"
+                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
+                  />
+                </div>
+              )}
+
+              <SectionHeader>DEFAULT INSTRUCTIONS</SectionHeader>
+              <div className="space-y-3">
                 <div>
-                  <Label className="text-neutral-400 text-xs">Default Gist Instructions</Label>
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">GIST INSTRUCTIONS</Label>
                   <Textarea
                     value={localSettings?.default_gist_instructions || ''}
                     onChange={(e) => setLocalSettings({ ...localSettings, default_gist_instructions: e.target.value })}
-                    placeholder="Instructions for AI when generating the summary..."
-                    className="mt-1 bg-neutral-900 border-neutral-700 min-h-[80px] rounded text-white"
+                    placeholder="Instructions for AI..."
+                    className="mt-1 bg-[#0D0D0D] border-neutral-700 min-h-[60px] text-white text-[10px]"
                   />
-                  <p className="text-xs text-neutral-500 mt-1">
-                    These instructions guide the AI when creating the intelligence summary.
-                  </p>
                 </div>
                 <div>
-                  <Label className="text-neutral-400 text-xs">Default Featured Article Instructions</Label>
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">FEATURED ARTICLE INSTRUCTIONS</Label>
                   <Textarea
                     value={localSettings?.default_critical_instructions || ''}
                     onChange={(e) => setLocalSettings({ ...localSettings, default_critical_instructions: e.target.value })}
-                    placeholder="Instructions for AI when selecting featured articles..."
-                    className="mt-1 bg-neutral-900 border-neutral-700 min-h-[80px] rounded text-white"
+                    placeholder="Instructions for AI..."
+                    className="mt-1 bg-[#0D0D0D] border-neutral-700 min-h-[60px] text-white text-[10px]"
                   />
-                  <p className="text-xs text-neutral-500 mt-1">
-                    These instructions guide the AI when selecting featured articles.
-                  </p>
                 </div>
                 <Button 
                   onClick={() => onUpdateSettings(localSettings)}
                   size="sm"
-                  className="bg-neutral-700 hover:bg-neutral-600 rounded text-xs"
+                  className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7"
                 >
-                  Save AI Settings
+                  SAVE AI SETTINGS
                 </Button>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="export" className="space-y-4 mt-0">
-              <div className="space-y-4">
-                <div className="p-4 bg-neutral-800/50 rounded space-y-4">
-                  <h4 className="font-medium text-xs text-neutral-300">Export Format</h4>
-                  <div>
-                    <Label className="text-neutral-400 text-xs">Default Format</Label>
-                    <Select
-                      value={localSettings?.export_format || 'csv'}
-                      onValueChange={(value) => setLocalSettings({ ...localSettings, export_format: value })}
-                    >
-                      <SelectTrigger className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-neutral-800 border-neutral-700 rounded">
-                        <SelectItem value="csv" className="text-white focus:bg-neutral-700 focus:text-white">CSV</SelectItem>
-                        <SelectItem value="excel" className="text-white focus:bg-neutral-700 focus:text-white">Excel</SelectItem>
-                        <SelectItem value="email" className="text-white focus:bg-neutral-700 focus:text-white">Email Attachment</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {localSettings?.export_format === 'email' && (
-                    <div>
-                      <Label className="text-neutral-400 text-xs">Email Address</Label>
-                      <Input
-                        type="email"
-                        value={localSettings?.export_email || ''}
-                        onChange={(e) => setLocalSettings({ ...localSettings, export_email: e.target.value })}
-                        placeholder="your@email.com"
-                        className="mt-1 bg-neutral-900 border-neutral-700 rounded text-white"
-                      />
-                      <p className="text-xs text-neutral-500 mt-1">
-                        Export will be sent to this email address
-                      </p>
-                    </div>
-                  )}
-                </div>
+            </div>
+          )}
 
-                <div className="p-4 bg-neutral-800/50 rounded space-y-4">
-                  <h4 className="font-medium text-xs text-neutral-300">Export Columns</h4>
-                  <p className="text-xs text-neutral-400">Select which columns to include in exports</p>
-                  <div className="space-y-2">
-                    {[
-                      { value: 'title', label: 'Title' },
-                      { value: 'link', label: 'Link' },
-                      { value: 'source', label: 'Source' },
-                      { value: 'sector', label: 'Sector' },
-                      { value: 'subsector', label: 'Subsector' },
-                      { value: 'date', label: 'Date' },
-                      { value: 'description', label: 'Description' },
-                      { value: 'collections', label: 'Collections' }
-                    ].map((col) => (
-                      <div key={col.value} className="flex items-center justify-between p-2 bg-neutral-800/30 rounded">
-                        <span className="text-sm text-white">{col.label}</span>
-                        <Switch
-                          checked={(localSettings?.export_columns || ['title', 'link', 'source', 'sector', 'date', 'description']).includes(col.value)}
-                          onCheckedChange={(checked) => {
-                            const currentColumns = localSettings?.export_columns || ['title', 'link', 'source', 'sector', 'date', 'description'];
-                            const newColumns = checked
-                              ? [...currentColumns, col.value]
-                              : currentColumns.filter(c => c !== col.value);
-                            setLocalSettings({ ...localSettings, export_columns: newColumns });
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
+          {activeTab === 'export' && (
+            <div>
+              <SectionHeader>EXPORT FORMAT</SectionHeader>
+              <SettingRow label="DEFAULT FORMAT">
+                <SegmentedControl
+                  options={[
+                    { value: 'csv', label: 'CSV' },
+                    { value: 'excel', label: 'EXCEL' },
+                    { value: 'email', label: 'EMAIL' }
+                  ]}
+                  value={localSettings?.export_format || 'csv'}
+                  onChange={(value) => setLocalSettings({ ...localSettings, export_format: value })}
+                />
+              </SettingRow>
+              
+              {localSettings?.export_format === 'email' && (
+                <div className="py-2">
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">EMAIL ADDRESS</Label>
+                  <Input
+                    type="email"
+                    value={localSettings?.export_email || ''}
+                    onChange={(e) => setLocalSettings({ ...localSettings, export_email: e.target.value })}
+                    placeholder="your@email.com"
+                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
+                  />
                 </div>
+              )}
 
+              <SectionHeader>EXPORT COLUMNS</SectionHeader>
+              {[
+                { value: 'title', label: 'TITLE' },
+                { value: 'link', label: 'LINK' },
+                { value: 'source', label: 'SOURCE' },
+                { value: 'sector', label: 'SECTOR' },
+                { value: 'subsector', label: 'SUBSECTOR' },
+                { value: 'date', label: 'DATE' },
+                { value: 'description', label: 'DESCRIPTION' },
+                { value: 'collections', label: 'COLLECTIONS' }
+              ].map((col) => (
+                <SettingRow key={col.value} label={col.label}>
+                  <Checkbox
+                    checked={(localSettings?.export_columns || ['title', 'link', 'source', 'sector', 'date', 'description']).includes(col.value)}
+                    onCheckedChange={(checked) => {
+                      const currentColumns = localSettings?.export_columns || ['title', 'link', 'source', 'sector', 'date', 'description'];
+                      const newColumns = checked
+                        ? [...currentColumns, col.value]
+                        : currentColumns.filter(c => c !== col.value);
+                      setLocalSettings({ ...localSettings, export_columns: newColumns });
+                    }}
+                  />
+                </SettingRow>
+              ))}
+
+              <div className="mt-4">
                 <Button 
                   onClick={() => onUpdateSettings(localSettings)}
                   size="sm"
-                  className="bg-neutral-700 hover:bg-neutral-600 rounded text-xs"
+                  className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7"
                 >
-                  Save Export Settings
+                  SAVE EXPORT SETTINGS
                 </Button>
               </div>
-            </TabsContent>
-          </div>
-        </Tabs>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
