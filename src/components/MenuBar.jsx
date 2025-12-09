@@ -280,14 +280,59 @@ export default function MenuBar({
             >
               Density: {viewMode === 'compact' ? 'Compact' : 'Regular'}
             </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={onToggleTheme}
-              className={cn("text-xs rounded-none", 
-                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
-                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
-            >
-              Appearance: {isDark ? 'Dark' : 'Light'}
-            </DropdownMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className={cn("px-2 py-1.5 text-xs rounded-none cursor-pointer flex items-center justify-between hover:bg-opacity-10",
+                  isPastel ? "text-[#E8E9F0] hover:bg-[#9B8B6B]/20" :
+                  isDark ? "text-neutral-200 hover:bg-orange-500/20" : "text-gray-700 hover:bg-orange-50")}>
+                  Appearance
+                  <span className="ml-2">›</span>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="start" className={cn("rounded-none",
+                isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+                isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    const newSettings = { ...settings, theme: 'light' };
+                    onUpdateSettings(newSettings);
+                  }}
+                  className={cn("text-xs rounded-none flex items-center gap-2",
+                    isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
+                    isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
+                >
+                  {settings?.theme === 'light' && <span className="text-orange-500">✓</span>}
+                  {settings?.theme !== 'light' && <span className="w-3" />}
+                  Light
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    const newSettings = { ...settings, theme: 'dark' };
+                    onUpdateSettings(newSettings);
+                  }}
+                  className={cn("text-xs rounded-none flex items-center gap-2",
+                    isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
+                    isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
+                >
+                  {settings?.theme === 'dark' && <span className="text-orange-500">✓</span>}
+                  {settings?.theme !== 'dark' && <span className="w-3" />}
+                  Dark
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    const newSettings = { ...settings, theme: 'pastel' };
+                    onUpdateSettings(newSettings);
+                  }}
+                  className={cn("text-xs rounded-none flex items-center gap-2",
+                    isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
+                    isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
+                >
+                  {settings?.theme === 'pastel' && <span className="text-orange-500">✓</span>}
+                  {settings?.theme !== 'pastel' && <span className="w-3" />}
+                  Pastel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <DropdownMenuSeparator className={cn(
             isPastel ? "bg-[#4A4D6C]" :
             isDark ? "bg-neutral-700" : "bg-gray-200")} />
