@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
-import { X, FileText, Check } from 'lucide-react';
+import { X, FileText, Check, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import ReactQuill from 'react-quill';
+import { toast } from 'sonner';
 
 export default function ReportBuilder({ 
   selectedItems,
@@ -20,6 +21,22 @@ export default function ReportBuilder({
   const [reportFormatId, setReportFormatId] = useState(null);
 
   const reportFormatItem = selectedItems.find(item => item.id === reportFormatId);
+
+  const handleDownload = () => {
+    if (!reportContent) {
+      toast.error('No report to download');
+      return;
+    }
+    
+    const blob = new Blob([reportContent.replace(/<[^>]*>/g, '')], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `report-${new Date().toISOString().split('T')[0]}.txt`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast.success('Report downloaded');
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -110,15 +127,27 @@ export default function ReportBuilder({
             isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-[#D0D2E0]" :
             isDark ? "bg-[#0A0A0A] border-[#1F1F1F] text-neutral-300" : "bg-white")}
         />
-        <Button
-          onClick={() => onGenerateReport(instructions, reportFormatItem)}
-          disabled={selectedItems.length === 0 || isGenerating}
-          className={cn("w-full mt-2 text-[11px] h-7",
-            isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" :
-            isDark ? "bg-orange-600 hover:bg-orange-700" : "bg-orange-600 hover:bg-orange-700")}
-        >
-          {isGenerating ? 'Generating...' : 'Create Report'}
-        </Button>
+        <div className="flex gap-2 mt-2">
+          <Button
+            onClick={() => onGenerateReport(instructions, reportFormatItem)}
+            disabled={selectedItems.length === 0 || isGenerating}
+            className={cn("flex-1 text-[11px] h-7",
+              isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" :
+              isDark ? "bg-orange-600 hover:bg-orange-700" : "bg-orange-600 hover:bg-orange-700")}
+          >
+            {isGenerating ? 'Generating...' : 'Create Report'}
+          </Button>
+          <Button
+            onClick={handleDownload}
+            disabled={!reportContent}
+            variant="outline"
+            className={cn("text-[11px] h-7 px-3",
+              isPastel ? "border-[#4A4D6C] text-[#A5A8C0] hover:bg-[#42456C]" :
+              isDark ? "border-neutral-700 text-neutral-400 hover:bg-neutral-800" : "")}
+          >
+            <Download className="w-3 h-3" />
+          </Button>
+        </div>
       </div>
 
       {/* Text Editor */}

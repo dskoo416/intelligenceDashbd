@@ -1,15 +1,13 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
 import { format } from 'date-fns';
-import { FileText, Trash2, FolderInput } from 'lucide-react';
+import { FileText, Trash2, ChevronDown } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export default function FileList({ 
   items, 
@@ -78,31 +76,58 @@ export default function FileList({
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {mode === 'documents' && folders && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={cn("h-6 w-6 p-0",
-                        isPastel ? "text-[#9B9EBC] hover:bg-[#42456C]" :
-                        isDark ? "text-neutral-500 hover:bg-neutral-800" : "text-gray-500 hover:bg-gray-100")}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      className={cn("p-1 rounded hover:bg-orange-500/10 transition-all",
+                        item.folder_ids?.length > 0
+                          ? "text-orange-500"
+                          : isPastel
+                            ? "text-[#7B7E9C] hover:text-orange-500"
+                            : isDark
+                              ? "text-neutral-500 hover:text-orange-500"
+                              : "text-gray-400 hover:text-orange-500"
+                      )}
                     >
-                      <FolderInput className="w-3 h-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className={isDark ? "bg-neutral-800 border-neutral-700" : ""}>
-                    <DropdownMenuItem onClick={() => onMoveToFolder(item.id, null)}>
-                      Remove from folders
-                    </DropdownMenuItem>
-                    {folders.map(folder => (
-                      <DropdownMenuItem key={folder.id} onClick={() => onMoveToFolder(item.id, folder.id)}>
-                        {folder.name}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className={cn("w-56",
+                      isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+                      isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}
+                    align="end"
+                  >
+                    <div className="space-y-2">
+                      <p className={cn("text-xs font-medium",
+                        isPastel ? "text-[#E8E9F0]" :
+                        isDark ? "text-neutral-300" : "text-gray-700")}>
+                        Move to folder:
+                      </p>
+                      <button
+                        onClick={() => onMoveToFolder(item.id, null)}
+                        className={cn("w-full text-left px-2 py-1 text-xs transition-colors",
+                          isPastel ? "text-white hover:bg-[#42456C]" :
+                          isDark ? "text-white hover:bg-neutral-700" : "text-gray-900 hover:bg-gray-100")}
+                      >
+                        Remove from folders
+                      </button>
+                      {folders.map(folder => (
+                        <button
+                          key={folder.id}
+                          onClick={() => onMoveToFolder(item.id, folder.id)}
+                          className={cn("w-full text-left px-2 py-1 text-xs transition-colors",
+                            isPastel ? "text-white hover:bg-[#42456C]" :
+                            isDark ? "text-white hover:bg-neutral-700" : "text-gray-900 hover:bg-gray-100")}
+                        >
+                          {folder.name}
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               )}
               <Checkbox
                 checked={isSelected}
