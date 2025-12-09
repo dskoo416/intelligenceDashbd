@@ -90,7 +90,7 @@ export default function SectorSnapshotStrip({ theme }) {
     <div className={cn("w-full border", 
       isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
       isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
-      <div className={cn("px-3 py-1 border-b flex items-center justify-between", 
+      <div className={cn("px-2 py-1 border-b flex items-center justify-between", 
         isPastel ? "border-[#4A4D6C]" :
         isDark ? "border-[#262629]" : "border-gray-300")}>
         <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
