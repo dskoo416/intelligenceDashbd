@@ -364,7 +364,7 @@ export default function Layout({ children, currentPageName }) {
           updateSettingsMutation.mutate(newSettings);
         }}
         onNavigateToIntelligence={() => navigate(createPageUrl('IntelligenceFeed'))}
-        onNavigateToSaved={() => navigate(createPageUrl('Saved'))}
+        onNavigateToSaved={() => navigate(createPageUrl('Home'))}
         textSize={textSize}
         onChangeTextSize={(size) => {
           if (size === 'small' && textSize !== 'small') {

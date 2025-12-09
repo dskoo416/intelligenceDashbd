@@ -161,7 +161,7 @@ export default function FeaturedArticlesCard({ theme }) {
                   <span className={cn("mr-1.5 inline-block w-3 text-right", isDark ? "text-neutral-600" : "text-gray-500")}>{idx + 1})</span>
                   {article.title}
                 </a>
-                <div className={cn("text-[9px] mt-0.5", isDark ? "text-neutral-700" : "text-gray-500")} style={{ marginLeft: '18px' }}>
+                <div className={cn("text-[9px] mt-0.5", isDark ? "text-neutral-700" : "text-gray-500")} style={{ marginLeft: '21px' }}>
                   {article.source} • {article.sector} • {article.pubDate && format(new Date(article.pubDate), 'MMM d')}
                 </div>
               </div>
