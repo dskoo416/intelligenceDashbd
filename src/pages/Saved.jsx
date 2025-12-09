@@ -492,9 +492,11 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                           <PopoverContent
                             className={cn(
                               "w-56",
-                              isDark
-                                ? "bg-neutral-800 border-neutral-700"
-                                : "bg-white"
+                              isPastel
+                                ? "bg-[#3A3D5C] border-[#4A4D6C]"
+                                : isDark
+                                  ? "bg-neutral-800 border-neutral-700"
+                                  : "bg-white"
                             )}
                             align="end"
                           >
@@ -502,6 +504,7 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                               <p
                                 className={cn(
                                   "text-xs font-medium",
+                                  isPastel ? "text-[#E8E9F0]" :
                                   isDark ? "text-neutral-300" : "text-gray-700"
                                 )}
                               >
@@ -527,6 +530,7 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                                   <span
                                     className={cn(
                                       "text-xs",
+                                      isPastel ? "text-white" :
                                       isDark ? "text-white" : "text-gray-900"
                                     )}
                                   >
