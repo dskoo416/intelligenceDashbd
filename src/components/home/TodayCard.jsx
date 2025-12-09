@@ -68,7 +68,7 @@ export default function TodayCard({ theme }) {
     } else if (sectors.length > 0 && todayIndex > 0) {
       loadGist();
     }
-  }, [sectorIndex, todayIndex, sectors]);
+  }, [todayIndex, sectors]);
 
   const generateToday = async () => {
     const cachedStr = localStorage.getItem('today_summary_all');
