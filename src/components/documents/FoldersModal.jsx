@@ -108,19 +108,6 @@ export default function FoldersModal({
               </>
             ) : (
               <>
-                <Select value={folder.parent_id || 'none'} onValueChange={(v) => handleMoveFolder(folder.id, v === 'none' ? null : v)}>
-                  <SelectTrigger className={cn("h-7 w-20 text-xs",
-                    isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-[#9B9EBC]" :
-                    isDark ? "bg-neutral-900 border-neutral-700 text-neutral-400" : "")}>
-                    <SelectValue placeholder="Move" />
-                  </SelectTrigger>
-                  <SelectContent className={isDark ? "bg-neutral-800 border-neutral-700" : ""}>
-                    <SelectItem value="none">Root</SelectItem>
-                    {folders.filter(f => f.id !== folder.id).map(f => (
-                      <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -140,6 +127,19 @@ export default function FoldersModal({
                 >
                   <Trash2 className="w-3 h-3" />
                 </Button>
+                <Select value={folder.parent_id || 'none'} onValueChange={(v) => handleMoveFolder(folder.id, v === 'none' ? null : v)}>
+                  <SelectTrigger className={cn("h-7 w-20 text-xs",
+                    isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-[#9B9EBC]" :
+                    isDark ? "bg-neutral-900 border-neutral-700 text-neutral-400" : "")}>
+                    <SelectValue placeholder="Move" />
+                  </SelectTrigger>
+                  <SelectContent className={isDark ? "bg-neutral-800 border-neutral-700" : ""}>
+                    <SelectItem value="none">Root</SelectItem>
+                    {folders.filter(f => f.id !== folder.id).map(f => (
+                      <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </>
             )}
           </div>

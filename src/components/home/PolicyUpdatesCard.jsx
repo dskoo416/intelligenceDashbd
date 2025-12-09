@@ -230,7 +230,9 @@ Return ONLY the JSON object and nothing else.`;
                 <h4 className={cn("text-[10px] font-medium line-clamp-2 leading-[1.3]", 
                   isPastel ? "text-[#E8E9F0]" :
                   isDark ? "text-neutral-400" : "text-gray-900")}>
-                  {update.title}
+                  <span className={cn("font-bold mr-1",
+                    isPastel ? "text-[#9B8B6B]" :
+                    isDark ? "text-orange-500" : "text-orange-600")}>{idx + 1}.</span>{update.title}
                 </h4>
                 <div className={cn("text-[9px] mt-0.5", 
                   isPastel ? "text-[#9B9EBC]" :

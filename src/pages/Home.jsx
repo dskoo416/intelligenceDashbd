@@ -26,29 +26,31 @@ export default function Home({ sidebarOpen }) {
       settings.theme === 'pastel' ? "bg-[#2B2D42]" :
       isDark ? "bg-[#0A0A0A]" : "bg-gray-50"
     )}>
-      <div className="w-full space-y-3">
+      <div className="flex flex-col gap-3 h-full">
         {/* Top Strip - Sector Snapshot */}
-        <SectorSnapshotStrip theme={settings.theme} />
+        <div className="flex-shrink-0">
+          <SectorSnapshotStrip theme={settings.theme} />
+        </div>
 
         {/* Top Row - 3 Featured Tiles + Policy Updates */}
-        <div className="grid grid-cols-4 gap-3" style={{ height: '280px' }}>
-          <div className="col-span-3 h-full">
+        <div className="grid grid-cols-4 gap-3 flex-shrink-0" style={{ height: '280px' }}>
+          <div className="col-span-3 h-full overflow-hidden">
             <FeaturedSectorTiles theme={settings.theme} />
           </div>
-          <div className="h-full">
+          <div className="h-full overflow-hidden">
             <PolicyUpdatesCard theme={settings.theme} />
           </div>
         </div>
 
         {/* Bottom Row - 3 Equal Cards */}
-        <div className="grid grid-cols-3 gap-3" style={{ minHeight: '360px', maxHeight: '500px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div className="grid grid-cols-3 gap-3 flex-1 min-h-0">
+          <div className="h-full overflow-hidden">
             <KeywordHeatmapCard theme={settings.theme} />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="h-full overflow-hidden">
             <TickerCard theme={settings.theme} />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="h-full overflow-hidden">
             <MarketShareCard theme={settings.theme} />
           </div>
         </div>

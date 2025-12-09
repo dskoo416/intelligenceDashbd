@@ -51,11 +51,27 @@ const fetchQuote = async (symbol, duration = '30') => {
     const change = currentPrice - previousClose;
     const changePercent = (change / previousClose) * 100;
     
-    // Build chart data
-    const chartData = timestamps.map((time, idx) => ({
-      time: new Date(time * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      price: closes[idx]
-    })).filter(d => d.price != null);
+    // Build chart data with appropriate time format based on duration
+    const chartData = timestamps.map((time, idx) => {
+      const date = new Date(time * 1000);
+      let formattedTime;
+      
+      if (duration === '1') {
+        // 1D: show time of day (HH:MM)
+        formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      } else if (duration === '7' || duration === '30') {
+        // 5D and 1M: show day labels (MMM D)
+        formattedTime = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } else {
+        // 3M and 1Y: show month labels (MMM)
+        formattedTime = date.toLocaleDateString('en-US', { month: 'short' });
+      }
+      
+      return {
+        time: formattedTime,
+        price: closes[idx]
+      };
+    }).filter(d => d.price != null);
     
     return {
       price: currentPrice,
@@ -94,7 +110,22 @@ export default function TickerCard({ theme }) {
     refreshTickers();
     const interval = setInterval(refreshTickers, 60000);
     return () => clearInterval(interval);
-  }, [tickerConfig, chartDuration]);
+  }, [tickerConfig]);
+
+  useEffect(() => {
+    // Refetch data when duration changes
+    if (selectedTicker.symbol) {
+      const refetchSelected = async () => {
+        setIsRefreshing(true);
+        const quote = await fetchQuote(selectedTicker.symbol, chartDuration);
+        if (quote) {
+          setTickerData(prev => ({ ...prev, [selectedTicker.symbol]: quote }));
+        }
+        setIsRefreshing(false);
+      };
+      refetchSelected();
+    }
+  }, [chartDuration]);
 
   const refreshTickers = async () => {
     setIsRefreshing(true);
