@@ -7,9 +7,7 @@ import DocumentsSidebar from '@/components/documents/DocumentsSidebar';
 import SavedSidebar from '@/components/saved/SavedSidebar';
 import FileList from '@/components/documents/FileList';
 import ReportBuilder from '@/components/documents/ReportBuilder';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import FoldersModal from '@/components/documents/FoldersModal';
 
 export default function Documents() {
   const queryClient = useQueryClient();
@@ -19,7 +17,6 @@ export default function Documents() {
   const [foldersModalOpen, setFoldersModalOpen] = useState(false);
   const [reportContent, setReportContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
 
   const { data: settingsData = [] } = useQuery({
     queryKey: ['appSettings'],
@@ -51,55 +48,66 @@ export default function Documents() {
     queryFn: () => base44.entities.Collection.list('order'),
   });
 
-  const uploadDocumentMutation = useMutation({
-    mutationFn: async (file) => {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      
-      // Extract text content using LLM
-      let content = '';
-      try {
-        const result = await base44.integrations.Core.InvokeLLM({
-          prompt: 'Extract all text content from this document. Return only the text, no commentary.',
-          file_urls: [file_url]
-        });
-        content = result;
-      } catch (error) {
-        console.error('Content extraction failed:', error);
-      }
 
-      return base44.entities.Document.create({
-        title: file.name,
-        file_url: file_url,
-        file_type: file.type,
-        folder_ids: [],
-        content: content
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
-      toast.success('Document uploaded');
-    },
-  });
 
   const createFolderMutation = useMutation({
-    mutationFn: async (name) => {
+    mutationFn: async ({ name, parent_id }) => {
       const maxOrder = Math.max(0, ...folders.map(f => f.order || 0));
-      return base44.entities.Folder.create({ name, order: maxOrder + 1 });
+      return base44.entities.Folder.create({ name, parent_id, order: maxOrder + 1 });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['folders'] });
-      setNewFolderName('');
       toast.success('Folder created');
     },
   });
 
-  const handleUpload = () => {
+  const updateFolderMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Folder.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      toast.success('Folder updated');
+    },
+  });
+
+  const deleteFolderMutation = useMutation({
+    mutationFn: (id) => base44.entities.Folder.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      toast.success('Folder deleted');
+    },
+  });
+
+  const handleUpload = (folderId = null) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf,.doc,.docx,.txt';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = e.target.files[0];
-      if (file) uploadDocumentMutation.mutate(file);
+      if (file) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        
+        let content = '';
+        try {
+          const result = await base44.integrations.Core.InvokeLLM({
+            prompt: 'Extract all text content from this document. Return only the text, no commentary.',
+            file_urls: [file_url]
+          });
+          content = result;
+        } catch (error) {
+          console.error('Content extraction failed:', error);
+        }
+
+        await base44.entities.Document.create({
+          title: file.name,
+          file_url: file_url,
+          file_type: file.type,
+          folder_ids: folderId ? [folderId] : [],
+          content: content
+        });
+        
+        queryClient.invalidateQueries({ queryKey: ['documents'] });
+        toast.success('Document uploaded');
+      }
     };
     input.click();
   };
@@ -114,7 +122,7 @@ export default function Documents() {
     setSelectedIds(prev => prev.filter(i => i !== id));
   };
 
-  const handleGenerateReport = async (instructions) => {
+  const handleGenerateReport = async (instructions, reportFormatItem) => {
     if (selectedIds.length === 0) return;
     
     setIsGenerating(true);
@@ -131,7 +139,9 @@ export default function Documents() {
       }
     }).join('\n\n');
 
-    const exampleFormat = `# Report Title
+    const formatText = reportFormatItem 
+      ? (reportFormatItem.content || reportFormatItem.description || '')
+      : `# Report Title
 
 ## Executive Summary
 [Brief overview of key findings]
@@ -153,8 +163,8 @@ export default function Documents() {
 
 User Instructions: ${instructions || 'Create a detailed summary report'}
 
-Follow this exact format:
-${exampleFormat}
+Follow this exact format structure:
+${formatText}
 
 Content to analyze:
 ${contentSummary}
@@ -193,59 +203,22 @@ Generate the report now:`,
       isPastel ? "bg-[#2B2D42]" :
       isDark ? "bg-neutral-950" : "bg-gray-50"
     )}>
-      {/* Mode Switch */}
-      <div className={cn("px-4 py-2 border-b flex items-center gap-2",
-        isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
-        isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")}>
-        <button
-          onClick={() => { setMode('documents'); setActiveView('all'); setSelectedIds([]); }}
-          className={cn("px-3 py-1 text-[11px] font-medium transition-colors border",
-            mode === 'documents'
-              ? (isPastel ? "bg-[#9B8B6B] text-white border-[#9B8B6B]" :
-                 isDark ? "bg-orange-600 text-white border-orange-600" : "bg-orange-600 text-white border-orange-600")
-              : (isPastel ? "bg-transparent text-[#A5A8C0] border-[#4A4D6C] hover:bg-[#42456C]" :
-                 isDark ? "bg-transparent text-neutral-400 border-neutral-700 hover:bg-neutral-800" : "bg-transparent text-gray-600 border-gray-300 hover:bg-gray-100")
-          )}
-        >
-          My Documents
-        </button>
-        <button
-          onClick={() => { setMode('saved'); setActiveView('all'); setSelectedIds([]); }}
-          className={cn("px-3 py-1 text-[11px] font-medium transition-colors border",
-            mode === 'saved'
-              ? (isPastel ? "bg-[#9B8B6B] text-white border-[#9B8B6B]" :
-                 isDark ? "bg-orange-600 text-white border-orange-600" : "bg-orange-600 text-white border-orange-600")
-              : (isPastel ? "bg-transparent text-[#A5A8C0] border-[#4A4D6C] hover:bg-[#42456C]" :
-                 isDark ? "bg-transparent text-neutral-400 border-neutral-700 hover:bg-neutral-800" : "bg-transparent text-gray-600 border-gray-300 hover:bg-gray-100")
-          )}
-        >
-          Saved
-        </button>
-      </div>
-
       {/* 3-Panel Layout */}
       <div className="flex-1 overflow-hidden grid grid-cols-[208px_minmax(0,1fr)_minmax(0,1fr)]">
         {/* Left Sidebar */}
         <div className="overflow-hidden">
-          {mode === 'documents' ? (
-            <DocumentsSidebar
-              folders={folders}
-              activeView={activeView}
-              onSelectView={setActiveView}
-              onOpenFoldersModal={() => setFoldersModalOpen(true)}
-              onUploadDocument={handleUpload}
-              theme={settings.theme}
-            />
-          ) : (
-            <SavedSidebar
-              savedArticles={savedArticles}
-              collections={collections}
-              activeView={activeView}
-              onSelectView={setActiveView}
-              onOpenCollectionsModal={() => {}}
-              theme={settings.theme}
-            />
-          )}
+          <DocumentsSidebar
+            mode={mode}
+            onModeChange={(newMode) => { setMode(newMode); setActiveView('all'); setSelectedIds([]); }}
+            folders={folders}
+            activeView={activeView}
+            onSelectView={setActiveView}
+            onOpenFoldersModal={() => setFoldersModalOpen(true)}
+            onUploadDocument={handleUpload}
+            collections={collections}
+            savedArticles={savedArticles}
+            theme={settings.theme}
+          />
         </div>
 
         {/* Center File List */}
@@ -278,49 +251,15 @@ Generate the report now:`,
       </div>
 
       {/* Folders Modal */}
-      <Dialog open={foldersModalOpen} onOpenChange={setFoldersModalOpen}>
-        <DialogContent className={cn("max-w-md",
-          isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
-          isDark ? "bg-neutral-900 border-neutral-800" : "bg-white")}>
-          <DialogHeader>
-            <DialogTitle className={cn(
-              isPastel ? "text-white" :
-              isDark ? "text-white" : "text-gray-900")}>
-              Manage Folders
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="flex gap-2">
-              <Input
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                placeholder="New folder name"
-                className={cn(
-                  isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
-                  isDark ? "bg-neutral-800 border-neutral-700 text-white" : "")}
-              />
-              <Button
-                onClick={() => createFolderMutation.mutate(newFolderName)}
-                disabled={!newFolderName}
-                className={cn(
-                  isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" :
-                  isDark ? "bg-orange-600 hover:bg-orange-700" : "bg-orange-600")}
-              >
-                Add
-              </Button>
-            </div>
-            <div className={cn("divide-y max-h-60 overflow-y-auto",
-              isPastel ? "divide-[#4A4D6C]" :
-              isDark ? "divide-neutral-800" : "divide-gray-200")}>
-              {folders.map(folder => (
-                <div key={folder.id} className="py-2 text-sm">
-                  {folder.name}
-                </div>
-              ))}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <FoldersModal
+        isOpen={foldersModalOpen}
+        onClose={() => setFoldersModalOpen(false)}
+        folders={folders}
+        onCreateFolder={(name, parent_id) => createFolderMutation.mutate({ name, parent_id })}
+        onUpdateFolder={(id, data) => updateFolderMutation.mutate({ id, data })}
+        onDeleteFolder={(id) => deleteFolderMutation.mutate(id)}
+        theme={settings.theme}
+      />
     </main>
   );
 }
