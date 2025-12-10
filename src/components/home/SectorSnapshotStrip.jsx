@@ -76,7 +76,7 @@ export default function SectorSnapshotStrip({ theme }) {
       const articleSummaries = articles.slice(0, 10).map(a => `- ${a.title}: ${a.description}`).join('\n');
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Provide a detailed 3-4 sentence snapshot summary for ${sector.name} sector based on these recent articles:\n\n${articleSummaries}\n\nProvide only the summary with no extra text:`,
+        prompt: `Provide a comprehensive 6-8 sentence snapshot summary for ${sector.name} sector based on these recent articles. Include key developments, trends, and important insights:\n\n${articleSummaries}\n\nProvide only the detailed summary with no extra text:`,
       });
 
       newSnapshots.push({ sector: sector.name, summary: result });

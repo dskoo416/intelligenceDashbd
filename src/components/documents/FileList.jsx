@@ -1,13 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
 import { format } from 'date-fns';
-import { FileText, Trash2, ChevronDown } from 'lucide-react';
+import { FileText, Trash2, ChevronDown, MoreVertical, Copy, Scissors, Edit2 } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function FileList({ 
   items, 
@@ -15,6 +22,9 @@ export default function FileList({
   onToggleSelect,
   onDelete,
   onMoveToFolder,
+  onRename,
+  onCopy,
+  onCut,
   folders,
   mode,
   theme,
@@ -22,6 +32,8 @@ export default function FileList({
 }) {
   const isDark = theme === 'dark';
   const isPastel = theme === 'pastel';
+  const [renamingId, setRenamingId] = useState(null);
+  const [newName, setNewName] = useState('');
 
   if (items.length === 0) {
     return (
@@ -56,11 +68,31 @@ export default function FileList({
                   isPastel ? "text-[#9B9EBC]" :
                   isDark ? "text-neutral-500" : "text-gray-500")} />
                 <div className="flex-1 min-w-0">
-                  <div className={cn("text-[11px] font-medium",
-                    isPastel ? "text-[#E8E9F0]" :
-                    isDark ? "text-neutral-300" : "text-gray-900")}>
-                    {item.title}
-                  </div>
+                  {renamingId === item.id ? (
+                    <Input
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          onRename(item.id, newName);
+                          setRenamingId(null);
+                        } else if (e.key === 'Escape') {
+                          setRenamingId(null);
+                        }
+                      }}
+                      onBlur={() => setRenamingId(null)}
+                      className={cn("h-6 text-[11px]",
+                        isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                        isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
+                      autoFocus
+                    />
+                  ) : (
+                    <div className={cn("text-[11px] font-medium",
+                      isPastel ? "text-[#E8E9F0]" :
+                      isDark ? "text-neutral-300" : "text-gray-900")}>
+                      {item.title}
+                    </div>
+                  )}
                   {viewMode === 'regular' && item.content && (
                     <p className={cn("text-[10px] mt-0.5 line-clamp-2",
                       isPastel ? "text-[#9B9EBC]" :
@@ -77,6 +109,40 @@ export default function FileList({
               </div>
             </div>
             <div className="flex items-center gap-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn("p-1 transition-colors",
+                      isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" :
+                      isDark ? "text-neutral-500 hover:text-neutral-300" : "text-gray-400 hover:text-gray-600")}
+                  >
+                    <MoreVertical className="w-3.5 h-3.5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className={cn(
+                  isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+                  isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
+                  <DropdownMenuItem onClick={() => {
+                    setRenamingId(item.id);
+                    setNewName(item.title);
+                  }} className={cn(isPastel ? "text-[#D0D2E0]" : isDark ? "text-neutral-300" : "")}>
+                    <Edit2 className="w-3 h-3 mr-2" />
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onCopy(item)} className={cn(isPastel ? "text-[#D0D2E0]" : isDark ? "text-neutral-300" : "")}>
+                    <Copy className="w-3 h-3 mr-2" />
+                    Copy
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onCut(item)} className={cn(isPastel ? "text-[#D0D2E0]" : isDark ? "text-neutral-300" : "")}>
+                    <Scissors className="w-3 h-3 mr-2" />
+                    Cut
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDelete(item.id)} className="text-red-500">
+                    <Trash2 className="w-3 h-3 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               {mode === 'documents' && folders && (
                 <Popover>
                   <PopoverTrigger asChild>
@@ -132,7 +198,7 @@ export default function FileList({
               <Checkbox
                 checked={isSelected}
                 onCheckedChange={() => onToggleSelect(item.id)}
-                className={cn("w-4 h-4",
+                className={cn("w-4 h-4 rounded-sm data-[state=checked]:bg-orange-600 data-[state=checked]:border-orange-600",
                   isPastel ? "border-[#7B7E9C]" :
                   isDark ? "border-neutral-600" : "border-gray-400")}
               />

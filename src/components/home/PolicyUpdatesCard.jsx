@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from "@/lib/utils";
-import { RefreshCw, ExternalLink, Settings } from 'lucide-react';
+import { RefreshCw, ExternalLink, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -33,6 +33,8 @@ export default function PolicyUpdatesCard({ theme }) {
   const [isLoading, setIsLoading] = useState(false);
   const [filteredUpdates, setFilteredUpdates] = useState([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
 
   const { data: settingsData = [] } = useQuery({
     queryKey: ['appSettings'],
@@ -167,10 +169,37 @@ Return ONLY the JSON object and nothing else.`;
       <div className={cn("flex items-center justify-between px-3 py-2 border-b", 
         isPastel ? "border-[#4A4D6C]" :
         isDark ? "border-[#262629]" : "border-gray-300")}>
-        <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
-          isPastel ? "text-[#A5A8C0]" :
-          isDark ? "text-neutral-500" : "text-gray-700")}>POLICY UPDATES</h3>
         <div className="flex items-center gap-1">
+          <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
+            isPastel ? "text-[#A5A8C0]" :
+            isDark ? "text-neutral-500" : "text-gray-700")}>POLICY UPDATES</h3>
+          {filteredUpdates.length > 0 && (
+            <span className={cn("text-[9px]",
+              isPastel ? "text-[#7B7E9C]" :
+              isDark ? "text-neutral-600" : "text-gray-500")}>
+              {currentPage * itemsPerPage + 1}-{Math.min((currentPage + 1) * itemsPerPage, filteredUpdates.length)} of {filteredUpdates.length}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+            disabled={currentPage === 0}
+            className={cn("p-0.5 transition-colors disabled:opacity-30", 
+              isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" :
+              isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+          >
+            <ChevronLeft className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => setCurrentPage(Math.min(Math.floor(filteredUpdates.length / itemsPerPage), currentPage + 1))}
+            disabled={(currentPage + 1) * itemsPerPage >= filteredUpdates.length}
+            className={cn("p-0.5 transition-colors disabled:opacity-30", 
+              isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" :
+              isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+          >
+            <ChevronRight className="w-3 h-3" />
+          </button>
           <Button
             size="sm"
             variant="ghost"
@@ -215,7 +244,9 @@ Return ONLY the JSON object and nothing else.`;
           isPastel ? "bg-[#32354C]" :
           isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
           <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {filteredUpdates.map((update, idx) => (
+            {filteredUpdates.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).map((update, idx) => {
+              const actualIndex = currentPage * itemsPerPage + idx;
+              return (
               <a
                 key={idx}
                 href={update.link}
@@ -230,7 +261,7 @@ Return ONLY the JSON object and nothing else.`;
                   isDark ? "text-neutral-400" : "text-gray-900")}>
                   <span className={cn("font-bold mr-1",
                     isPastel ? "text-[#9B8B6B]" :
-                    isDark ? "text-orange-500" : "text-orange-600")}>{idx + 1}.</span>{update.title}
+                    isDark ? "text-orange-500" : "text-orange-600")}>{actualIndex + 1}.</span>{update.title}
                 </h4>
                 <div className={cn("text-[9px] mt-0.5", 
                   isPastel ? "text-[#9B9EBC]" :
@@ -241,7 +272,7 @@ Return ONLY the JSON object and nothing else.`;
                   {update.date && (
                     <>
                       <span className="mx-1">•</span>
-                      <span>{format(new Date(update.date), 'MMM d')}</span>
+                      <span>{format(new Date(update.date), 'MMM d, yyyy')}</span>
                     </>
                   )}
                   {update.type && (

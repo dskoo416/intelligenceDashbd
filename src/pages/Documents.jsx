@@ -17,6 +17,7 @@ export default function Documents() {
   const [foldersModalOpen, setFoldersModalOpen] = useState(false);
   const [reportContent, setReportContent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [clipboard, setClipboard] = useState(null);
 
   const { data: settingsData = [] } = useQuery({
     queryKey: ['appSettings'],
@@ -189,6 +190,28 @@ Generate the report now:`,
     toast.success('Document moved');
   };
 
+  const handleRename = async (documentId, newName) => {
+    await base44.entities.Document.update(documentId, { title: newName });
+    queryClient.invalidateQueries({ queryKey: ['documents'] });
+    toast.success('Renamed');
+  };
+
+  const handleCopy = (item) => {
+    setClipboard({ action: 'copy', item });
+    toast.success('Copied');
+  };
+
+  const handleCut = (item) => {
+    setClipboard({ action: 'cut', item });
+    toast.success('Cut');
+  };
+
+  const handleDelete = async (documentId) => {
+    await base44.entities.Document.delete(documentId);
+    queryClient.invalidateQueries({ queryKey: ['documents'] });
+    toast.success('Deleted');
+  };
+
   const filteredItems = mode === 'documents'
     ? (activeView === 'main' 
         ? documents 
@@ -252,6 +275,10 @@ Generate the report now:`,
             selectedIds={selectedIds}
             onToggleSelect={handleToggleSelect}
             onMoveToFolder={handleMoveToFolder}
+            onRename={handleRename}
+            onCopy={handleCopy}
+            onCut={handleCut}
+            onDelete={handleDelete}
             folders={folders}
             mode={mode}
             theme={settings.theme}

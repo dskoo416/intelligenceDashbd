@@ -267,7 +267,7 @@ export default function TickerCard({ theme }) {
       </div>
       
       {/* Top Half - Chart */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-col" style={{ height: '180px' }}>
         <div className={cn("px-2 py-1 border-b flex items-center justify-between", 
           isPastel ? "border-[#4A4D6C]" :
           isDark ? "border-[#1F1F1F]" : "border-gray-300")}>

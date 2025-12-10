@@ -140,7 +140,7 @@ export default function FeaturedArticlesCard({ theme }) {
         </Button>
       </div>
 
-      <div className={cn("flex-1 overflow-y-auto px-3 py-1.5", 
+      <div className={cn("flex-1 overflow-y-auto px-3 py-2", 
         isPastel ? "bg-[#32354C]" :
         isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
         {criticalArticles.length === 0 && !isLoading ? (
@@ -150,35 +150,44 @@ export default function FeaturedArticlesCard({ theme }) {
             Click refresh to generate featured articles
           </div>
         ) : (
-          <div 
-            className="grid gap-x-6 gap-y-1"
-            style={{
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gridAutoFlow: 'column'
-            }}
-          >
+          <div className="grid grid-cols-2 gap-4">
             {criticalArticles.map((article, idx) => (
-              <div key={idx} className="pb-0.5 w-full">
+              <div key={idx} className={cn("p-2 border transition-colors",
+                isPastel ? "bg-[#42456C] border-[#4A4D6C] hover:bg-[#4A4D7C]" :
+                isDark ? "bg-[#0A0A0A] border-[#1F1F1F] hover:bg-[#17181b]" : "bg-gray-50 border-gray-300 hover:border-gray-400")}>
                 <a
                   href={article.link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
-                    "block text-[11px] leading-[1.3] transition-colors",
+                    "block text-[10px] leading-[1.3] font-medium line-clamp-2",
                     isPastel ? "text-[#E8E9F0] hover:text-white" :
-                    isDark ? "text-neutral-300 hover:text-white" : "text-gray-700 hover:text-gray-900"
+                    isDark ? "text-neutral-300 hover:text-white" : "text-gray-900 hover:text-gray-700"
                   )}
-                  style={{ fontFamily: 'ui-monospace, monospace' }}
                 >
-                  <span className={cn("mr-1.5 inline-block w-3 text-right", 
-                    isPastel ? "text-[#7B7E9C]" :
-                    isDark ? "text-neutral-600" : "text-gray-500")}>{idx + 1})</span>
+                  <span className={cn("font-bold mr-1",
+                    isPastel ? "text-[#9B8B6B]" :
+                    isDark ? "text-orange-500" : "text-orange-600")}>{idx + 1}.</span>
                   {article.title}
                 </a>
-                <div className={cn("text-[9px] mt-0.5", 
-                  isPastel ? "text-[#7B7E9C]" :
-                  isDark ? "text-neutral-700" : "text-gray-500")} style={{ marginLeft: '21px' }}>
-                  {article.source} • {article.sector} • {article.pubDate && format(new Date(article.pubDate), 'MMM d')}
+                <div className={cn("text-[9px] mt-1", 
+                  isPastel ? "text-[#9B9EBC]" :
+                  isDark ? "text-neutral-600" : "text-gray-500")}>
+                  <span className={cn(
+                    isPastel ? "text-[#6B9B9B]" :
+                    isDark ? "text-blue-500" : "text-blue-600")}>{article.source}</span>
+                  {article.sector && (
+                    <>
+                      <span className="mx-1">•</span>
+                      <span>{article.sector}</span>
+                    </>
+                  )}
+                  {article.pubDate && (
+                    <>
+                      <span className="mx-1">•</span>
+                      <span>{format(new Date(article.pubDate), 'MMM d')}</span>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
