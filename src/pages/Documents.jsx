@@ -263,6 +263,26 @@ Generate the report now:`,
             collections={collections}
             savedArticles={savedArticles}
             theme={settings.theme}
+            hasClipboard={clipboard !== null}
+            onPaste={async () => {
+              if (!clipboard) return;
+              if (clipboard.action === 'copy') {
+                const newDoc = { ...clipboard.item, title: clipboard.item.title + ' (Copy)' };
+                delete newDoc.id;
+                delete newDoc.created_date;
+                delete newDoc.updated_date;
+                await base44.entities.Document.create(newDoc);
+              } else if (clipboard.action === 'cut') {
+                if (activeView !== 'main' && folders.find(f => f.id === activeView)) {
+                  await base44.entities.Document.update(clipboard.item.id, { folder_ids: [activeView] });
+                } else {
+                  await base44.entities.Document.update(clipboard.item.id, { folder_ids: [] });
+                }
+              }
+              setClipboard(null);
+              queryClient.invalidateQueries({ queryKey: ['documents'] });
+              toast.success('Pasted');
+            }}
           />
         </div>
 

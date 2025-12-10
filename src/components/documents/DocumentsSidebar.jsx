@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
-import { Folder, Upload, Settings, ChevronRight, ChevronDown } from 'lucide-react';
+import { Folder, Upload, Settings, ChevronRight, ChevronDown, FileText } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -19,7 +19,9 @@ export default function DocumentsSidebar({
   onUploadDocument,
   collections,
   savedArticles,
-  theme 
+  theme,
+  hasClipboard,
+  onPaste
 }) {
   const isDark = theme === 'dark';
   const isPastel = theme === 'pastel';
@@ -176,6 +178,17 @@ export default function DocumentsSidebar({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+            <Button
+              onClick={onPaste}
+              disabled={!hasClipboard}
+              variant="ghost"
+              className={cn("w-full text-[11px] h-7 gap-2",
+                isPastel ? "text-[#A5A8C0] hover:bg-[#42456C]" :
+                isDark ? "text-neutral-400 hover:bg-neutral-800" : "text-gray-600 hover:bg-gray-100")}
+            >
+              <FileText className="w-3 h-3" />
+              Paste
+            </Button>
             <Button
               onClick={onOpenFoldersModal}
               variant="ghost"

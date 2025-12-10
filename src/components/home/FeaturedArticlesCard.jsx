@@ -78,7 +78,7 @@ export default function FeaturedArticlesCard({ theme }) {
       }));
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `${instructions}\n\nArticles across all sectors:\n${JSON.stringify(articleData)}\n\nSelect the 4 most featured articles and explain why each is important.`,
+        prompt: `${instructions}\n\nArticles across all sectors:\n${JSON.stringify(articleData)}\n\nSelect EXACTLY 4 of the most important and featured articles. These should be the top 4 most impactful stories that decision-makers must know about.`,
         response_json_schema: {
           type: 'object',
           properties: {
@@ -96,10 +96,17 @@ export default function FeaturedArticlesCard({ theme }) {
         }
       });
 
-      const critical = result.critical_articles?.map(c => ({
+      const critical = result.critical_articles?.slice(0, 4).map(c => ({
         ...allArticles[c.index],
         reasoning: c.reasoning
       })).filter(Boolean) || [];
+
+      // Ensure we always have exactly 4 articles
+      while (critical.length < 4 && critical.length < allArticles.length) {
+        const nextArticle = allArticles.find(a => !critical.some(c => c.link === a.link));
+        if (nextArticle) critical.push(nextArticle);
+        else break;
+      }
 
       setCriticalArticles(critical);
       localStorage.setItem('home_featured_articles', JSON.stringify(critical));
