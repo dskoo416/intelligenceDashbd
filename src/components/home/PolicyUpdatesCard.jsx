@@ -36,7 +36,7 @@ export default function PolicyUpdatesCard({ theme }) {
   const [filteredUpdates, setFilteredUpdates] = useState([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
 
   const { data: settingsData = [] } = useQuery({
     queryKey: ['appSettings'],
@@ -58,6 +58,7 @@ export default function PolicyUpdatesCard({ theme }) {
 
   useEffect(() => {
     applyFilters(updates);
+    setCurrentPage(0);
   }, [enabledAgencies, customKeywords, updates]);
 
   const isDataStale = () => {
@@ -73,7 +74,8 @@ export default function PolicyUpdatesCard({ theme }) {
       
       const text = (update.title + ' ' + (update.summary || '')).toLowerCase();
       return customKeywords.some(keyword => text.includes(keyword.toLowerCase()));
-    });
+    }).sort((a, b) => new Date(b.date) - new Date(a.date));
+    
     setFilteredUpdates(filtered);
   };
 
@@ -139,13 +141,12 @@ Return ONLY the JSON object and nothing else.`;
         }
       });
 
-      const allUpdates = (result.updates || []).sort((a, b) => {
-        return new Date(b.date) - new Date(a.date);
-      });
+      const allUpdates = (result.updates || []).sort((a, b) => new Date(b.date) - new Date(a.date));
       
       setUpdates(allUpdates);
       localStorage.setItem('policy_updates', JSON.stringify(allUpdates));
       applyFilters(allUpdates);
+      setCurrentPage(0);
     } catch (error) {
       console.error('Error fetching policy updates:', error);
     }
@@ -245,11 +246,10 @@ Return ONLY the JSON object and nothing else.`;
           Click refresh to load policy updates
         </div>
       ) : (
-        <div className={cn("flex-1 flex flex-col", 
+        <div className={cn("flex-1 p-2 space-y-1", 
           isPastel ? "bg-[#32354C]" :
           isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {filteredUpdates.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).map((update, idx) => {
+          {filteredUpdates.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).map((update, idx) => {
               const actualIndex = currentPage * itemsPerPage + idx;
               return (
                 <a
@@ -297,9 +297,6 @@ Return ONLY the JSON object and nothing else.`;
                 </a>
               );
             })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
