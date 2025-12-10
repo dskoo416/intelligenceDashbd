@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
-import { X, FileText, Check, Download } from 'lucide-react';
+import { X, FileText, Check, Download, FileDown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import ReactQuill from 'react-quill';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function ReportBuilder({ 
   selectedItems,
@@ -22,20 +28,35 @@ export default function ReportBuilder({
 
   const reportFormatItems = selectedItems.filter(item => reportFormatIds.includes(item.id));
 
-  const handleDownload = () => {
+  const handleDownload = async (format = 'txt') => {
     if (!reportContent) {
       toast.error('No report to download');
       return;
     }
     
-    const blob = new Blob([reportContent.replace(/<[^>]*>/g, '')], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `report-${new Date().toISOString().split('T')[0]}.txt`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    toast.success('Report downloaded');
+    if (format === 'pdf') {
+      try {
+        const { jsPDF } = await import('jspdf');
+        const doc = new jsPDF();
+        const textContent = reportContent.replace(/<[^>]*>/g, '');
+        const lines = doc.splitTextToSize(textContent, 180);
+        doc.text(lines, 15, 15);
+        doc.save(`report-${new Date().toISOString().split('T')[0]}.pdf`);
+        toast.success('PDF downloaded');
+      } catch (error) {
+        console.error('PDF generation failed:', error);
+        toast.error('Failed to generate PDF');
+      }
+    } else {
+      const blob = new Blob([reportContent.replace(/<[^>]*>/g, '')], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `report-${new Date().toISOString().split('T')[0]}.txt`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Report downloaded');
+    }
   };
 
   return (
@@ -148,16 +169,27 @@ export default function ReportBuilder({
           >
             {isGenerating ? 'Generating...' : 'Create Report'}
           </Button>
-          <Button
-            onClick={handleDownload}
-            disabled={!reportContent}
-            variant="outline"
-            className={cn("text-[11px] h-7 px-3",
-              isPastel ? "border-[#4A4D6C] text-[#A5A8C0] hover:bg-[#42456C]" :
-              isDark ? "border-neutral-700 text-neutral-400 hover:bg-neutral-800" : "")}
-          >
-            <Download className="w-3 h-3" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                disabled={!reportContent}
+                variant="outline"
+                className={cn("text-[11px] h-7 px-3",
+                  isPastel ? "border-[#4A4D6C] text-[#A5A8C0] hover:bg-[#42456C]" :
+                  isDark ? "border-neutral-700 text-neutral-400 hover:bg-neutral-800" : "")}
+              >
+                <FileDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className={isDark ? "bg-neutral-800 border-neutral-700" : ""}>
+              <DropdownMenuItem onClick={() => handleDownload('txt')}>
+                Download as TXT
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDownload('pdf')}>
+                Download as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

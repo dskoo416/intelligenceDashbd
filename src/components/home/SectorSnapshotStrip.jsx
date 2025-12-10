@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from "@/lib/utils";
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const parseRSS = async (url) => {
@@ -36,6 +36,7 @@ export default function SectorSnapshotStrip({ theme }) {
   const isPastel = theme === 'pastel';
   const [snapshots, setSnapshots] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -58,7 +59,7 @@ export default function SectorSnapshotStrip({ theme }) {
     setIsLoading(true);
     const newSnapshots = [];
 
-    for (const sector of sectors.slice(0, 4)) {
+    for (const sector of sectors) {
       const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
       let articles = [];
 
@@ -75,7 +76,7 @@ export default function SectorSnapshotStrip({ theme }) {
       const articleSummaries = articles.slice(0, 10).map(a => `- ${a.title}: ${a.description}`).join('\n');
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Provide a single-sentence snapshot summary for ${sector.name} sector based on these articles:\n\n${articleSummaries}\n\nProvide only the one-sentence summary with no extra text:`,
+        prompt: `Provide a detailed 3-4 sentence snapshot summary for ${sector.name} sector based on these recent articles:\n\n${articleSummaries}\n\nProvide only the summary with no extra text:`,
       });
 
       newSnapshots.push({ sector: sector.name, summary: result });
@@ -86,6 +87,16 @@ export default function SectorSnapshotStrip({ theme }) {
     setIsLoading(false);
   };
 
+  const handlePrevious = () => {
+    setCurrentIndex((prev) => (prev === 0 ? snapshots.length - 1 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev === snapshots.length - 1 ? 0 : prev + 1));
+  };
+
+  const currentSnapshot = snapshots[currentIndex];
+
   return (
     <div className={cn("w-full border", 
       isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
@@ -93,22 +104,51 @@ export default function SectorSnapshotStrip({ theme }) {
       <div className={cn("px-2 py-1 border-b flex items-center justify-between", 
         isPastel ? "border-[#4A4D6C]" :
         isDark ? "border-[#262629]" : "border-gray-300")}>
-        <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
-          isPastel ? "text-[#A5A8C0]" :
-          isDark ? "text-neutral-500" : "text-gray-700")}>SECTOR SNAPSHOT</h3>
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          onClick={generateSnapshots}
-          disabled={isLoading}
-          className="h-4 w-4 p-0"
-        >
-          <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", 
-            isPastel ? "text-[#7B7E9C]" :
-            isDark ? "text-neutral-600" : "text-gray-500")} />
-        </Button>
+        <div className="flex items-center gap-2">
+          <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
+            isPastel ? "text-[#A5A8C0]" :
+            isDark ? "text-neutral-500" : "text-gray-700")}>SECTOR SNAPSHOT</h3>
+          {currentSnapshot && (
+            <span className={cn("text-[9px] uppercase font-semibold",
+              isPastel ? "text-[#9B8B6B]" :
+              isDark ? "text-orange-500" : "text-orange-600")}>
+              {currentSnapshot.sector}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handlePrevious}
+            disabled={snapshots.length === 0}
+            className={cn("p-0.5 transition-colors", 
+              isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" :
+              isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+          >
+            <ChevronLeft className="w-3 h-3" />
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={snapshots.length === 0}
+            className={cn("p-0.5 transition-colors", 
+              isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" :
+              isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+          >
+            <ChevronRight className="w-3 h-3" />
+          </button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={generateSnapshots}
+            disabled={isLoading}
+            className="h-4 w-4 p-0"
+          >
+            <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", 
+              isPastel ? "text-[#7B7E9C]" :
+              isDark ? "text-neutral-600" : "text-gray-500")} />
+          </Button>
+        </div>
       </div>
-      <div className={cn("px-2 py-0.5", 
+      <div className={cn("px-3 py-2", 
         isPastel ? "bg-[#32354C]" :
         isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
         {snapshots.length === 0 ? (
@@ -117,29 +157,13 @@ export default function SectorSnapshotStrip({ theme }) {
             isDark ? "text-neutral-600" : "text-gray-500")}>
             Click refresh to load sector snapshots
           </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-0">
-            {snapshots.map((snap, idx) => (
-              <div key={idx} className="flex items-start gap-1.5">
-                <span className={cn("text-[8px] font-mono", 
-                  isPastel ? "text-[#7B7E9C]" :
-                  isDark ? "text-neutral-600" : "text-gray-500")}>{idx + 1})</span>
-                <div className="flex-1 min-w-0">
-                  <span className={cn("text-[8px] font-semibold uppercase mr-1", 
-                    isPastel ? "text-[#A5A8C0]" :
-                    isDark ? "text-neutral-400" : "text-gray-700")}>
-                    {snap.sector}:
-                  </span>
-                  <span className={cn("text-[8px] leading-[1.1] line-clamp-1", 
-                    isPastel ? "text-[#D0D2E0]" :
-                    isDark ? "text-neutral-500" : "text-gray-600")}>
-                    {snap.summary.slice(0, 80)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        ) : currentSnapshot ? (
+          <p className={cn("text-[10px] leading-[1.4]", 
+            isPastel ? "text-[#D0D2E0]" :
+            isDark ? "text-neutral-400" : "text-gray-700")}>
+            {currentSnapshot.summary}
+          </p>
+        ) : null}
       </div>
     </div>
   );

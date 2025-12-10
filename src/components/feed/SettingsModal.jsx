@@ -250,10 +250,13 @@ export default function SettingsModal({
   };
 
   const currentTarget = editingSector || newSector;
-  const isDark = settings?.theme === 'dark';
+  const isDark = settings?.theme === 'dark' || !settings?.theme;
+
+  const isPastel = settings?.theme === 'pastel';
 
   const SegmentedControl = ({ options, value, onChange }) => (
-    <div className="flex border border-neutral-700">
+    <div className={cn("flex border",
+      isPastel ? "border-[#4A4D6C]" : "border-neutral-700")}>
       {options.map((opt, idx) => (
         <button
           key={opt.value}
@@ -261,9 +264,9 @@ export default function SettingsModal({
           className={cn(
             "flex-1 px-3 py-1 text-[10px] uppercase tracking-wide transition-colors",
             value === opt.value
-              ? "bg-[#1E1E1E] text-white border-r border-neutral-600"
-              : "bg-[#0D0D0D] text-neutral-500 hover:text-neutral-300",
-            idx < options.length - 1 && value !== opt.value && "border-r border-neutral-700"
+              ? (isPastel ? "bg-[#42456C] text-white border-r border-[#4A4D6C]" : "bg-[#1E1E1E] text-white border-r border-neutral-600")
+              : (isPastel ? "bg-[#2B2D42] text-[#9B9EBC] hover:text-white" : "bg-[#0D0D0D] text-neutral-500 hover:text-neutral-300"),
+            idx < options.length - 1 && value !== opt.value && (isPastel ? "border-r border-[#4A4D6C]" : "border-r border-neutral-700")
           )}
         >
           {opt.label}
@@ -275,30 +278,47 @@ export default function SettingsModal({
   const SettingRow = ({ label, children, divider = true }) => (
     <>
       <div className="flex items-center justify-between py-2">
-        <span className="text-[11px] text-neutral-300 uppercase tracking-wide">{label}</span>
+        <span className={cn("text-[11px] uppercase tracking-wide",
+          isPastel ? "text-[#D0D2E0]" :
+          isDark ? "text-neutral-300" : "text-gray-700")}>{label}</span>
         {children}
       </div>
-      {divider && <div className="border-b border-neutral-800" />}
+      {divider && <div className={cn("border-b",
+        isPastel ? "border-[#4A4D6C]" :
+        isDark ? "border-neutral-800" : "border-gray-200")} />}
     </>
   );
 
   const SectionHeader = ({ children }) => (
     <div className="flex items-center gap-2 mb-3 mt-4">
-      <div className="h-[1px] w-1 bg-orange-500" />
-      <h3 className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">{children}</h3>
-      <div className="h-[1px] flex-1 bg-neutral-800" />
+      <div className={cn("h-[1px] w-1",
+        isPastel ? "bg-[#9B8B6B]" : "bg-orange-500")} />
+      <h3 className={cn("text-[10px] font-bold uppercase tracking-widest",
+        isPastel ? "text-[#A5A8C0]" :
+        isDark ? "text-neutral-400" : "text-gray-600")}>{children}</h3>
+      <div className={cn("h-[1px] flex-1",
+        isPastel ? "border-t border-[#4A4D6C]" :
+        isDark ? "bg-neutral-800" : "bg-gray-200")} />
     </div>
   );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden bg-[#0A0A0A] border border-neutral-800 text-white p-0">
-        <div className="border-b border-neutral-800 px-4 py-3">
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-neutral-300">SYSTEM SETTINGS</h2>
+      <DialogContent className={cn("max-w-4xl max-h-[90vh] overflow-hidden p-0",
+        isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+        isDark ? "bg-[#0A0A0A] border-neutral-800 text-white" : "bg-white border-gray-300 text-gray-900")}>
+        <div className={cn("border-b px-4 py-3",
+          isPastel ? "border-[#4A4D6C]" :
+          isDark ? "border-neutral-800" : "border-gray-300")}>
+          <h2 className={cn("text-[11px] font-bold uppercase tracking-widest",
+            isPastel ? "text-[#A5A8C0]" :
+            isDark ? "text-neutral-300" : "text-gray-700")}>SYSTEM SETTINGS</h2>
         </div>
         
         {/* Tabs */}
-        <div className="border-b border-neutral-800 px-4">
+        <div className={cn("border-b px-4",
+          isPastel ? "border-[#4A4D6C]" :
+          isDark ? "border-neutral-800" : "border-gray-300")}>
           <div className="flex gap-6">
             {[
               { id: 'general', label: 'GENERAL' },
@@ -314,13 +334,14 @@ export default function SettingsModal({
                 className={cn(
                   "pb-2 text-[10px] uppercase tracking-widest font-medium transition-colors relative",
                   activeTab === tab.id
-                    ? "text-white"
-                    : "text-neutral-600 hover:text-neutral-400"
+                    ? (isPastel ? "text-white" : isDark ? "text-white" : "text-gray-900")
+                    : (isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" : isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")
                 )}
               >
                 {tab.label}
                 {activeTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-orange-500" />
+                  <div className={cn("absolute bottom-0 left-0 right-0 h-[2px]",
+                    isPastel ? "bg-[#9B8B6B]" : "bg-orange-500")} />
                 )}
               </button>
             ))}

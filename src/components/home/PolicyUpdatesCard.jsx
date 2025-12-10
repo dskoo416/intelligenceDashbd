@@ -81,14 +81,11 @@ export default function PolicyUpdatesCard({ theme }) {
 Return ONLY real, recently announced US government trade / industrial policy measures that affect goods, tariffs, duties, export controls, or sanctions.
 
 Task:
-Search the web with browsing enabled. Look ONLY at official sources on these domains:
-   - federalregister.gov
-   - ustr.gov
-   - commerce.gov
-   - bis.doc.gov
-   - treasury.gov
-   - energy.gov
-   - whitehouse.gov
+Search the web with browsing enabled. Focus PRIMARILY on these official sources:
+   - ustr.gov (Office of the United States Trade Representative)
+   - energy.gov (Department of Energy)
+   - commerce.gov (U.S. Department of Commerce)
+   - bis.doc.gov (Bureau of Industry and Security)
 
 Find the most recent and relevant measures from the last 45 days that relate to:
    - Tariffs, duties, Section 301, Section 232, safeguards
@@ -98,7 +95,7 @@ Find the most recent and relevant measures from the last 45 days that relate to:
 
 Output requirements:
 - You MUST follow this JSON structure exactly, under a top-level key "updates".
-- For "agency", use ONLY these ids: "ustr", "commerce", "bis", "treasury", "doe", "whitehouse", "federal_register"
+- For "agency", use ONLY these ids: "ustr", "commerce", "bis", "doe"
 - For "date", use YYYY-MM-DD.
 - "type" is a short label like "tariff", "export_control", "sanction", "anti_dumping", "countervailing_duty", or "other".
 
@@ -107,6 +104,7 @@ Critical constraints:
 - DO NOT use placeholder paths like "/example" or "/sample".
 - If you cannot find 10 valid items, return fewer. It is better to return 3–5 real updates than 10 fabricated ones.
 - Do not include opinion, forecasts, or news commentary. Only concrete regulatory or policy actions.
+- PRIORITIZE updates from USTR, DOE, and DOC. These are the most important sources.
 
 Return ONLY the JSON object and nothing else.`;
 
