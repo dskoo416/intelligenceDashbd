@@ -16,7 +16,9 @@ const AGENCIES = [
   { id: 'bis', name: 'BIS', types: ['rule', 'notice'] },
   { id: 'treasury', name: 'Treasury', types: ['rule', 'notice'] },
   { id: 'doe', name: 'DOE', types: ['rule', 'notice'] },
-  { id: 'whitehouse', name: 'White House', types: ['fact sheet', 'executive order', 'proclamation', 'statement'] }
+  { id: 'whitehouse', name: 'White House', types: ['fact sheet', 'executive order', 'proclamation', 'statement'] },
+  { id: 'sec', name: 'SEC', types: ['rule', 'notice'] },
+  { id: 'ferc', name: 'FERC', types: ['order', 'notice'] }
 ];
 
 const DEFAULT_KEYWORDS = [
@@ -84,12 +86,14 @@ Return ONLY real, recently announced US government trade / industrial policy mea
 
 Task:
 Search the web with browsing enabled. Focus PRIMARILY on these official sources:
+   - whitehouse.gov (White House - HIGHEST PRIORITY)
    - ustr.gov (Office of the United States Trade Representative)
    - energy.gov (Department of Energy)
    - commerce.gov (U.S. Department of Commerce)
    - bis.doc.gov (Bureau of Industry and Security)
+   - treasury.gov (Department of Treasury)
 
-Find the most recent and relevant measures from the last 45 days that relate to:
+Find the most recent and relevant measures from the last 60 days that relate to:
    - Tariffs, duties, Section 301, Section 232, safeguards
    - Export controls, entity list additions, sanctions
    - Anti-dumping, countervailing duties
@@ -97,16 +101,17 @@ Find the most recent and relevant measures from the last 45 days that relate to:
 
 Output requirements:
 - You MUST follow this JSON structure exactly, under a top-level key "updates".
-- For "agency", use ONLY these ids: "ustr", "commerce", "bis", "doe"
-- For "date", use YYYY-MM-DD.
-- "type" is a short label like "tariff", "export_control", "sanction", "anti_dumping", "countervailing_duty", or "other".
+- For "agency", use ONLY these ids: "whitehouse", "ustr", "commerce", "bis", "treasury", "doe", "sec", "ferc"
+- For "date", use YYYY-MM-DD format. This is CRITICAL - extract the actual publication date from the source.
+- "type" is a short label like "tariff", "export_control", "sanction", "anti_dumping", "countervailing_duty", "executive_order", "fact_sheet", or "other".
 
 Critical constraints:
 - DO NOT invent URLs. Every "link" MUST be an actual, public URL copied from the official site.
 - DO NOT use placeholder paths like "/example" or "/sample".
-- If you cannot find 10 valid items, return fewer. It is better to return 3–5 real updates than 10 fabricated ones.
+- Return AT LEAST 15-20 valid items if available. Quality AND quantity matter.
 - Do not include opinion, forecasts, or news commentary. Only concrete regulatory or policy actions.
-- PRIORITIZE updates from USTR, DOE, and DOC. These are the most important sources.
+- PRIORITIZE updates from White House, USTR, DOE, and Commerce. These are the most important sources.
+- Make sure each update has the correct publication date from the source.
 
 Return ONLY the JSON object and nothing else.`;
 
