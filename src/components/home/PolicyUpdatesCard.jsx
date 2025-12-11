@@ -36,7 +36,8 @@ export default function PolicyUpdatesCard({ theme }) {
   const [filteredUpdates, setFilteredUpdates] = useState([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 6;
+  const [itemsPerPage, setItemsPerPage] = useState(6);
+  const contentRef = React.useRef(null);
 
   const { data: settingsData = [] } = useQuery({
     queryKey: ['appSettings'],
@@ -54,6 +55,20 @@ export default function PolicyUpdatesCard({ theme }) {
       setUpdates(data);
       applyFilters(data);
     }
+  }, []);
+
+  useEffect(() => {
+    const calculateItemsPerPage = () => {
+      if (!contentRef.current) return;
+      const containerHeight = contentRef.current.clientHeight;
+      const itemHeight = 70;
+      const items = Math.floor(containerHeight / itemHeight);
+      setItemsPerPage(Math.max(1, items));
+    };
+
+    calculateItemsPerPage();
+    window.addEventListener('resize', calculateItemsPerPage);
+    return () => window.removeEventListener('resize', calculateItemsPerPage);
   }, []);
 
   useEffect(() => {
@@ -83,42 +98,44 @@ export default function PolicyUpdatesCard({ theme }) {
     setIsLoading(true);
     
     try {
-      const prompt = `You are powering a policy dashboard. 
-Return ONLY real, recently announced US government trade / industrial policy measures.
+      const prompt = `You are a policy research assistant. Your task is to find REAL policy updates from official US government websites.
 
-Task:
-Search the web with browsing enabled. For USTR, White House, and Treasury - you MUST verify:
-   1. The actual URL exists and is publicly accessible
-   2. The date is the real publication date from that webpage
-   3. The title matches the actual document title
+CRITICAL INSTRUCTIONS:
+1. Search the web and browse these official sites DIRECTLY:
+   - whitehouse.gov
+   - ustr.gov
+   - treasury.gov
+   - commerce.gov
+   - bis.doc.gov
+   - energy.gov
 
-Focus on these official sources:
-   - whitehouse.gov (White House)
-   - ustr.gov (USTR)
-   - energy.gov (DOE)
-   - commerce.gov (Commerce)
-   - bis.doc.gov (BIS)
-   - treasury.gov (Treasury)
+2. For EVERY item you include, you MUST:
+   - Visit the actual webpage and verify it exists
+   - Copy the EXACT URL from your browser
+   - Copy the EXACT publication date from the webpage
+   - Copy the EXACT title from the webpage
+   - DO NOT create, modify, or guess URLs
+   - DO NOT estimate or approximate dates
 
-Find measures from the last 60 days relating to:
+3. Find policy measures from the last 60 days about:
    - Tariffs, Section 301, Section 232
-   - Export controls, entity list, sanctions
+   - Export controls, entity list additions
+   - Sanctions, trade restrictions
    - Anti-dumping, countervailing duties
-   - Batteries, EVs, steel, aluminum, graphite, lithium
+   - Industries: batteries, EVs, steel, aluminum, lithium, rare earths
 
-Output requirements:
-- Follow JSON structure with "updates" array
-- agency: "whitehouse", "ustr", "commerce", "bis", "treasury", "doe", "sec", "ferc"
-- date: YYYY-MM-DD format - MUST be the real date from the source
-- type: "tariff", "export_control", "sanction", etc.
+4. JSON structure:
+   - agency: "whitehouse", "ustr", "commerce", "bis", "treasury", "doe", "sec", "ferc"
+   - title: exact title from webpage
+   - link: exact URL (must start with https://)
+   - date: YYYY-MM-DD (exact date from webpage)
+   - summary: brief 1-sentence description
+   - type: "tariff", "export_control", "sanction", "rule", "notice", "fact_sheet"
 
-CRITICAL - For USTR, White House, Treasury:
-- Verify the URL actually exists before including it
-- Copy the exact publication date from the document
-- Use the actual title from the webpage
-- If you cannot verify the URL and date are real, DO NOT include that item
-
-Return 15-20 items with VERIFIED URLs and dates.`;
+QUALITY OVER QUANTITY:
+- Only include items where you have verified the URL actually works
+- If you cannot verify an item, DO NOT include it
+- Return 15-20 VERIFIED items with real URLs and dates`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
@@ -249,7 +266,7 @@ Return 15-20 items with VERIFIED URLs and dates.`;
           Click refresh to load policy updates
         </div>
       ) : (
-        <div className={cn("flex-1 p-2 space-y-1", 
+        <div ref={contentRef} className={cn("flex-1 p-2 space-y-1 overflow-hidden", 
           isPastel ? "bg-[#32354C]" :
           isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
           {filteredUpdates.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).map((update, idx) => {

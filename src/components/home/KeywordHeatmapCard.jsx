@@ -74,6 +74,7 @@ export default function KeywordHeatmapCard({ theme }) {
 
   const suggestedWords = ['tariff', 'battery', 'lithium', 'steel', 'aluminum', 'sanctions', 'export', 'EV'];
   const colors = ['#f97316', '#3b82f6', '#22c55e', '#ef4444'];
+  const treemapColors = ['#f97316', '#fb923c', '#fdba74', '#fed7aa', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#22c55e', '#4ade80', '#86efac', '#bbf7d0', '#ef4444', '#f87171', '#fca5a5', '#fecaca'];
 
   useEffect(() => {
     const cached = localStorage.getItem(`keyword_heatmap_${selectedSector?.id || 'all'}`);
@@ -354,20 +355,21 @@ export default function KeywordHeatmapCard({ theme }) {
                 Click refresh to analyze keywords
               </div>
             ) : viewType === 'treemap' ? (
-            <div className="h-full flex flex-wrap content-start gap-0.5">
-              {keywordData.map((item) => {
-                const size = Math.max(40, (item.count / maxCount) * 120);
+            <div className="h-full w-full flex flex-wrap content-start gap-0.5">
+              {keywordData.map((item, idx) => {
+                const size = Math.max(50, (item.count / maxCount) * 150);
+                const colorIdx = idx % treemapColors.length;
                 return (
                   <button
                     key={item.word}
                     onClick={() => handleKeywordClick(item.word)}
-                    className={cn("transition-all hover:opacity-80 flex items-center justify-center text-center px-1",
-                      isPastel ? "bg-[#9B8B6B] text-white" :
-                      isDark ? "bg-orange-600 text-white" : "bg-orange-600 text-white")}
+                    className="transition-all hover:opacity-90 flex items-center justify-center text-center px-1 text-white"
                     style={{
+                      backgroundColor: treemapColors[colorIdx],
                       width: `${size}px`,
                       height: `${size * 0.6}px`,
                       fontSize: `${Math.max(8, size / 10)}px`,
+                      flexShrink: 0
                     }}
                   >
                     <div>
@@ -379,24 +381,41 @@ export default function KeywordHeatmapCard({ theme }) {
               })}
             </div>
           ) : (
-            <div className="h-full flex flex-wrap content-center justify-center gap-1">
-              {keywordData.map((item) => {
-                const size = Math.max(10, (item.count / maxCount) * 24);
+            <div className="h-full w-full relative flex items-center justify-center overflow-hidden">
+              {keywordData.sort((a, b) => b.count - a.count).map((item, idx) => {
+                const centerDistance = Math.abs(idx - keywordData.length / 2);
+                const maxDistance = keywordData.length / 2;
+                const sizeFactor = 1 - (centerDistance / maxDistance) * 0.7;
+                const baseFontSize = Math.min(32, (item.count / maxCount) * 36);
+                const fontSize = Math.max(9, baseFontSize * sizeFactor);
+                const weight = Math.min(900, 400 + (item.count / maxCount) * 500);
+
+                const angle = (idx / keywordData.length) * Math.PI * 2;
+                const radius = (centerDistance / maxDistance) * 40;
+                const x = 50 + radius * Math.cos(angle);
+                const y = 50 + radius * Math.sin(angle);
+
                 return (
                   <button
                     key={item.word}
                     onClick={() => handleKeywordClick(item.word)}
-                    className={cn("transition-all hover:opacity-80",
+                    className={cn("absolute transition-all hover:opacity-80 whitespace-nowrap",
                       isPastel ? "text-[#D0D2E0] hover:text-white" :
                       isDark ? "text-neutral-400 hover:text-white" : "text-gray-700 hover:text-gray-900")}
-                    style={{ fontSize: `${size}px`, fontWeight: Math.min(900, 400 + item.count * 50) }}
+                    style={{ 
+                      fontSize: `${fontSize}px`, 
+                      fontWeight: weight,
+                      left: `${x}%`,
+                      top: `${y}%`,
+                      transform: 'translate(-50%, -50%)'
+                    }}
                   >
                     {item.word}
                   </button>
                 );
               })}
             </div>
-            )}
+          )}
           </div>
         </>
       ) : (
