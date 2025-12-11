@@ -76,10 +76,7 @@ export default function FeaturedSectorTiles({ theme }) {
   };
 
   const loadFeaturedForSector = async (sectorIdx) => {
-    const item = featuredArticles[sectorIdx];
-    if (!item) return;
-    
-    const sector = sectors.find(s => s.id === item.sectorId);
+    const sector = sectors[sectorIdx];
     if (!sector) return;
 
     setLoadingStates(prev => ({ ...prev, [sectorIdx]: true }));
@@ -114,15 +111,20 @@ export default function FeaturedSectorTiles({ theme }) {
       }
     }
 
-    const newFeatured = [...featuredArticles];
-    newFeatured[sectorIdx] = {
-      sector: sector.name,
-      articles: criticalArticles,
-      sectorId: sector.id
-    };
-
-    setFeaturedArticles(newFeatured);
-    localStorage.setItem('home_featured_tiles', JSON.stringify(newFeatured));
+    setFeaturedArticles(prev => {
+      const newFeatured = [...prev];
+      while (newFeatured.length <= sectorIdx) {
+        newFeatured.push({ sector: '', articles: [], sectorId: '' });
+      }
+      newFeatured[sectorIdx] = {
+        sector: sector.name,
+        articles: criticalArticles,
+        sectorId: sector.id
+      };
+      localStorage.setItem('home_featured_tiles', JSON.stringify(newFeatured));
+      return newFeatured;
+    });
+    
     setLoadingStates(prev => ({ ...prev, [sectorIdx]: false }));
   };
 
