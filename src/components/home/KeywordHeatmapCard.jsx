@@ -210,10 +210,24 @@ export default function KeywordHeatmapCard({ theme }) {
   const [activityData, setActivityData] = useState([]);
   const [customKeyword, setCustomKeyword] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [includeWords, setIncludeWords] = useState([]);
-  const [excludeWords, setExcludeWords] = useState([]);
+  const [includeWords, setIncludeWords] = useState(() => {
+    const saved = localStorage.getItem('keyword_include_words');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [excludeWords, setExcludeWords] = useState(() => {
+    const saved = localStorage.getItem('keyword_exclude_words');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [newIncludeWord, setNewIncludeWord] = useState('');
   const [newExcludeWord, setNewExcludeWord] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('keyword_include_words', JSON.stringify(includeWords));
+  }, [includeWords]);
+
+  useEffect(() => {
+    localStorage.setItem('keyword_exclude_words', JSON.stringify(excludeWords));
+  }, [excludeWords]);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],

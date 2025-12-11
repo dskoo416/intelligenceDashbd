@@ -67,10 +67,11 @@ export default function FeaturedSectorTiles({ theme }) {
   }, [sectors, rssSources]);
 
   const loadInitialFeatured = async () => {
-    const featured = [];
-    for (const sector of sectors.slice(0, 3)) {
-      featured.push({ sector: sector.name, articles: [], sectorId: sector.id });
-    }
+    const featured = sectors.slice(0, 3).map(sector => ({
+      sector: sector.name,
+      articles: [],
+      sectorId: sector.id
+    }));
     setFeaturedArticles(featured);
   };
 
