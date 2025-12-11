@@ -193,6 +193,9 @@ export default function PolicyUpdatesCard({ theme }) {
     } else {
       await base44.entities.AppSettings.create(updatedSettings);
     }
+    
+    setSettingsOpen(false);
+    window.location.reload();
   };
 
   return (

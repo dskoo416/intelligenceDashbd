@@ -415,6 +415,7 @@ export default function KeywordHeatmapCard({ theme }) {
                   <div className="space-y-3">
                     <div>
                       <Label className={cn("text-xs mb-1 block",
+                        isPastel ? "text-[#E8E9F0]" :
                         isDark ? "text-neutral-300" : "text-gray-700")}>Include Words</Label>
                       <div className="flex gap-1 mb-1">
                         <Input
@@ -428,12 +429,15 @@ export default function KeywordHeatmapCard({ theme }) {
                           }}
                           placeholder="Add word..."
                           className={cn("h-6 text-xs",
-                            isDark ? "bg-neutral-900 border-neutral-700" : "")}
+                            isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
+                            isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
                         />
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {includeWords.map((word, idx) => (
-                          <Badge key={idx} variant="secondary" className="text-xs">
+                          <Badge key={idx} variant="secondary" className={cn("text-xs",
+                            isPastel ? "bg-[#9B8B6B] text-white" :
+                            isDark ? "bg-orange-600 text-white" : "")}>
                             {word}
                             <button onClick={() => setIncludeWords(includeWords.filter((_, i) => i !== idx))} className="ml-1">×</button>
                           </Badge>
@@ -442,6 +446,7 @@ export default function KeywordHeatmapCard({ theme }) {
                     </div>
                     <div>
                       <Label className={cn("text-xs mb-1 block",
+                        isPastel ? "text-[#E8E9F0]" :
                         isDark ? "text-neutral-300" : "text-gray-700")}>Exclude Words</Label>
                       <div className="flex gap-1 mb-1">
                         <Input
@@ -455,12 +460,15 @@ export default function KeywordHeatmapCard({ theme }) {
                           }}
                           placeholder="Add word..."
                           className={cn("h-6 text-xs",
-                            isDark ? "bg-neutral-900 border-neutral-700" : "")}
+                            isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
+                            isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
                         />
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {excludeWords.map((word, idx) => (
-                          <Badge key={idx} variant="secondary" className="text-xs">
+                          <Badge key={idx} variant="secondary" className={cn("text-xs",
+                            isPastel ? "bg-[#9B8B6B] text-white" :
+                            isDark ? "bg-orange-600 text-white" : "")}>
                             {word}
                             <button onClick={() => setExcludeWords(excludeWords.filter((_, i) => i !== idx))} className="ml-1">×</button>
                           </Badge>
