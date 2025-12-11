@@ -20,71 +20,125 @@ const TreemapView = ({ data, onItemClick, colors }) => {
     if (!containerRef.current || data.length === 0) return;
     
     const container = containerRef.current.getBoundingClientRect();
-    const totalValue = data.reduce((sum, item) => sum + item.count, 0);
+    const padding = 2;
     
-    const squarify = (items, x, y, width, height) => {
-      if (items.length === 0) return [];
+    const squarify = (children, x, y, width, height) => {
+      if (children.length === 0) return [];
       
-      const total = items.reduce((sum, item) => sum + item.count, 0);
+      const total = children.reduce((sum, c) => sum + c.count, 0);
+      
+      const layoutRow = (row, x, y, width, height) => {
+        const rowTotal = row.reduce((sum, r) => sum + r.count, 0);
+        const ratio = rowTotal / total;
+        
+        if (width >= height) {
+          const rowWidth = width * ratio;
+          let currentY = y;
+          return row.map((item, idx) => {
+            const itemHeight = (item.count / rowTotal) * height;
+            const tile = {
+              ...item,
+              x: x,
+              y: currentY,
+              width: rowWidth,
+              height: itemHeight,
+              colorIdx: idx % colors.length
+            };
+            currentY += itemHeight;
+            return tile;
+          });
+        } else {
+          const rowHeight = height * ratio;
+          let currentX = x;
+          return row.map((item, idx) => {
+            const itemWidth = (item.count / rowTotal) * width;
+            const tile = {
+              ...item,
+              x: currentX,
+              y: y,
+              width: itemWidth,
+              height: rowHeight,
+              colorIdx: idx % colors.length
+            };
+            currentX += itemWidth;
+            return tile;
+          });
+        }
+      };
+      
+      const worstAspectRatio = (row, sideLength) => {
+        if (row.length === 0) return Infinity;
+        const rowSum = row.reduce((sum, r) => sum + r.count, 0);
+        const rowMin = Math.min(...row.map(r => r.count));
+        const rowMax = Math.max(...row.map(r => r.count));
+        const s2 = sideLength * sideLength;
+        const rSum2 = rowSum * rowSum;
+        return Math.max((s2 * rowMax) / rSum2, rSum2 / (s2 * rowMin));
+      };
+      
+      const sorted = [...children].sort((a, b) => b.count - a.count);
       const results = [];
-      
-      const sortedItems = [...items].sort((a, b) => b.count - a.count);
-      
+      let remaining = [...sorted];
       let currentX = x;
       let currentY = y;
       let remainingWidth = width;
       let remainingHeight = height;
       
-      sortedItems.forEach((item, idx) => {
-        const ratio = item.count / total;
-        const area = width * height * ratio;
+      while (remaining.length > 0) {
+        const sideLength = Math.min(remainingWidth, remainingHeight);
+        const row = [];
+        let bestAspect = Infinity;
         
-        let tileWidth, tileHeight;
-        
-        if (remainingWidth > remainingHeight) {
-          tileWidth = area / remainingHeight;
-          tileHeight = remainingHeight;
+        for (let i = 0; i < remaining.length; i++) {
+          const testRow = [...row, remaining[i]];
+          const aspect = worstAspectRatio(testRow, sideLength);
           
-          results.push({
-            ...item,
-            x: currentX,
-            y: currentY,
-            width: tileWidth,
-            height: tileHeight,
-            colorIdx: idx % colors.length
-          });
-          
-          currentX += tileWidth;
-          remainingWidth -= tileWidth;
-        } else {
-          tileWidth = remainingWidth;
-          tileHeight = area / remainingWidth;
-          
-          results.push({
-            ...item,
-            x: currentX,
-            y: currentY,
-            width: tileWidth,
-            height: tileHeight,
-            colorIdx: idx % colors.length
-          });
-          
-          currentY += tileHeight;
-          remainingHeight -= tileHeight;
+          if (aspect < bestAspect) {
+            bestAspect = aspect;
+            row.push(remaining[i]);
+          } else {
+            break;
+          }
         }
-      });
+        
+        if (row.length === 0) row.push(remaining[0]);
+        
+        const rowTiles = layoutRow(row, currentX, currentY, remainingWidth, remainingHeight);
+        results.push(...rowTiles);
+        
+        remaining = remaining.slice(row.length);
+        
+        if (remainingWidth >= remainingHeight) {
+          const rowWidth = rowTiles[0].width;
+          currentX += rowWidth;
+          remainingWidth -= rowWidth;
+        } else {
+          const rowHeight = rowTiles[0].height;
+          currentY += rowHeight;
+          remainingHeight -= rowHeight;
+        }
+      }
       
       return results;
     };
     
     const tiles = squarify(data, 0, 0, container.width, container.height);
     setTiles(tiles);
+    
+    const handleResize = () => {
+      const container = containerRef.current.getBoundingClientRect();
+      const newTiles = squarify(data, 0, 0, container.width, container.height);
+      setTiles(newTiles);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [data, colors]);
 
   return (
     <div ref={containerRef} className="relative h-full w-full">
       {tiles.map((tile) => {
-        const fontSize = Math.max(8, Math.min(tile.width, tile.height) / 6);
+        const fontSize = Math.max(7, Math.min(tile.width / 8, tile.height / 3));
         return (
           <button
             key={tile.word}
@@ -96,13 +150,16 @@ const TreemapView = ({ data, onItemClick, colors }) => {
               width: `${tile.width}px`,
               height: `${tile.height}px`,
               backgroundColor: colors[tile.colorIdx],
-              padding: '2px'
+              padding: '4px',
+              border: '1px solid rgba(0,0,0,0.1)'
             }}
           >
-            <div className="font-medium truncate w-full px-1" style={{ fontSize: `${fontSize}px` }}>
+            <div className="font-semibold truncate w-full px-1" style={{ fontSize: `${fontSize}px` }}>
               {tile.word}
             </div>
-            <div className="text-[8px] opacity-80">{tile.count}</div>
+            <div style={{ fontSize: `${Math.max(6, fontSize * 0.6)}px` }} className="opacity-80">
+              {tile.count}
+            </div>
           </button>
         );
       })}

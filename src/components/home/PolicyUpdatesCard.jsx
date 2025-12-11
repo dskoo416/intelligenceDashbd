@@ -98,45 +98,51 @@ export default function PolicyUpdatesCard({ theme }) {
     setIsLoading(true);
     
     try {
-      const prompt = `You are a policy research assistant finding REAL policy updates from official US government websites.
+      const prompt = `You are scraping REAL policy documents from official US government websites. You have web browsing enabled.
 
-CRITICAL - URL VERIFICATION:
-1. You MUST browse and verify each URL returns a valid page (not 404, not "page not found")
-2. If a URL returns 404 or error, DO NOT include it in results
-3. Only include URLs you have ACTUALLY visited and confirmed work
-4. Copy EXACT URLs from the working pages
-
-Search these official sites:
+ABSOLUTE REQUIREMENTS - NO EXCEPTIONS:
+1. Browse to the actual webpage for EACH item before including it
+2. Verify the page loads and is NOT a 404 error or "page not found"
+3. If you get ANY error loading the page, do NOT include it
+4. Use ONLY URLs from these domains:
    - whitehouse.gov
-   - ustr.gov  
+   - ustr.gov
    - treasury.gov
    - commerce.gov
    - bis.doc.gov
    - energy.gov
+   - sec.gov
+   - ferc.gov
 
-For EACH item:
-   - Visit the webpage and verify it loads successfully
-   - If page returns 404 or error, skip it completely
-   - Copy EXACT URL that works
-   - Copy EXACT publication date from the page
-   - Copy EXACT title from the page
+STRICT PROCESS FOR EACH ITEM:
+Step 1: Search for recent policy updates on the official site
+Step 2: Click the link and verify the page loads successfully
+Step 3: If page loads: Copy EXACT title, URL, and date from that page
+Step 4: If page is 404 or error: Skip it completely, do NOT include
 
-Find policy measures from last 60 days about:
-   - Tariffs, Section 301, Section 232
-   - Export controls, entity list additions
-   - Sanctions, trade restrictions
-   - Anti-dumping, countervailing duties
-   - Industries: batteries, EVs, steel, aluminum, lithium, rare earths
+Find recent policy measures (last 60 days) about:
+- Tariffs, duties, Section 301, Section 232
+- Export controls, entity list
+- Sanctions, trade restrictions
+- Anti-dumping, countervailing duties
+- Industries: batteries, EVs, steel, aluminum, lithium, rare earths
 
-JSON structure:
-   - agency: "whitehouse", "ustr", "commerce", "bis", "treasury", "doe", "sec", "ferc"
-   - title: exact title
-   - link: verified working URL (must return 200, not 404)
-   - date: YYYY-MM-DD from page
-   - summary: 1-sentence description
-   - type: "tariff", "export_control", "sanction", "rule", "notice", "fact_sheet"
+JSON format:
+{
+  "updates": [
+    {
+      "agency": "ustr",
+      "title": "exact title from working page",
+      "link": "https://exact-url-that-loads-successfully",
+      "date": "YYYY-MM-DD",
+      "summary": "brief description",
+      "type": "tariff"
+    }
+  ]
+}
 
-Return only items with VERIFIED working URLs (no 404s). Quality over quantity.`;
+CRITICAL: Only return items where you successfully loaded the URL and verified it's not 404.
+Return 10-15 VERIFIED working links only. No broken links.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
