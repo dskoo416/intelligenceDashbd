@@ -234,10 +234,10 @@ export default function KeywordHeatmapCard({ theme }) {
   const colors = ['#f97316', '#3b82f6', '#22c55e', '#ef4444'];
   
   const treemapColors = isPastel 
-    ? ['#B89B7B', '#C8AB8B', '#D8BB9B', '#9BABAB', '#ABABB8', '#BBABBB', '#AB9BAB', '#BBBBA8']
+    ? ['#D4A574', '#B8956E', '#C9A87B', '#A8C4C8', '#9BACC4', '#C8A8C4', '#C4A8A8', '#A8C4A8']
     : isDark
-    ? ['#6B6B6B', '#7B7B7B', '#8B8B8B', '#9B9B9B', '#5B6B7B', '#6B7B8B', '#7B8B9B', '#8B9BAB', '#6B7B6B', '#7B8B7B', '#8B9B8B', '#9BAB9B']
-    : ['#E8B584', '#D9C9A7', '#C8B9A2', '#B8AD9E', '#AFC4D4', '#C0D4E4', '#D0E4F4', '#B8C8AC'];
+    ? ['#D97706', '#F59E0B', '#FBBF24', '#3B82F6', '#60A5FA', '#8B5CF6', '#A78BFA', '#10B981', '#34D399', '#F472B6', '#FB7185', '#14B8A6']
+    : ['#F97316', '#FB923C', '#FDBA74', '#3B82F6', '#60A5FA', '#8B5CF6', '#A78BFA', '#10B981', '#34D399', '#F472B6', '#FB7185', '#06B6D4'];
 
   useEffect(() => {
     const cached = localStorage.getItem(`keyword_heatmap_${selectedSector?.id || 'all'}`);

@@ -96,48 +96,52 @@ export default function PolicyUpdatesCard({ theme }) {
 
   const fetchUpdates = async () => {
     setIsLoading(true);
-    
+
     try {
-      const prompt = `Find recent US trade/industrial policy updates from official government websites.
+      const prompt = `I need you to browse official US government websites and find recent trade/industrial policy announcements.
 
-CRITICAL - URL FORMAT REQUIREMENTS:
-- For whitehouse.gov: Use format /briefings-statements/ NOT /briefing-room/statements-releases/
-- Example CORRECT: https://www.whitehouse.gov/briefings-statements/2025/12/title-here/
-- Example WRONG: https://www.whitehouse.gov/briefing-room/statements-releases/2025/12/title-here/
-- For all sites: Copy the EXACT working URL format from the live page
+  CRITICAL INSTRUCTIONS:
+  1. You MUST actually visit and browse each website
+  2. Click on actual article links on the site
+  3. Copy the EXACT URL from your browser when the article loads
+  4. Do NOT guess or construct URLs - use what you see in the browser
+  5. Only include articles where you successfully opened the page
 
-Search these sites and return ONLY articles that currently exist (no 404 errors):
-- ustr.gov - USTR press releases and notices  
-- whitehouse.gov - fact sheets, executive orders, statements
-- treasury.gov - press releases, sanctions announcements
-- commerce.gov - ITA and BIS notices
-- bis.doc.gov - export control rules
-- energy.gov - battery, EV, critical minerals policy
+  Websites to search:
+  - https://ustr.gov/about-us/policy-offices/press-office
+  - https://www.whitehouse.gov/briefings-statements/
+  - https://home.treasury.gov/news/press-releases
+  - https://www.commerce.gov/news
+  - https://www.bis.gov/press-room
+  - https://www.energy.gov/newsroom
 
-VERIFICATION PROCESS:
-1. Browse each site and click actual links from their press/news pages
-2. Copy the EXACT URL from the browser address bar
-3. Verify the page loads and has content (not 404)
-4. Only include URLs you have personally verified work
+  Search for recent articles (last 90 days) about:
+  - Tariffs, Section 301, Section 232
+  - Export controls, Entity List
+  - Sanctions, trade restrictions
+  - Anti-dumping/countervailing duties
+  - Batteries, EVs, semiconductors, steel, aluminum, rare earths
 
-Topics to search:
-- Tariffs (Section 301, 232 measures)
-- Export controls, Entity List additions
-- Sanctions, OFAC designations  
-- Anti-dumping/countervailing duties
-- Critical industries: batteries, EVs, semiconductors, steel, aluminum, rare earths
+  PROCESS FOR EACH ARTICLE:
+  Step 1: Go to the website's news/press section
+  Step 2: Click on an article link
+  Step 3: When page loads, copy URL from address bar
+  Step 4: Verify page is NOT 404
+  Step 5: Add to results with exact URL
 
-For each verified item, provide:
-{
-  "agency": "ustr|whitehouse|treasury|commerce|bis|doe",
-  "title": "exact title from page",
-  "link": "exact working URL from address bar",
-  "date": "YYYY-MM-DD",
-  "summary": "1-line summary",
-  "type": "tariff|export_control|sanction|rule|notice|fact_sheet"
-}
-
-Return 12-18 working links. Prioritize recent, high-impact measures.`;
+  Return 12-18 articles in this JSON format:
+  {
+  "updates": [
+  {
+    "agency": "ustr" (or "whitehouse", "treasury", "commerce", "bis", "doe"),
+    "title": "exact title from page",
+    "link": "exact URL from browser address bar",
+    "date": "YYYY-MM-DD",
+    "summary": "one sentence",
+    "type": "tariff|export_control|sanction|rule|notice|fact_sheet"
+  }
+  ]
+  }`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
@@ -164,7 +168,7 @@ Return 12-18 working links. Prioritize recent, high-impact measures.`;
       });
 
       const allUpdates = (result.updates || []).sort((a, b) => new Date(b.date) - new Date(a.date));
-      
+
       setUpdates(allUpdates);
       localStorage.setItem('policy_updates', JSON.stringify(allUpdates));
       applyFilters(allUpdates);
@@ -172,7 +176,7 @@ Return 12-18 working links. Prioritize recent, high-impact measures.`;
     } catch (error) {
       console.error('Error fetching policy updates:', error);
     }
-    
+
     setIsLoading(false);
   };
 
