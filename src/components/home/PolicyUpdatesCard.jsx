@@ -108,12 +108,12 @@ export default function PolicyUpdatesCard({ theme }) {
   5. Only include articles where you successfully opened the page
 
   Websites to search:
-  - https://ustr.gov/about-us/policy-offices/press-office
-  - https://www.whitehouse.gov/briefings-statements/
-  - https://home.treasury.gov/news/press-releases
-  - https://www.commerce.gov/news
-  - https://www.bis.gov/press-room
-  - https://www.energy.gov/newsroom
+  https://ustr.gov/about-us/policy-offices/press-office
+  https://www.whitehouse.gov/briefings-statements/
+  https://home.treasury.gov/news/press-releases
+  https://www.commerce.gov/news
+  https://www.bis.gov/press-room
+  https://www.energy.gov/newsroom
 
   Search for recent articles (last 90 days) about:
   - Tariffs, Section 301, Section 232
@@ -127,7 +127,8 @@ export default function PolicyUpdatesCard({ theme }) {
   Step 2: Click on an article link
   Step 3: When page loads, copy URL from address bar
   Step 4: Verify page is NOT 404
-  Step 5: Add to results with exact URL
+  Step 5: Open a new page, paste the url, and check the page says either 404, Not Found or anything like that. If it does, try again.
+  Step 6: Add to results with exact URL
 
   Return 12-18 articles in this JSON format:
   {
