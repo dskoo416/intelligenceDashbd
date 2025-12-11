@@ -100,50 +100,120 @@ export default function PolicyUpdatesCard({ theme }) {
     try {
       const prompt = `I need you to browse official US government websites and find recent trade/industrial policy announcements.
 
-  CRITICAL INSTRUCTIONS:
-  1. You MUST actually visit and browse each website
-  2. Click on actual article links on the site
-  3. Copy the EXACT URL from your browser when the article loads
-  4. Do NOT guess or construct URLs - use what you see in the browser
-  5. Only include articles where you successfully opened the page
+You already fetch the TITLE and CONTENT correctly.
+The BUG is with the LINK field.
+You often return URLs that go to 404 or Not Found pages.
+You must fix that.
 
-  Websites to search:
-  https://ustr.gov/about-us/policy-offices/press-office
-  https://www.whitehouse.gov/briefings-statements/
-  https://home.treasury.gov/news/press-releases
-  https://www.commerce.gov/news
-  https://www.bis.gov/press-room
-  https://www.energy.gov/newsroom
+TASK SUMMARY
+Build a JSON object of 12–18 updates with:
+- agency
+- title
+- link
+- date
+- summary
+- type
 
-  Search for recent articles (last 90 days) about:
-  - Tariffs, Section 301, Section 232
-  - Export controls, Entity List
-  - Sanctions, trade restrictions
-  - Anti-dumping/countervailing duties
-  - Batteries, EVs, semiconductors, steel, aluminum, rare earths
+SITES TO USE
+Only use these as starting points:
+- https://ustr.gov/about-us/policy-offices/press-office
+- https://www.whitehouse.gov/briefings-statements/
+- https://home.treasury.gov/news/press-releases
+- https://www.commerce.gov/news
+- https://www.bis.gov/press-room
+- https://www.energy.gov/newsroom
 
-  PROCESS FOR EACH ARTICLE:
-  Step 1: Go to the website's news/press section
-  Step 2: Click on an article link
-  Step 3: When page loads, copy URL from address bar
-  Step 4: Verify page is NOT 404
-  Step 5: Open a new page, paste the url, and check the page says either 404, Not Found, 404 / Page Not Found or anything like that. If it does, try again. The contente and the title you fetch are mostly correct. The way you put link is wrong.
-  Step 6: Add to results with exact URL
-  Step 7: Check by opening each url and see if these page leads to 404 or Not found or anything like that. if so fix it.
+TOPICS (last 90 days)
+Include only articles that clearly match at least one of:
+- Tariffs, Section 301, Section 232
+- Export controls, Entity List
+- Sanctions, trade restrictions
+- Anti-dumping or countervailing duties
+- Batteries, EVs, semiconductors, steel, aluminum, rare earths
 
-  Return 12-18 articles in this JSON format:
-  {
+AGENCY IDS AND DOMAINS
+Every article must use one of these agency ids and matching domains:
+- "ustr"       => pages on ustr.gov
+- "whitehouse" => pages on whitehouse.gov
+- "treasury"   => pages on home.treasury.gov
+- "commerce"   => pages on commerce.gov
+- "bis"        => pages on bis.doc.gov
+- "doe"        => pages on energy.gov
+
+CRITICAL LINK LOGIC (THIS FIXES THE BUG)
+You must follow these rules for the "link" field:
+
+1) You MUST get each link by following a real article link on the official site.
+2) When the article page loads, copy the URL EXACTLY as it appears in the browser address bar.
+3) Do NOT guess, invent, or construct URLs by hand.
+4) Do NOT shorten the URL.
+5) Do NOT insert "..." anywhere in the URL.
+6) Do NOT remove any path segments or query strings.
+7) The URL must start with "https://" and contain the correct domain for the agency.
+
+HARD 404 CHECK
+For every link you want to return:
+1) Take the exact URL you plan to use in "link".
+2) Open that exact URL again in a fresh request.
+3) If you see 404, "Not Found", "Page Not Found", a generic error page, or anything that is clearly not the article:
+   - Do NOT include that URL.
+   - Either:
+     a) Find the correct working article URL for the same article and use that instead, OR
+     b) Skip this article completely and choose a different one.
+4) Only include links that you personally verified as working article pages.
+
+If there is any conflict between speed and correctness, prefer CORRECT working links over speed.
+
+FIELD RULES
+For each update:
+
+- "agency":
+  One of "ustr", "whitehouse", "treasury", "commerce", "bis", "doe".
+
+- "title":
+  Exact article title copied from the page.
+
+- "link":
+  Exact working article URL from the browser address bar, after passing the hard 404 check.
+
+- "date":
+  The article's own date shown on the page, formatted as "YYYY-MM-DD".
+
+- "summary":
+  One clear sentence in your own words that explains the main announcement.
+
+- "type":
+  Exactly one of:
+  "tariff"
+  "export_control"
+  "sanction"
+  "rule"
+  "notice"
+  "fact_sheet"
+
+FILTERING
+- Only include articles from the last 90 days.
+- Every article must match at least one of the target topics.
+- If you are uncertain about relevance, skip the article.
+
+OUTPUT FORMAT
+Return ONLY this JSON structure, with no markdown and no extra text:
+
+{
   "updates": [
-  {
-    "agency": "ustr" (or "whitehouse", "treasury", "commerce", "bis", "doe"),
-    "title": "exact title from page",
-    "link": "exact URL from browser address bar",
-    "date": "YYYY-MM-DD",
-    "summary": "one sentence",
-    "type": "tariff|export_control|sanction|rule|notice|fact_sheet"
-  }
+    {
+      "agency": "ustr",
+      "title": "exact title from page",
+      "link": "exact working article URL that does NOT 404",
+      "date": "YYYY-MM-DD",
+      "summary": "one sentence summary",
+      "type": "tariff|export_control|sanction|rule|notice|fact_sheet"
+    }
   ]
-  }`;
+}
+
+Do not add any other fields.
+Do not wrap the JSON in backticks in your actual response.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
@@ -195,8 +265,8 @@ export default function PolicyUpdatesCard({ theme }) {
       await base44.entities.AppSettings.create(updatedSettings);
     }
     
+    queryClient.invalidateQueries({ queryKey: ['appSettings'] });
     setSettingsOpen(false);
-    window.location.reload();
   };
 
   return (
