@@ -76,7 +76,10 @@ export default function FeaturedSectorTiles({ theme }) {
   };
 
   const loadFeaturedForSector = async (sectorIdx) => {
-    const sector = sectors[sectorIdx];
+    const item = featuredArticles[sectorIdx];
+    if (!item) return;
+    
+    const sector = sectors.find(s => s.id === item.sectorId);
     if (!sector) return;
 
     setLoadingStates(prev => ({ ...prev, [sectorIdx]: true }));
