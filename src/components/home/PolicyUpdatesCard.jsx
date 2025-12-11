@@ -36,7 +36,7 @@ export default function PolicyUpdatesCard({ theme }) {
   const [filteredUpdates, setFilteredUpdates] = useState([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 5;
+  const itemsPerPage = 6;
 
   const { data: settingsData = [] } = useQuery({
     queryKey: ['appSettings'],
@@ -84,38 +84,41 @@ export default function PolicyUpdatesCard({ theme }) {
     
     try {
       const prompt = `You are powering a policy dashboard. 
-Return ONLY real, recently announced US government trade / industrial policy measures that affect goods, tariffs, duties, export controls, or sanctions.
+Return ONLY real, recently announced US government trade / industrial policy measures.
 
 Task:
-Search the web with browsing enabled. Focus PRIMARILY on these official sources:
-   - whitehouse.gov (White House - HIGHEST PRIORITY)
-   - ustr.gov (Office of the United States Trade Representative)
-   - energy.gov (Department of Energy)
-   - commerce.gov (U.S. Department of Commerce)
-   - bis.doc.gov (Bureau of Industry and Security)
-   - treasury.gov (Department of Treasury)
+Search the web with browsing enabled. For USTR, White House, and Treasury - you MUST verify:
+   1. The actual URL exists and is publicly accessible
+   2. The date is the real publication date from that webpage
+   3. The title matches the actual document title
 
-Find the most recent and relevant measures from the last 60 days that relate to:
-   - Tariffs, duties, Section 301, Section 232, safeguards
-   - Export controls, entity list additions, sanctions
+Focus on these official sources:
+   - whitehouse.gov (White House)
+   - ustr.gov (USTR)
+   - energy.gov (DOE)
+   - commerce.gov (Commerce)
+   - bis.doc.gov (BIS)
+   - treasury.gov (Treasury)
+
+Find measures from the last 60 days relating to:
+   - Tariffs, Section 301, Section 232
+   - Export controls, entity list, sanctions
    - Anti-dumping, countervailing duties
-   - Policies that materially affect: batteries, EVs, refineries, steel, aluminum, graphite, lithium, rare earths, advanced materials, petrochemicals.
+   - Batteries, EVs, steel, aluminum, graphite, lithium
 
 Output requirements:
-- You MUST follow this JSON structure exactly, under a top-level key "updates".
-- For "agency", use ONLY these ids: "whitehouse", "ustr", "commerce", "bis", "treasury", "doe", "sec", "ferc"
-- For "date", use YYYY-MM-DD format. This is CRITICAL - extract the actual publication date from the source.
-- "type" is a short label like "tariff", "export_control", "sanction", "anti_dumping", "countervailing_duty", "executive_order", "fact_sheet", or "other".
+- Follow JSON structure with "updates" array
+- agency: "whitehouse", "ustr", "commerce", "bis", "treasury", "doe", "sec", "ferc"
+- date: YYYY-MM-DD format - MUST be the real date from the source
+- type: "tariff", "export_control", "sanction", etc.
 
-Critical constraints:
-- DO NOT invent URLs. Every "link" MUST be an actual, public URL copied from the official site.
-- DO NOT use placeholder paths like "/example" or "/sample".
-- Return AT LEAST 15-20 valid items if available. Quality AND quantity matter.
-- Do not include opinion, forecasts, or news commentary. Only concrete regulatory or policy actions.
-- PRIORITIZE updates from White House, USTR, DOE, and Commerce. These are the most important sources.
-- Make sure each update has the correct publication date from the source.
+CRITICAL - For USTR, White House, Treasury:
+- Verify the URL actually exists before including it
+- Copy the exact publication date from the document
+- Use the actual title from the webpage
+- If you cannot verify the URL and date are real, DO NOT include that item
 
-Return ONLY the JSON object and nothing else.`;
+Return 15-20 items with VERIFIED URLs and dates.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,

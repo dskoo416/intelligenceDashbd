@@ -323,16 +323,37 @@ export default function KeywordHeatmapCard({ theme }) {
       </div>
 
       {mode === 'analysis' ? (
-        <div className={cn("flex-1 overflow-hidden p-2", 
-          isPastel ? "bg-[#32354C]" :
-          isDark ? "bg-[#0A0A0A]" : "bg-gray-50")}>
-          {keywordData.length === 0 && !isLoading ? (
-            <div className={cn("text-center text-[10px] py-8", 
-              isPastel ? "text-[#7B7E9C]" :
-              isDark ? "text-neutral-700" : "text-gray-500")}>
-              Click refresh to analyze keywords
-            </div>
-          ) : viewType === 'treemap' ? (
+        <>
+          <div className={cn("px-2 py-1 border-b",
+            isPastel ? "border-[#4A4D6C]" :
+            isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
+            <Select value={selectedSector?.id || 'all'} onValueChange={(value) => {
+              const sector = value === 'all' ? null : sectors.find(s => s.id === value);
+              setSelectedSector(sector);
+            }}>
+              <SelectTrigger className={cn("h-5 w-full text-[9px]",
+                isPastel ? "bg-[#2B2D42] border-[#4A4D6C]" :
+                isDark ? "bg-neutral-900 border-neutral-700" : "")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className={isDark ? "bg-neutral-800 border-neutral-700" : ""}>
+                <SelectItem value="all">All Sectors</SelectItem>
+                {sectors.map(s => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className={cn("flex-1 overflow-hidden p-2", 
+            isPastel ? "bg-[#32354C]" :
+            isDark ? "bg-[#0A0A0A]" : "bg-gray-50")}>
+            {keywordData.length === 0 && !isLoading ? (
+              <div className={cn("text-center text-[10px] py-8", 
+                isPastel ? "text-[#7B7E9C]" :
+                isDark ? "text-neutral-700" : "text-gray-500")}>
+                Click refresh to analyze keywords
+              </div>
+            ) : viewType === 'treemap' ? (
             <div className="h-full flex flex-wrap content-start gap-0.5">
               {keywordData.map((item) => {
                 const size = Math.max(40, (item.count / maxCount) * 120);
@@ -375,8 +396,9 @@ export default function KeywordHeatmapCard({ theme }) {
                 );
               })}
             </div>
-          )}
-        </div>
+            )}
+          </div>
+        </>
       ) : (
         <div className={cn("flex-1 flex flex-col", 
           isPastel ? "bg-[#32354C]" :

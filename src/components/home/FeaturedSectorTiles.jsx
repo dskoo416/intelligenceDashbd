@@ -69,7 +69,7 @@ export default function FeaturedSectorTiles({ theme }) {
   const loadInitialFeatured = async () => {
     const featured = [];
     for (const sector of sectors.slice(0, 3)) {
-      featured.push({ sector: sector.name, article: null, sectorId: sector.id });
+      featured.push({ sector: sector.name, articles: [], sectorId: sector.id });
     }
     setFeaturedArticles(featured);
   };
@@ -80,17 +80,40 @@ export default function FeaturedSectorTiles({ theme }) {
 
     setLoadingStates(prev => ({ ...prev, [sectorIdx]: true }));
     const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
-    let articles = [];
+    let allArticles = [];
 
-    for (const source of sectorSources.slice(0, 3)) {
+    for (const source of sectorSources.slice(0, 5)) {
       const sourceArticles = await parseRSS(source.url);
-      articles.push(...sourceArticles.map(a => ({ ...a, source: source.name })));
+      allArticles.push(...sourceArticles.map(a => ({ ...a, source: source.name })));
+    }
+
+    const articleText = allArticles.map((a, idx) => 
+      `${idx + 1}. ${a.title}\nSource: ${a.source}\n`
+    ).join('\n');
+
+    let criticalArticles = [];
+    if (allArticles.length > 0) {
+      try {
+        const result = await base44.integrations.Core.InvokeLLM({
+          prompt: `Select the 4 most critical and newsworthy articles from this list for ${sector.name}:\n\n${articleText}\n\nReturn ONLY a JSON array of article numbers (1-indexed). Example: [1, 3, 5, 7]`,
+          response_json_schema: {
+            type: 'object',
+            properties: {
+              articles: { type: 'array', items: { type: 'number' } }
+            }
+          }
+        });
+        const selectedIndices = result.articles || [];
+        criticalArticles = selectedIndices.slice(0, 4).map(idx => allArticles[idx - 1]).filter(Boolean);
+      } catch (error) {
+        criticalArticles = allArticles.slice(0, 4);
+      }
     }
 
     const newFeatured = [...featuredArticles];
     newFeatured[sectorIdx] = {
       sector: sector.name,
-      article: articles.length > 0 ? articles[0] : null,
+      articles: criticalArticles,
       sectorId: sector.id
     };
 
@@ -125,32 +148,36 @@ export default function FeaturedSectorTiles({ theme }) {
                 isDark ? "text-neutral-600" : "text-gray-500")} />
             </Button>
           </div>
-          <div className={cn("flex-1 p-3", 
+          <div className={cn("flex-1 p-2 space-y-2", 
             isPastel ? "bg-[#32354C]" :
             isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
-          {item.article ? (
-            <div>
-              <a
-                href={item.article.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn("text-[11px] font-medium leading-[1.3] line-clamp-2 block transition-colors", 
-                  isPastel ? "text-[#E8E9F0] hover:text-white" :
-                  isDark ? "text-neutral-300 hover:text-white" : "text-gray-700 hover:text-gray-900")}
-              >
-                {item.article.title}
-              </a>
-              <div className={cn("text-[9px] mt-1", 
-                isPastel ? "text-[#7B7E9C]" :
-                isDark ? "text-neutral-700" : "text-gray-500")}>
-                {item.article.source} • {item.article.pubDate && format(new Date(item.article.pubDate), 'MMM d')}
+          {item.articles && item.articles.length > 0 ? (
+            item.articles.map((article, aIdx) => (
+              <div key={aIdx} className={cn("pb-2", aIdx < item.articles.length - 1 && "border-b",
+                isPastel ? "border-[#4A4D6C]" :
+                isDark ? "border-[#1F1F1F]" : "border-gray-200")}>
+                <a
+                  href={article.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn("text-[10px] font-medium leading-[1.3] line-clamp-2 block transition-colors", 
+                    isPastel ? "text-[#E8E9F0] hover:text-white" :
+                    isDark ? "text-neutral-300 hover:text-white" : "text-gray-700 hover:text-gray-900")}
+                >
+                  {article.title}
+                </a>
+                <div className={cn("text-[8px] mt-0.5", 
+                  isPastel ? "text-[#7B7E9C]" :
+                  isDark ? "text-neutral-700" : "text-gray-500")}>
+                  {article.source} • {article.pubDate && format(new Date(article.pubDate), 'MMM d')}
+                </div>
               </div>
-            </div>
+            ))
           ) : (
             <div className={cn("text-[10px]", 
               isPastel ? "text-[#7B7E9C]" :
               isDark ? "text-neutral-600" : "text-gray-500")}>
-              No featured article yet
+              Click refresh to load featured articles
             </div>
           )}
           </div>
