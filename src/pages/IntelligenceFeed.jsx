@@ -345,7 +345,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
           onSearchFilter={setSearchFilter}
           dateFilter={dateFilter}
           searchFilter={searchFilter}
-          sectorName={activeSector?.name}
+          sectorName={activeSubsector?.name || activeSector?.name}
           savedArticleIds={savedArticles.map(a => a.link)}
           theme={settings.theme}
           onRefresh={() => fetchArticles(true)}
