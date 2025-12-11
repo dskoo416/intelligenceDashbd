@@ -98,44 +98,45 @@ export default function PolicyUpdatesCard({ theme }) {
     setIsLoading(true);
     
     try {
-      const prompt = `You are a policy research assistant. Your task is to find REAL policy updates from official US government websites.
+      const prompt = `You are a policy research assistant finding REAL policy updates from official US government websites.
 
-CRITICAL INSTRUCTIONS:
-1. Search the web and browse these official sites DIRECTLY:
+CRITICAL - URL VERIFICATION:
+1. You MUST browse and verify each URL returns a valid page (not 404, not "page not found")
+2. If a URL returns 404 or error, DO NOT include it in results
+3. Only include URLs you have ACTUALLY visited and confirmed work
+4. Copy EXACT URLs from the working pages
+
+Search these official sites:
    - whitehouse.gov
-   - ustr.gov
+   - ustr.gov  
    - treasury.gov
    - commerce.gov
    - bis.doc.gov
    - energy.gov
 
-2. For EVERY item you include, you MUST:
-   - Visit the actual webpage and verify it exists
-   - Copy the EXACT URL from your browser
-   - Copy the EXACT publication date from the webpage
-   - Copy the EXACT title from the webpage
-   - DO NOT create, modify, or guess URLs
-   - DO NOT estimate or approximate dates
+For EACH item:
+   - Visit the webpage and verify it loads successfully
+   - If page returns 404 or error, skip it completely
+   - Copy EXACT URL that works
+   - Copy EXACT publication date from the page
+   - Copy EXACT title from the page
 
-3. Find policy measures from the last 60 days about:
+Find policy measures from last 60 days about:
    - Tariffs, Section 301, Section 232
    - Export controls, entity list additions
    - Sanctions, trade restrictions
    - Anti-dumping, countervailing duties
    - Industries: batteries, EVs, steel, aluminum, lithium, rare earths
 
-4. JSON structure:
+JSON structure:
    - agency: "whitehouse", "ustr", "commerce", "bis", "treasury", "doe", "sec", "ferc"
-   - title: exact title from webpage
-   - link: exact URL (must start with https://)
-   - date: YYYY-MM-DD (exact date from webpage)
-   - summary: brief 1-sentence description
+   - title: exact title
+   - link: verified working URL (must return 200, not 404)
+   - date: YYYY-MM-DD from page
+   - summary: 1-sentence description
    - type: "tariff", "export_control", "sanction", "rule", "notice", "fact_sheet"
 
-QUALITY OVER QUANTITY:
-- Only include items where you have verified the URL actually works
-- If you cannot verify an item, DO NOT include it
-- Return 15-20 VERIFIED items with real URLs and dates`;
+Return only items with VERIFIED working URLs (no 404s). Quality over quantity.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
@@ -195,37 +196,12 @@ QUALITY OVER QUANTITY:
       <div className={cn("flex items-center justify-between px-3 py-2 border-b", 
         isPastel ? "border-[#4A4D6C]" :
         isDark ? "border-[#262629]" : "border-gray-300")}>
+        <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
+          isPastel ? "text-[#A5A8C0]" :
+          isDark ? "text-neutral-500" : "text-gray-700")}>
+          POLICY UPDATES {filteredUpdates.length > 0 && `(${filteredUpdates.length})`}
+        </h3>
         <div className="flex items-center gap-1">
-          <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
-            isPastel ? "text-[#A5A8C0]" :
-            isDark ? "text-neutral-500" : "text-gray-700")}>POLICY UPDATES</h3>
-          {filteredUpdates.length > 0 && (
-            <span className={cn("text-[9px]",
-              isPastel ? "text-[#7B7E9C]" :
-              isDark ? "text-neutral-600" : "text-gray-500")}>
-              {currentPage * itemsPerPage + 1}-{Math.min((currentPage + 1) * itemsPerPage, filteredUpdates.length)} of {filteredUpdates.length}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-            disabled={currentPage === 0}
-            className={cn("p-0.5 transition-colors disabled:opacity-30", 
-              isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" :
-              isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
-          >
-            <ChevronLeft className="w-3 h-3" />
-          </button>
-          <button
-            onClick={() => setCurrentPage(Math.min(Math.floor(filteredUpdates.length / itemsPerPage), currentPage + 1))}
-            disabled={(currentPage + 1) * itemsPerPage >= filteredUpdates.length}
-            className={cn("p-0.5 transition-colors disabled:opacity-30", 
-              isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" :
-              isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
-          >
-            <ChevronRight className="w-3 h-3" />
-          </button>
           <Button
             size="sm"
             variant="ghost"
@@ -250,6 +226,7 @@ QUALITY OVER QUANTITY:
               isDark ? "bg-[#111215] border-[#262629]" : "bg-white border-gray-300")} align="end">
               <PolicySettingsContent 
                 isDark={isDark}
+                isPastel={isPastel}
                 enabledAgencies={enabledAgencies}
                 customKeywords={customKeywords}
                 onSave={handleSaveSettings}
@@ -266,11 +243,10 @@ QUALITY OVER QUANTITY:
           Click refresh to load policy updates
         </div>
       ) : (
-        <div ref={contentRef} className={cn("flex-1 p-2 space-y-1 overflow-hidden", 
+        <div className={cn("flex-1 p-2 space-y-1 overflow-y-auto", 
           isPastel ? "bg-[#32354C]" :
           isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
-          {filteredUpdates.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).map((update, idx) => {
-              const actualIndex = currentPage * itemsPerPage + idx;
+          {filteredUpdates.map((update, idx) => {
               return (
                 <a
                   key={idx}
@@ -286,7 +262,7 @@ QUALITY OVER QUANTITY:
                     isDark ? "text-neutral-400" : "text-gray-900")}>
                     <span className={cn("font-bold mr-1",
                       isPastel ? "text-[#9B8B6B]" :
-                      isDark ? "text-orange-500" : "text-orange-600")}>{actualIndex + 1}.</span>{update.title}
+                      isDark ? "text-orange-500" : "text-orange-600")}>{idx + 1}.</span>{update.title}
                   </h4>
                   <div className={cn("text-[9px] mt-0.5", 
                     isPastel ? "text-[#9B9EBC]" :
@@ -323,7 +299,7 @@ QUALITY OVER QUANTITY:
   );
 }
 
-function PolicySettingsContent({ isDark, enabledAgencies, customKeywords, onSave }) {
+function PolicySettingsContent({ isDark, isPastel, enabledAgencies, customKeywords, onSave }) {
   const [localAgencies, setLocalAgencies] = useState(enabledAgencies);
   const [localKeywords, setLocalKeywords] = useState(customKeywords);
   const [inputValue, setInputValue] = useState('');
@@ -362,7 +338,9 @@ function PolicySettingsContent({ isDark, enabledAgencies, customKeywords, onSave
   return (
     <div className="space-y-3">
       <div>
-        <h4 className={cn("font-medium text-xs mb-2", isDark ? "text-white" : "text-gray-900")}>Filter by Agencies</h4>
+        <h4 className={cn("font-medium text-xs mb-2", 
+          isPastel ? "text-[#E8E9F0]" :
+          isDark ? "text-white" : "text-gray-900")}>Filter by Agencies</h4>
         <div className="space-y-1.5">
           {AGENCIES.map((agency) => (
             <div key={agency.id} className="flex items-center gap-2">
@@ -371,7 +349,9 @@ function PolicySettingsContent({ isDark, enabledAgencies, customKeywords, onSave
                 checked={localAgencies.includes(agency.id)}
                 onCheckedChange={() => handleToggleAgency(agency.id)}
               />
-              <Label htmlFor={agency.id} className={cn("text-xs cursor-pointer", isDark ? "text-neutral-300" : "text-gray-700")}>
+              <Label htmlFor={agency.id} className={cn("text-xs cursor-pointer", 
+                isPastel ? "text-[#D0D2E0]" :
+                isDark ? "text-neutral-300" : "text-gray-700")}>
                 {agency.name}
               </Label>
             </div>
@@ -380,7 +360,9 @@ function PolicySettingsContent({ isDark, enabledAgencies, customKeywords, onSave
       </div>
       
       <div>
-        <Label className={cn("text-xs mb-1 block", isDark ? "text-neutral-400" : "text-gray-600")}>
+        <Label className={cn("text-xs mb-1 block", 
+          isPastel ? "text-[#A5A8C0]" :
+          isDark ? "text-neutral-400" : "text-gray-600")}>
           Filter Keywords
         </Label>
         <div className="flex flex-wrap gap-1 mb-2">
@@ -389,7 +371,9 @@ function PolicySettingsContent({ isDark, enabledAgencies, customKeywords, onSave
               key={idx} 
               className={cn(
                 "text-[10px] px-2 py-0.5 border inline-flex items-center gap-1 transition-colors",
-                isDark 
+                isPastel
+                  ? "bg-[#2B2D42] border-[#4A4D6C] text-[#D0D2E0] hover:border-[#9B8B6B]"
+                  : isDark 
                   ? "bg-neutral-900 border-neutral-700 text-neutral-300 hover:border-neutral-600" 
                   : "bg-gray-100 border-gray-300 text-gray-700 hover:border-gray-400"
               )}
@@ -397,7 +381,9 @@ function PolicySettingsContent({ isDark, enabledAgencies, customKeywords, onSave
               {keyword}
               <button 
                 onClick={() => handleRemoveKeyword(idx)}
-                className={cn("hover:text-red-500 transition-colors", isDark ? "text-neutral-500" : "text-gray-500")}
+                className={cn("hover:text-red-500 transition-colors", 
+                  isPastel ? "text-[#9B9EBC]" :
+                  isDark ? "text-neutral-500" : "text-gray-500")}
               >
                 ×
               </button>
@@ -409,7 +395,9 @@ function PolicySettingsContent({ isDark, enabledAgencies, customKeywords, onSave
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type keyword and press Enter..."
-          className={cn("h-7 text-xs", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
+          className={cn("h-7 text-xs", 
+            isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-[#E8E9F0] placeholder:text-[#7B7E9C]" :
+            isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
         />
       </div>
 

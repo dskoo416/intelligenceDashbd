@@ -12,6 +12,190 @@ import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+const TreemapView = ({ data, onItemClick, colors }) => {
+  const containerRef = React.useRef(null);
+  const [tiles, setTiles] = React.useState([]);
+
+  React.useEffect(() => {
+    if (!containerRef.current || data.length === 0) return;
+    
+    const container = containerRef.current.getBoundingClientRect();
+    const totalValue = data.reduce((sum, item) => sum + item.count, 0);
+    
+    const squarify = (items, x, y, width, height) => {
+      if (items.length === 0) return [];
+      
+      const total = items.reduce((sum, item) => sum + item.count, 0);
+      const results = [];
+      
+      const sortedItems = [...items].sort((a, b) => b.count - a.count);
+      
+      let currentX = x;
+      let currentY = y;
+      let remainingWidth = width;
+      let remainingHeight = height;
+      
+      sortedItems.forEach((item, idx) => {
+        const ratio = item.count / total;
+        const area = width * height * ratio;
+        
+        let tileWidth, tileHeight;
+        
+        if (remainingWidth > remainingHeight) {
+          tileWidth = area / remainingHeight;
+          tileHeight = remainingHeight;
+          
+          results.push({
+            ...item,
+            x: currentX,
+            y: currentY,
+            width: tileWidth,
+            height: tileHeight,
+            colorIdx: idx % colors.length
+          });
+          
+          currentX += tileWidth;
+          remainingWidth -= tileWidth;
+        } else {
+          tileWidth = remainingWidth;
+          tileHeight = area / remainingWidth;
+          
+          results.push({
+            ...item,
+            x: currentX,
+            y: currentY,
+            width: tileWidth,
+            height: tileHeight,
+            colorIdx: idx % colors.length
+          });
+          
+          currentY += tileHeight;
+          remainingHeight -= tileHeight;
+        }
+      });
+      
+      return results;
+    };
+    
+    const tiles = squarify(data, 0, 0, container.width, container.height);
+    setTiles(tiles);
+  }, [data, colors]);
+
+  return (
+    <div ref={containerRef} className="relative h-full w-full">
+      {tiles.map((tile) => {
+        const fontSize = Math.max(8, Math.min(tile.width, tile.height) / 6);
+        return (
+          <button
+            key={tile.word}
+            onClick={() => onItemClick(tile.word)}
+            className="absolute transition-all hover:opacity-90 flex flex-col items-center justify-center text-center text-white overflow-hidden"
+            style={{
+              left: `${tile.x}px`,
+              top: `${tile.y}px`,
+              width: `${tile.width}px`,
+              height: `${tile.height}px`,
+              backgroundColor: colors[tile.colorIdx],
+              padding: '2px'
+            }}
+          >
+            <div className="font-medium truncate w-full px-1" style={{ fontSize: `${fontSize}px` }}>
+              {tile.word}
+            </div>
+            <div className="text-[8px] opacity-80">{tile.count}</div>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const WordCloudView = ({ data, maxCount, onItemClick, isDark, isPastel }) => {
+  const containerRef = React.useRef(null);
+  const [words, setWords] = React.useState([]);
+
+  React.useEffect(() => {
+    if (!containerRef.current || data.length === 0) return;
+    
+    const container = containerRef.current.getBoundingClientRect();
+    const centerX = container.width / 2;
+    const centerY = container.height / 2;
+    
+    const sorted = [...data].sort((a, b) => b.count - a.count);
+    const positioned = [];
+    
+    const checkOverlap = (x, y, width, height) => {
+      return positioned.some(p => {
+        const padding = 4;
+        return !(x + width + padding < p.x || 
+                x > p.x + p.width + padding || 
+                y + height + padding < p.y || 
+                y > p.y + p.height + padding);
+      });
+    };
+    
+    sorted.forEach((item, idx) => {
+      const ratio = item.count / maxCount;
+      const fontSize = idx === 0 ? 28 : Math.max(10, 28 * Math.pow(ratio, 0.7));
+      const weight = 400 + Math.floor(ratio * 500);
+      
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.font = `${weight} ${fontSize}px sans-serif`;
+      const metrics = ctx.measureText(item.word);
+      const width = metrics.width;
+      const height = fontSize * 1.2;
+      
+      let placed = false;
+      let angle = 0;
+      let radius = idx === 0 ? 0 : 20;
+      const maxRadius = Math.min(centerX, centerY) - 40;
+      
+      while (!placed && radius < maxRadius) {
+        const x = centerX + radius * Math.cos(angle) - width / 2;
+        const y = centerY + radius * Math.sin(angle) - height / 2;
+        
+        if (x > 0 && y > 0 && x + width < container.width && y + height < container.height) {
+          if (!checkOverlap(x, y, width, height)) {
+            positioned.push({ ...item, x, y, width, height, fontSize, weight });
+            placed = true;
+          }
+        }
+        
+        angle += 0.5;
+        if (angle >= Math.PI * 2) {
+          angle = 0;
+          radius += 8;
+        }
+      }
+    });
+    
+    setWords(positioned);
+  }, [data, maxCount]);
+
+  return (
+    <div ref={containerRef} className="relative h-full w-full overflow-hidden">
+      {words.map((word) => (
+        <button
+          key={word.word}
+          onClick={() => onItemClick(word.word)}
+          className={cn("absolute transition-all hover:opacity-80 whitespace-nowrap",
+            isPastel ? "text-[#D0D2E0] hover:text-white" :
+            isDark ? "text-neutral-300 hover:text-white" : "text-gray-700 hover:text-gray-900")}
+          style={{
+            left: `${word.x}px`,
+            top: `${word.y}px`,
+            fontSize: `${word.fontSize}px`,
+            fontWeight: word.weight
+          }}
+        >
+          {word.word}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 const parseRSS = async (url) => {
   try {
     const corsProxy = 'https://api.allorigins.win/raw?url=';
@@ -355,66 +539,19 @@ export default function KeywordHeatmapCard({ theme }) {
                 Click refresh to analyze keywords
               </div>
             ) : viewType === 'treemap' ? (
-            <div className="h-full w-full flex flex-wrap content-start gap-0.5">
-              {keywordData.map((item, idx) => {
-                const size = Math.max(50, (item.count / maxCount) * 150);
-                const colorIdx = idx % treemapColors.length;
-                return (
-                  <button
-                    key={item.word}
-                    onClick={() => handleKeywordClick(item.word)}
-                    className="transition-all hover:opacity-90 flex items-center justify-center text-center px-1 text-white"
-                    style={{
-                      backgroundColor: treemapColors[colorIdx],
-                      width: `${size}px`,
-                      height: `${size * 0.6}px`,
-                      fontSize: `${Math.max(8, size / 10)}px`,
-                      flexShrink: 0
-                    }}
-                  >
-                    <div>
-                      <div className="font-medium">{item.word}</div>
-                      <div className="text-[8px] opacity-80">{item.count}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            <TreemapView 
+              data={keywordData} 
+              onItemClick={handleKeywordClick}
+              colors={treemapColors}
+            />
           ) : (
-            <div className="h-full w-full relative flex items-center justify-center overflow-hidden">
-              {keywordData.sort((a, b) => b.count - a.count).map((item, idx) => {
-                const centerDistance = Math.abs(idx - keywordData.length / 2);
-                const maxDistance = keywordData.length / 2;
-                const sizeFactor = 1 - (centerDistance / maxDistance) * 0.7;
-                const baseFontSize = Math.min(32, (item.count / maxCount) * 36);
-                const fontSize = Math.max(9, baseFontSize * sizeFactor);
-                const weight = Math.min(900, 400 + (item.count / maxCount) * 500);
-
-                const angle = (idx / keywordData.length) * Math.PI * 2;
-                const radius = (centerDistance / maxDistance) * 40;
-                const x = 50 + radius * Math.cos(angle);
-                const y = 50 + radius * Math.sin(angle);
-
-                return (
-                  <button
-                    key={item.word}
-                    onClick={() => handleKeywordClick(item.word)}
-                    className={cn("absolute transition-all hover:opacity-80 whitespace-nowrap",
-                      isPastel ? "text-[#D0D2E0] hover:text-white" :
-                      isDark ? "text-neutral-400 hover:text-white" : "text-gray-700 hover:text-gray-900")}
-                    style={{ 
-                      fontSize: `${fontSize}px`, 
-                      fontWeight: weight,
-                      left: `${x}%`,
-                      top: `${y}%`,
-                      transform: 'translate(-50%, -50%)'
-                    }}
-                  >
-                    {item.word}
-                  </button>
-                );
-              })}
-            </div>
+            <WordCloudView 
+              data={keywordData}
+              maxCount={maxCount}
+              onItemClick={handleKeywordClick}
+              isDark={isDark}
+              isPastel={isPastel}
+            />
           )}
           </div>
         </>
