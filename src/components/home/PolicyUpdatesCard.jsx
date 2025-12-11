@@ -100,6 +100,12 @@ export default function PolicyUpdatesCard({ theme }) {
     try {
       const prompt = `Find recent US trade/industrial policy updates from official government websites.
 
+CRITICAL - URL FORMAT REQUIREMENTS:
+- For whitehouse.gov: Use format /briefings-statements/ NOT /briefing-room/statements-releases/
+- Example CORRECT: https://www.whitehouse.gov/briefings-statements/2025/12/title-here/
+- Example WRONG: https://www.whitehouse.gov/briefing-room/statements-releases/2025/12/title-here/
+- For all sites: Copy the EXACT working URL format from the live page
+
 Search these sites and return ONLY articles that currently exist (no 404 errors):
 - ustr.gov - USTR press releases and notices  
 - whitehouse.gov - fact sheets, executive orders, statements
@@ -109,10 +115,10 @@ Search these sites and return ONLY articles that currently exist (no 404 errors)
 - energy.gov - battery, EV, critical minerals policy
 
 VERIFICATION PROCESS:
-1. Search each site for recent policy updates (last 90 days)
-2. For EACH result, click the link to verify it loads
-3. If page returns 404 or error, DO NOT include it
-4. Only include links you have verified work
+1. Browse each site and click actual links from their press/news pages
+2. Copy the EXACT URL from the browser address bar
+3. Verify the page loads and has content (not 404)
+4. Only include URLs you have personally verified work
 
 Topics to search:
 - Tariffs (Section 301, 232 measures)
@@ -125,7 +131,7 @@ For each verified item, provide:
 {
   "agency": "ustr|whitehouse|treasury|commerce|bis|doe",
   "title": "exact title from page",
-  "link": "verified working URL",
+  "link": "exact working URL from address bar",
   "date": "YYYY-MM-DD",
   "summary": "1-line summary",
   "type": "tariff|export_control|sanction|rule|notice|fact_sheet"
