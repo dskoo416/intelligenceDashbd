@@ -127,8 +127,9 @@ export default function PolicyUpdatesCard({ theme }) {
   Step 2: Click on an article link
   Step 3: When page loads, copy URL from address bar
   Step 4: Verify page is NOT 404
-  Step 5: Open a new page, paste the url, and check the page says either 404, Not Found or anything like that. If it does, try again.
+  Step 5: Open a new page, paste the url, and check the page says either 404, Not Found, 404 / Page Not Found or anything like that. If it does, try again. The contente and the title you fetch are mostly correct. The way you put link is wrong.
   Step 6: Add to results with exact URL
+  Step 7: Check by opening each url and see if these page leads to 404 or Not found or anything like that. if so fix it.
 
   Return 12-18 articles in this JSON format:
   {
