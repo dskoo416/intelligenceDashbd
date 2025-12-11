@@ -98,51 +98,40 @@ export default function PolicyUpdatesCard({ theme }) {
     setIsLoading(true);
     
     try {
-      const prompt = `You are scraping REAL policy documents from official US government websites. You have web browsing enabled.
+      const prompt = `Find recent US trade/industrial policy updates from official government websites.
 
-ABSOLUTE REQUIREMENTS - NO EXCEPTIONS:
-1. Browse to the actual webpage for EACH item before including it
-2. Verify the page loads and is NOT a 404 error or "page not found"
-3. If you get ANY error loading the page, do NOT include it
-4. Use ONLY URLs from these domains:
-   - whitehouse.gov
-   - ustr.gov
-   - treasury.gov
-   - commerce.gov
-   - bis.doc.gov
-   - energy.gov
-   - sec.gov
-   - ferc.gov
+Search these sites and return ONLY articles that currently exist (no 404 errors):
+- ustr.gov - USTR press releases and notices  
+- whitehouse.gov - fact sheets, executive orders, statements
+- treasury.gov - press releases, sanctions announcements
+- commerce.gov - ITA and BIS notices
+- bis.doc.gov - export control rules
+- energy.gov - battery, EV, critical minerals policy
 
-STRICT PROCESS FOR EACH ITEM:
-Step 1: Search for recent policy updates on the official site
-Step 2: Click the link and verify the page loads successfully
-Step 3: If page loads: Copy EXACT title, URL, and date from that page
-Step 4: If page is 404 or error: Skip it completely, do NOT include
+VERIFICATION PROCESS:
+1. Search each site for recent policy updates (last 90 days)
+2. For EACH result, click the link to verify it loads
+3. If page returns 404 or error, DO NOT include it
+4. Only include links you have verified work
 
-Find recent policy measures (last 60 days) about:
-- Tariffs, duties, Section 301, Section 232
-- Export controls, entity list
-- Sanctions, trade restrictions
-- Anti-dumping, countervailing duties
-- Industries: batteries, EVs, steel, aluminum, lithium, rare earths
+Topics to search:
+- Tariffs (Section 301, 232 measures)
+- Export controls, Entity List additions
+- Sanctions, OFAC designations  
+- Anti-dumping/countervailing duties
+- Critical industries: batteries, EVs, semiconductors, steel, aluminum, rare earths
 
-JSON format:
+For each verified item, provide:
 {
-  "updates": [
-    {
-      "agency": "ustr",
-      "title": "exact title from working page",
-      "link": "https://exact-url-that-loads-successfully",
-      "date": "YYYY-MM-DD",
-      "summary": "brief description",
-      "type": "tariff"
-    }
-  ]
+  "agency": "ustr|whitehouse|treasury|commerce|bis|doe",
+  "title": "exact title from page",
+  "link": "verified working URL",
+  "date": "YYYY-MM-DD",
+  "summary": "1-line summary",
+  "type": "tariff|export_control|sanction|rule|notice|fact_sheet"
 }
 
-CRITICAL: Only return items where you successfully loaded the URL and verified it's not 404.
-Return 10-15 VERIFIED working links only. No broken links.`;
+Return 12-18 working links. Prioritize recent, high-impact measures.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
