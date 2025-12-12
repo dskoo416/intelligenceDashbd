@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend, Treemap } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { extractKeywordsFromArticles } from '@/components/utils/keywordExtraction';
 
 const TreemapView = ({ data, onItemClick, colors, isDark, isPastel }) => {
   const treeData = [{
@@ -263,7 +264,6 @@ export default function KeywordHeatmapCard({ theme }) {
 
   const analyzeKeywords = async () => {
     setIsLoading(true);
-    const keywordCounts = {};
     const allArticles = [];
 
     const sourcesToAnalyze = selectedSector
@@ -276,24 +276,19 @@ export default function KeywordHeatmapCard({ theme }) {
       
       articles.forEach(article => {
         allArticles.push({ ...article, source: source.name, sector: sector?.name });
-        
-        const text = `${article.title} ${article.description}`.toLowerCase();
-        const words = text.match(/\b[a-z]{4,}\b/g) || [];
-        
-        words.forEach(word => {
-          if (!excludeWords.includes(word)) {
-            if (includeWords.length === 0 || includeWords.some(inc => word.includes(inc))) {
-              keywordCounts[word] = (keywordCounts[word] || 0) + 1;
-            }
-          }
-        });
       });
     }
 
-    const sortedKeywords = Object.entries(keywordCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 30)
-      .map(([word, count]) => ({ word, count, articles: allArticles }));
+    // Use deterministic keyword extraction
+    const keywords = extractKeywordsFromArticles(allArticles, {
+      topN: 30,
+      sectorName: selectedSector?.name,
+      strictSectorTerms: false,
+      includeWords,
+      excludeWords
+    });
+
+    const sortedKeywords = keywords.map(kw => ({ ...kw, articles: allArticles }));
 
     setKeywordData(sortedKeywords);
     localStorage.setItem(`keyword_heatmap_${selectedSector?.id || 'all'}`, JSON.stringify(sortedKeywords));

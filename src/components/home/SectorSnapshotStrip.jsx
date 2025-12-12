@@ -59,6 +59,7 @@ export default function SectorSnapshotStrip({ theme }) {
     setIsLoading(true);
     const newSnapshots = [];
 
+    // Generate snapshots for ALL sectors, not just first 3
     for (const sector of sectors) {
       const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
       let articles = [];
