@@ -291,7 +291,7 @@ export default function SettingsModal({
     </>
   );
 
-  const SectionHeader = ({ children }) => (
+  const SectionHeader = ({ children, extra }) => (
     <div className="flex items-center gap-2 mb-3 mt-4">
       <div className={cn("h-[1px] w-1",
         isPastel ? "bg-[#9B8B6B]" : "bg-orange-500")} />
@@ -301,6 +301,7 @@ export default function SettingsModal({
       <div className={cn("h-[1px] flex-1",
         isPastel ? "border-t border-[#4A4D6C]" :
         isDark ? "bg-neutral-800" : "bg-gray-200")} />
+      {extra}
     </div>
   );
 
@@ -782,9 +783,8 @@ export default function SettingsModal({
                 )}
               </div>
 
-              <SectionHeader>
-                EXISTING RSS SOURCES
-                <div className="flex gap-2 ml-auto">
+              <SectionHeader extra={
+                <div className="flex gap-2 ml-2">
                   <select
                     value={selectedSectorForRSS?.id || 'all'}
                     onChange={(e) => setSelectedSectorForRSS(e.target.value === 'all' ? null : sectors.find(s => s.id === e.target.value))}
@@ -801,14 +801,14 @@ export default function SettingsModal({
                     onClick={removeDuplicateRSS} 
                     size="sm" 
                     variant="ghost"
-                    className={cn("text-[9px] h-5 ml-auto",
+                    className={cn("text-[9px] h-5",
                       isPastel ? "text-[#9B9EBC] hover:text-white" :
                       "text-neutral-500 hover:text-white")}
                   >
                     REMOVE DUPLICATES
                   </Button>
                 </div>
-              </SectionHeader>
+              }>EXISTING RSS SOURCES</SectionHeader>
               <div className="space-y-1">
                 {rssSources.length === 0 ? (
                   <p className={cn("text-[10px] py-4 text-center",
