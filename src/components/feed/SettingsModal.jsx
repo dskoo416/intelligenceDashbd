@@ -28,7 +28,7 @@ export default function SettingsModal({
   onReorderCollections,
   initialTab = 'general'
 }) {
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState('general');
   const [editingSector, setEditingSector] = useState(null);
   const [newSector, setNewSector] = useState({ name: '', keywords: [], subsectors: [] });
   const [newKeyword, setNewKeyword] = useState('');
@@ -49,8 +49,10 @@ export default function SettingsModal({
   }, [settings]);
 
   useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
+    if (isOpen && !activeTab) {
+      setActiveTab('general');
+    }
+  }, [isOpen]);
 
   const handleAddKeyword = (e) => {
     if (e.key === 'Enter' && newKeyword.trim()) {
@@ -688,32 +690,48 @@ export default function SettingsModal({
                 <div>
                   <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">SOURCE NAME</Label>
                   <Input
-                    value={newRSSSource.name}
-                    onChange={(e) => setNewRSSSource({ ...newRSSSource, name: e.target.value })}
+                    value={editingRSS ? editingRSS.name : newRSSSource.name}
+                    onChange={(e) => editingRSS 
+                      ? setEditingRSS({ ...editingRSS, name: e.target.value })
+                      : setNewRSSSource({ ...newRSSSource, name: e.target.value })
+                    }
                     placeholder="e.g., Reuters"
-                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
+                    className={cn("mt-1 text-[11px] h-7",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      "bg-[#0D0D0D] border-neutral-700 text-white")}
                   />
                 </div>
                 <div>
                   <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">RSS FEED URL</Label>
                   <Input
-                    value={newRSSSource.url}
-                    onChange={(e) => setNewRSSSource({ ...newRSSSource, url: e.target.value })}
+                    value={editingRSS ? editingRSS.url : newRSSSource.url}
+                    onChange={(e) => editingRSS
+                      ? setEditingRSS({ ...editingRSS, url: e.target.value })
+                      : setNewRSSSource({ ...newRSSSource, url: e.target.value })
+                    }
                     placeholder="https://example.com/rss"
-                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
+                    className={cn("mt-1 text-[11px] h-7",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      "bg-[#0D0D0D] border-neutral-700 text-white")}
                   />
                 </div>
                 <div>
-                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">SECTOR</Label>
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">LEVEL 1</Label>
                   <select
-                    value={newRSSSource.sector_id}
+                    value={editingRSS ? editingRSS.sector_id : newRSSSource.sector_id}
                     onChange={(e) => {
-                      setNewRSSSource({ ...newRSSSource, sector_id: e.target.value, subsector: '', subsubsector: '' });
-                      setSelectedSectorForRSS(sectors.find(s => s.id === e.target.value));
+                      if (editingRSS) {
+                        setEditingRSS({ ...editingRSS, sector_id: e.target.value });
+                      } else {
+                        setNewRSSSource({ ...newRSSSource, sector_id: e.target.value, subsector: '', subsubsector: '' });
+                        setSelectedSectorForRSS(sectors.find(s => s.id === e.target.value));
+                      }
                     }}
-                    className="mt-1 w-full bg-[#0D0D0D] border border-neutral-700 text-white text-[11px] px-2 py-1"
+                    className={cn("mt-1 w-full text-[11px] px-2 py-1",
+                      isPastel ? "bg-[#2B2D42] border border-[#4A4D6C] text-white" :
+                      "bg-[#0D0D0D] border border-neutral-700 text-white")}
                   >
-                    <option value="">SELECT SECTOR</option>
+                    <option value="">SELECT LEVEL 1</option>
                     {sectors.map((sector) => (
                       <option key={sector.id} value={sector.id}>
                         {sector.name}
@@ -721,9 +739,32 @@ export default function SettingsModal({
                     ))}
                   </select>
                 </div>
-                <Button onClick={handleSaveRSSSource} size="sm" className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7">
-                  ADD RSS SOURCE
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={async () => {
+                      if (editingRSS) {
+                        await onUpdateRSSSource(editingRSS.id, editingRSS);
+                        setEditingRSS(null);
+                      } else {
+                        await handleSaveRSSSource();
+                      }
+                    }} 
+                    size="sm" 
+                    className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7"
+                  >
+                    {editingRSS ? 'UPDATE' : 'ADD'} RSS SOURCE
+                  </Button>
+                  {editingRSS && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setEditingRSS(null)} 
+                      className="text-[10px] h-7"
+                    >
+                      CANCEL
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <SectionHeader>BULK ADD RSS SOURCES</SectionHeader>
@@ -759,37 +800,75 @@ export default function SettingsModal({
 
               <SectionHeader>
                 EXISTING RSS SOURCES
-                <Button 
-                  onClick={removeDuplicateRSS} 
-                  size="sm" 
-                  variant="ghost"
-                  className="text-[9px] h-5 text-neutral-500 hover:text-white ml-auto"
-                >
-                  REMOVE DUPLICATES
-                </Button>
+                <div className="flex gap-2 ml-auto">
+                  <select
+                    value={selectedSectorForRSS?.id || 'all'}
+                    onChange={(e) => setSelectedSectorForRSS(e.target.value === 'all' ? null : sectors.find(s => s.id === e.target.value))}
+                    className={cn("text-[9px] h-5 px-2",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      "bg-[#0D0D0D] border-neutral-700 text-white")}
+                  >
+                    <option value="all">ALL LEVELS</option>
+                    {sectors.map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                  <Button 
+                    onClick={removeDuplicateRSS} 
+                    size="sm" 
+                    variant="ghost"
+                    className={cn("text-[9px] h-5 ml-auto",
+                      isPastel ? "text-[#9B9EBC] hover:text-white" :
+                      "text-neutral-500 hover:text-white")}
+                  >
+                    REMOVE DUPLICATES
+                  </Button>
+                </div>
               </SectionHeader>
               <div className="space-y-1">
                 {rssSources.length === 0 ? (
-                  <p className="text-neutral-600 text-[10px] py-4 text-center">NO RSS SOURCES ADDED YET</p>
+                  <p className={cn("text-[10px] py-4 text-center",
+                    isPastel ? "text-[#7B7E9C]" :
+                    "text-neutral-600")}>NO RSS SOURCES ADDED YET</p>
                 ) : (
-                  rssSources.map((source) => {
-                    const sector = sectors.find(s => s.id === source.sector_id);
-                    return (
-                      <div key={source.id} className="py-2 border-b border-neutral-800">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1 min-w-0">
-                            <span className="text-[11px] text-white">{source.name}</span>
-                            <p className="text-[9px] text-neutral-600 truncate">{source.url}</p>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" className="text-red-500 text-[10px] h-6" onClick={() => onDeleteRSSSource(source.id)}>
-                              DELETE
-                            </Button>
+                  rssSources
+                    .filter(source => !selectedSectorForRSS || source.sector_id === selectedSectorForRSS.id)
+                    .map((source) => {
+                      const sector = sectors.find(s => s.id === source.sector_id);
+                      return (
+                        <div key={source.id} className={cn("py-2 border-b",
+                          isPastel ? "border-[#4A4D6C]" :
+                          "border-neutral-800")}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={cn("text-[11px]",
+                                  isPastel ? "text-white" :
+                                  isDark ? "text-white" : "text-gray-900")}>{source.name}</span>
+                                {sector && (
+                                  <span className={cn("text-[9px]",
+                                    isPastel ? "text-[#9B8B6B]" :
+                                    "text-orange-500")}>({sector.name})</span>
+                                )}
+                              </div>
+                              <p className={cn("text-[9px] truncate",
+                                isPastel ? "text-[#7B7E9C]" :
+                                "text-neutral-600")}>{source.url}</p>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="ghost" onClick={() => setEditingRSS(source)} className={cn("text-[10px] h-6",
+                                isPastel ? "text-[#9B9EBC]" :
+                                "text-neutral-400")}>
+                                EDIT
+                              </Button>
+                              <Button size="sm" variant="ghost" className="text-red-500 text-[10px] h-6" onClick={() => onDeleteRSSSource(source.id)}>
+                                DELETE
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })
                 )}
               </div>
             </div>
