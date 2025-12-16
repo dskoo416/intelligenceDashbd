@@ -21,6 +21,7 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
   const setActiveView = propOnSelectView || (() => {});
   const [collectionsModalOpen, setCollectionsModalOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState(null);
+  const [tempDateFilter, setTempDateFilter] = useState(null);
   const [searchFilter, setSearchFilter] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [viewMode, setViewMode] = useState(
@@ -264,82 +265,110 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label
-                          className={cn(
-                            "text-xs mb-1",
-                            isDark ? "text-neutral-400" : "text-gray-600"
-                          )}
-                        >
-                          From
-                        </Label>
+                        <Label className={cn("text-xs mb-1 block", 
+                          isPastel ? "text-[#D0D2E0]" :
+                          isDark ? "text-neutral-300" : "text-gray-700")}>From</Label>
                         <Input
                           type="date"
-                          value={
-                            dateFilter?.from ? format(dateFilter.from, 'yyyy-MM-dd') : ''
-                          }
+                          value={tempDateFilter?.from ? format(tempDateFilter.from, 'yyyy-MM-dd') : ''}
                           onChange={(e) => {
-                            const newDate = e.target.value
-                              ? new Date(e.target.value)
-                              : null;
-                            setDateFilter(
-                              newDate ? { ...dateFilter, from: newDate } : null
-                            );
+                            const newDate = e.target.value ? new Date(e.target.value) : null;
+                            setTempDateFilter(newDate ? { ...tempDateFilter, from: newDate } : null);
                           }}
-                          className={cn(
-                            "text-xs h-8",
-                            isDark
-                              ? "bg-neutral-900 border-neutral-700 text-white"
-                              : "bg-white"
-                          )}
+                          className={cn("text-xs h-8",
+                            isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                            isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white")}
                         />
                       </div>
                       <div>
-                        <Label
-                          className={cn(
-                            "text-xs mb-1",
-                            isDark ? "text-neutral-400" : "text-gray-600"
-                          )}
-                        >
-                          To
-                        </Label>
+                        <Label className={cn("text-xs mb-1 block", 
+                          isPastel ? "text-[#D0D2E0]" :
+                          isDark ? "text-neutral-300" : "text-gray-700")}>To</Label>
                         <Input
                           type="date"
-                          value={
-                            dateFilter?.to ? format(dateFilter.to, 'yyyy-MM-dd') : ''
-                          }
+                          value={tempDateFilter?.to ? format(tempDateFilter.to, 'yyyy-MM-dd') : ''}
                           onChange={(e) => {
-                            const newDate = e.target.value
-                              ? new Date(e.target.value)
-                              : null;
-                            setDateFilter(
-                              newDate ? { ...dateFilter, to: newDate } : null
-                            );
+                            const newDate = e.target.value ? new Date(e.target.value) : null;
+                            setTempDateFilter(newDate ? { ...tempDateFilter, to: newDate } : null);
                           }}
-                          className={cn(
-                            "text-xs h-8",
-                            isDark
-                              ? "bg-neutral-900 border-neutral-700 text-white"
-                              : "bg-white"
-                          )}
+                          className={cn("text-xs h-8",
+                            isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                            isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white")}
                         />
                       </div>
                     </div>
                     <CalendarComponent
                       mode="range"
-                      selected={dateFilter}
-                      onSelect={setDateFilter}
-                      className={isDark ? "text-white" : ""}
+                      selected={tempDateFilter || dateFilter}
+                      onSelect={setTempDateFilter}
+                      className={cn("rdp-months",
+                        isPastel ? "text-[#E8E9F0]" :
+                        isDark ? "text-white" : "text-gray-900")}
+                      classNames={{
+                        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                        month: "space-y-4",
+                        caption: cn("flex justify-center pt-1 relative items-center",
+                          isPastel ? "text-[#E8E9F0]" :
+                          isDark ? "text-white" : "text-gray-900"),
+                        caption_label: "text-sm font-medium",
+                        nav: "space-x-1 flex items-center",
+                        nav_button: cn("h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100",
+                          isPastel ? "text-[#D0D2E0]" :
+                          isDark ? "text-white" : "text-gray-900"),
+                        table: "w-full border-collapse space-y-1",
+                        head_row: "flex",
+                        head_cell: cn("rounded-md w-9 font-normal text-[0.8rem]",
+                          isPastel ? "text-[#9B9EBC]" :
+                          isDark ? "text-neutral-400" : "text-gray-500"),
+                        row: "flex w-full mt-2",
+                        cell: "text-center text-sm p-0 relative",
+                        day: cn("h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-opacity-10",
+                          isPastel ? "text-[#E8E9F0] hover:bg-white" :
+                          isDark ? "text-white hover:bg-white" : "text-gray-900 hover:bg-gray-100"),
+                        day_selected: cn("text-white font-semibold",
+                          isPastel ? "bg-[#9B8B6B]" :
+                          "bg-orange-500"),
+                        day_today: cn("font-bold",
+                          isPastel ? "text-[#9B8B6B]" :
+                          isDark ? "text-orange-400" : "text-orange-600"),
+                        day_outside: "opacity-50",
+                        day_disabled: "opacity-50",
+                        day_range_middle: cn("aria-selected:bg-opacity-50",
+                          isPastel ? "aria-selected:bg-[#9B8B6B]" :
+                          "aria-selected:bg-orange-200 aria-selected:text-gray-900"),
+                        day_hidden: "invisible"
+                      }}
                     />
-                    {dateFilter && (
-                      <Button
-                        variant="ghost"
+                    <div className="flex gap-2">
+                      {dateFilter && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setDateFilter(null);
+                            setTempDateFilter(null);
+                          }}
+                          className={cn("flex-1 text-xs",
+                            isPastel ? "text-[#D0D2E0] hover:text-white" :
+                            isDark ? "text-neutral-400 hover:text-white" : "")}
+                        >
+                          Clear Filter
+                        </Button>
+                      )}
+                      <Button 
                         size="sm"
-                        onClick={() => setDateFilter(null)}
-                        className="w-full text-xs"
+                        onClick={() => {
+                          if (tempDateFilter) {
+                            setDateFilter(tempDateFilter);
+                          }
+                        }}
+                        className={cn("flex-1 text-xs",
+                          isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B] text-white" :
+                          "bg-orange-600 hover:bg-orange-700 text-white")}
                       >
-                        Clear Filter
+                        Apply
                       </Button>
-                    )}
+                    </div>
                   </div>
                 </PopoverContent>
               </Popover>

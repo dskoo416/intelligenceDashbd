@@ -107,10 +107,22 @@ export default function TickerCard({ theme }) {
   }, [settingsData]);
 
   useEffect(() => {
-    refreshTickers();
-    const interval = setInterval(refreshTickers, 60000);
-    return () => clearInterval(interval);
-  }, [tickerConfig]);
+    const cached = localStorage.getItem('ticker_config');
+    if (cached) {
+      const config = JSON.parse(cached);
+      setTickerConfig(config);
+      setEditingConfig(config);
+      setSelectedTicker(config[0]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tickerConfig.length > 0) {
+      refreshTickers();
+      const interval = setInterval(refreshTickers, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [chartDuration]);
 
   useEffect(() => {
     // Refetch data when duration changes
@@ -180,9 +192,13 @@ export default function TickerCard({ theme }) {
                   isDark ? "text-neutral-600" : "text-gray-500")} />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className={cn("w-80", isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
+            <PopoverContent className={cn("w-80",
+              isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+              isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")} align="end">
               <div className="space-y-2">
-                <h4 className={cn("font-medium text-[10px] uppercase", isDark ? "text-white" : "text-gray-900")}>Tickers</h4>
+                <h4 className={cn("font-medium text-[10px] uppercase",
+                  isPastel ? "text-[#E8E9F0]" :
+                  isDark ? "text-white" : "text-gray-900")}>Tickers</h4>
                 {editingConfig.map((config, idx) => (
                   <div key={idx} className="flex gap-1 items-center">
                     <Input
@@ -192,7 +208,9 @@ export default function TickerCard({ theme }) {
                         newConfig[idx] = { ...newConfig[idx], label: e.target.value };
                         setEditingConfig(newConfig);
                       }}
-                      className={cn("h-6 text-[10px] flex-1", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
+                      className={cn("h-6 text-[10px] flex-1",
+                        isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                        isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
                       placeholder="Label"
                     />
                     <Input
@@ -203,7 +221,9 @@ export default function TickerCard({ theme }) {
                         setEditingConfig(newConfig);
                       }}
                       placeholder="Symbol"
-                      className={cn("h-6 text-[10px] flex-1", isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
+                      className={cn("h-6 text-[10px] flex-1",
+                        isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                        isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
                     />
                     <Button 
                       size="sm" 
@@ -228,8 +248,12 @@ export default function TickerCard({ theme }) {
                 >
                   + Add
                 </Button>
-                <div className="space-y-1 border-t border-neutral-700 pt-2">
-                  <Label className={cn("text-[10px] uppercase", isDark ? "text-neutral-400" : "text-gray-600")}>Duration</Label>
+                <div className={cn("space-y-1 pt-2 border-t",
+                  isPastel ? "border-[#4A4D6C]" :
+                  "border-neutral-700")}>
+                  <Label className={cn("text-[10px] uppercase",
+                    isPastel ? "text-[#A5A8C0]" :
+                    isDark ? "text-neutral-400" : "text-gray-600")}>Duration</Label>
                   <div className="grid grid-cols-5 gap-1">
                     {['1', '7', '30', '365', 'ytd'].map(days => (
                       <button
@@ -244,8 +268,10 @@ export default function TickerCard({ theme }) {
                         className={cn(
                           "text-[9px] uppercase px-1 py-0.5 transition-colors border",
                           chartDuration === days
-                            ? (isDark ? "bg-[#1E1E1E] text-neutral-300 border-neutral-600" : "bg-gray-200 text-gray-900 border-gray-400")
-                            : (isDark ? "bg-[#0D0D0D] text-neutral-600 hover:text-neutral-400 border-neutral-700" : "bg-white text-gray-600 hover:text-gray-900 border-gray-300")
+                            ? (isPastel ? "bg-[#42456C] text-white border-[#5A5D7C]" :
+                               isDark ? "bg-[#1E1E1E] text-neutral-300 border-neutral-600" : "bg-gray-200 text-gray-900 border-gray-400")
+                            : (isPastel ? "bg-[#2B2D42] text-[#9B9EBC] hover:text-white border-[#4A4D6C]" :
+                               isDark ? "bg-[#0D0D0D] text-neutral-600 hover:text-neutral-400 border-neutral-700" : "bg-white text-gray-600 hover:text-gray-900 border-gray-300")
                         )}
                       >
                         {days === 'ytd' ? 'YTD' : `${days}D`}
@@ -255,7 +281,10 @@ export default function TickerCard({ theme }) {
                 </div>
                 <Button 
                   size="sm" 
-                  onClick={() => setTickerConfig(editingConfig)}
+                  onClick={() => {
+                    setTickerConfig(editingConfig);
+                    localStorage.setItem('ticker_config', JSON.stringify(editingConfig));
+                  }}
                   className="w-full h-6 text-[10px]"
                 >
                   Save

@@ -492,7 +492,9 @@ export default function SettingsModal({
               <SectionHeader>{editingSector ? 'EDIT LEVEL 1' : 'ADD NEW LEVEL 1'}</SectionHeader>
               <div className="space-y-3 mb-4">
                 <div>
-                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">NAME</Label>
+                  <Label className={cn("text-[10px] uppercase tracking-wider",
+                    isPastel ? "text-[#A5A8C0]" :
+                    "text-neutral-500")}>NAME</Label>
                   <Input
                     value={currentTarget.name}
                     onChange={(e) => editingSector 
@@ -500,50 +502,33 @@ export default function SettingsModal({
                       : setNewSector({ ...newSector, name: e.target.value })
                     }
                     placeholder="e.g., Advanced Materials"
-                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
+                    className={cn("mt-1 text-[11px] h-7",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
                   />
                 </div>
                 
                 <div>
-                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">LEVEL 2</Label>
-                  <div className="flex gap-1 mt-1">
-                    <Input
-                      value={newSubsector}
-                      onChange={(e) => setNewSubsector(e.target.value)}
-                      placeholder="Add level 2"
-                      className="bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
-                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSubsector(!!editingSector))}
-                    />
-                    <Button size="sm" onClick={() => handleAddSubsector(!!editingSector)} className="bg-neutral-700 hover:bg-neutral-600 h-7 px-2">
-                      <Plus className="w-3 h-3" />
-                    </Button>
-                  </div>
-                  <div className="space-y-1 mt-2">
-                    {(currentTarget.subsectors || []).map((sub, idx) => (
-                      <div key={idx} className="p-2 bg-[#0D0D0D] border border-neutral-800">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-white">{sub.name}</span>
-                          <button onClick={() => handleRemoveSubsector(idx, !!editingSector)} className="text-red-500 hover:text-red-400">
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+
 
                 <div>
-                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">KEYWORDS</Label>
+                  <Label className={cn("text-[10px] uppercase tracking-wider",
+                    isPastel ? "text-[#A5A8C0]" :
+                    "text-neutral-500")}>KEYWORDS</Label>
                   <Input
                     value={newKeyword}
                     onChange={(e) => setNewKeyword(e.target.value)}
                     onKeyDown={handleAddKeyword}
                     placeholder="Press Enter to add"
-                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
+                    className={cn("mt-1 text-[11px] h-7",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
                   />
                   <div className="flex flex-wrap gap-1 mt-2">
                     {(currentTarget.keywords || []).map((kw, idx) => (
-                      <Badge key={idx} className="bg-neutral-800 text-neutral-300 text-[9px]">
+                      <Badge key={idx} className={cn("text-[9px]",
+                        isPastel ? "bg-[#42456C] text-white" :
+                        isDark ? "bg-neutral-800 text-neutral-300" : "bg-gray-200 text-gray-800")}>
                         {kw}
                         <button onClick={() => handleRemoveKeyword(idx, !!editingSector)} className="ml-1">
                           <X className="w-2 h-2" />
