@@ -84,7 +84,20 @@ export default function Layout({ children, currentPageName }) {
   });
 
   const deleteSectorMutation = useMutation({
-    mutationFn: (id) => base44.entities.Sector.delete(id),
+    mutationFn: async (id) => {
+      // Find all child sectors
+      const childSectors = sectors.filter(s => s.parent_id === id);
+      // Delete children first
+      for (const child of childSectors) {
+        const grandChildren = sectors.filter(s => s.parent_id === child.id);
+        for (const grandChild of grandChildren) {
+          await base44.entities.Sector.delete(grandChild.id);
+        }
+        await base44.entities.Sector.delete(child.id);
+      }
+      // Delete the parent
+      return base44.entities.Sector.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sectors'] });
       toast.success('Sector deleted');
