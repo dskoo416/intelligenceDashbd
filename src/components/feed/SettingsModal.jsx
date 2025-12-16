@@ -40,7 +40,8 @@ export default function SettingsModal({
 }) {
   const [activeTab, setActiveTab] = useState('general');
   const [editingSector, setEditingSector] = useState(null);
-  const [newSector, setNewSector] = useState({ name: '', keywords: [], subsectors: [] });
+  const [selectedSector, setSelectedSector] = useState(null);
+  const [newSector, setNewSector] = useState({ name: '', keywords: [] });
   const [newKeyword, setNewKeyword] = useState('');
   const [newSubsector, setNewSubsector] = useState('');
   const [newSubsubsector, setNewSubsubsector] = useState({ subsectorIdx: null, value: '' });
@@ -144,9 +145,14 @@ export default function SettingsModal({
     if (editingSector) {
       await onSaveSector(editingSector);
       setEditingSector(null);
+      setSelectedSector(null);
     } else if (newSector.name) {
-      await onSaveSector(newSector);
-      setNewSector({ name: '', keywords: [], subsectors: [], parent_id: null });
+      const parentId = selectedSector?.id || null;
+      await onSaveSector({ ...newSector, parent_id: parentId });
+      setNewSector({ name: '', keywords: [] });
+      if (parentId) {
+        setExpandedNodes(prev => ({ ...prev, [parentId]: true }));
+      }
     }
   };
 
@@ -181,45 +187,46 @@ export default function SettingsModal({
     const children = buildTree(sector.id);
     const hasChildren = children.length > 0;
     const isExpanded = expandedNodes[sector.id] !== false;
-    const indentClass = depth > 0 ? `ml-${depth * 4}` : "";
+    const isSelected = selectedSector?.id === sector.id || editingSector?.id === sector.id;
     
     return (
       <React.Fragment key={sector.id}>
         <div 
           className={cn(
-            "flex items-center justify-between py-1.5 border-b cursor-pointer hover:bg-opacity-10 transition-colors",
-            isPastel ? "border-[#4A4D6C] hover:bg-white" : "border-neutral-800 hover:bg-white",
-            editingSector?.id === sector.id && (isPastel ? "bg-[#4A4D6C]" : "bg-neutral-800")
+            "flex items-center gap-1.5 py-1.5 border-b cursor-pointer transition-colors",
+            isPastel ? "border-[#4A4D6C] hover:bg-[#4A4D6C]" : "border-neutral-800 hover:bg-neutral-800",
+            isSelected && (isPastel ? "bg-[#4A4D6C]" : "bg-neutral-800")
           )}
-          onClick={() => setEditingSector(sector)}
+          onClick={() => {
+            setSelectedSector(sector);
+            setEditingSector(sector);
+          }}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
-          <div className="flex items-center gap-1.5 flex-1">
-            {hasChildren ? (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleNode(sector.id);
-                }}
-                className={cn("p-0.5 transition-transform", isExpanded && "rotate-90")}
-              >
-                <ChevronRight className={cn("w-3 h-3", 
-                  isPastel ? "text-[#7B7E9C]" : "text-neutral-500")} />
-              </button>
-            ) : (
-              <div className="w-4" />
-            )}
-            <span className={cn("text-[11px]",
-              isPastel ? "text-[#E8E9F0]" : "text-white")}>
-              {sector.name}
+          {hasChildren ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleNode(sector.id);
+              }}
+              className={cn("p-0.5 transition-transform", isExpanded && "rotate-90")}
+            >
+              <ChevronRight className={cn("w-3 h-3", 
+                isPastel ? "text-[#7B7E9C]" : "text-neutral-500")} />
+            </button>
+          ) : (
+            <div className="w-4" />
+          )}
+          <span className={cn("text-[11px] flex-1",
+            isPastel ? "text-[#E8E9F0]" : "text-white")}>
+            {sector.name}
+          </span>
+          {sector.keywords && sector.keywords.length > 0 && (
+            <span className={cn("text-[9px]", 
+              isPastel ? "text-[#7B7E9C]" : "text-neutral-600")}>
+              ({sector.keywords.length})
             </span>
-            {sector.keywords && sector.keywords.length > 0 && (
-              <span className={cn("text-[9px]", 
-                isPastel ? "text-[#7B7E9C]" : "text-neutral-600")}>
-                ({sector.keywords.length} keywords)
-              </span>
-            )}
-          </div>
+          )}
         </div>
         {hasChildren && isExpanded && children.map(child => renderTreeNode(child, depth + 1))}
       </React.Fragment>
@@ -589,115 +596,174 @@ export default function SettingsModal({
           )}
 
           {activeTab === 'levels' && (
-            <div className="h-full flex flex-col">
-              <SectionHeader>{editingSector ? 'EDIT LEVEL' : 'ADD NEW LEVEL'}</SectionHeader>
-              <div className={cn("space-y-3 mb-4 p-3 border",
-                isPastel ? "bg-[#32354C] border-[#4A4D6C]" : "bg-[#0A0A0A] border-neutral-800")}>
-                <div>
-                  <Label className={cn("text-[10px] uppercase tracking-wider",
-                    isPastel ? "text-[#A5A8C0]" :
-                    "text-neutral-500")}>NAME</Label>
-                  <Input
-                    value={currentTarget.name}
-                    onChange={(e) => editingSector 
-                      ? setEditingSector({ ...editingSector, name: e.target.value })
-                      : setNewSector({ ...newSector, name: e.target.value })
-                    }
-                    placeholder="e.g., Advanced Materials"
-                    className={cn("mt-1 text-[11px] h-7",
-                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
-                      isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
-                  />
-                </div>
-
-                <div>
-                  <Label className={cn("text-[10px] uppercase tracking-wider",
-                    isPastel ? "text-[#A5A8C0]" :
-                    "text-neutral-500")}>PARENT LEVEL</Label>
-                  <select
-                    value={currentTarget.parent_id || ''}
-                    onChange={(e) => editingSector
-                      ? setEditingSector({ ...editingSector, parent_id: e.target.value || null })
-                      : setNewSector({ ...newSector, parent_id: e.target.value || null })
-                    }
-                    className={cn("mt-1 w-full text-[11px] px-2 py-1 border",
-                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
-                      isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300")}
+            <div className="h-full flex gap-3">
+              {/* Left side: Hierarchy Tree */}
+              <div className="flex-1 flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className={cn("text-[10px] font-bold uppercase tracking-widest",
+                    isPastel ? "text-[#A5A8C0]" : "text-neutral-400")}>
+                    HIERARCHY TREE
+                  </h3>
+                  <Button 
+                    size="sm" 
+                    onClick={() => {
+                      setNewSector({ name: '', keywords: [] });
+                      setEditingSector(null);
+                    }}
+                    className={cn("text-white text-[9px] h-6 px-2",
+                      isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}
                   >
-                    <option value="">TOP LEVEL</option>
-                    {sectors.filter(s => !editingSector || s.id !== editingSector.id).map(s => {
-                      const parent = sectors.find(p => p.id === s.parent_id);
-                      const prefix = parent ? "  └─ " : "";
-                      return (
-                        <option key={s.id} value={s.id}>{prefix}{s.name}</option>
-                      );
-                    })}
-                  </select>
+                    <Plus className="w-3 h-3 mr-1" />
+                    ADD {selectedSector ? 'CHILD' : 'TOP'} LEVEL
+                  </Button>
                 </div>
-
-                <div>
-                  <Label className={cn("text-[10px] uppercase tracking-wider",
-                    isPastel ? "text-[#A5A8C0]" :
-                    "text-neutral-500")}>KEYWORDS</Label>
-                  <Input
-                    value={newKeyword}
-                    onChange={(e) => setNewKeyword(e.target.value)}
-                    onKeyDown={handleAddKeyword}
-                    placeholder="Press Enter to add"
-                    className={cn("mt-1 text-[11px] h-7",
-                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
-                      isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
-                  />
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {(currentTarget.keywords || []).map((kw, idx) => (
-                      <Badge key={idx} className={cn("text-[9px]",
-                        isPastel ? "bg-[#9B8B6B] text-white" :
-                        isDark ? "bg-neutral-800 text-neutral-300" : "bg-gray-200 text-gray-800")}>
-                        {kw}
-                        <button onClick={() => handleRemoveKeyword(idx, !!editingSector)} className="ml-1">
-                          <X className="w-2 h-2" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex gap-2 justify-between">
-                  <div className="flex gap-2">
-                    <Button onClick={handleSaveSector} size="sm" className={cn("text-white text-[10px] h-7",
-                      isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}>
-                      {editingSector ? 'UPDATE' : 'ADD'} LEVEL
-                    </Button>
-                    {editingSector && (
-                      <Button variant="ghost" size="sm" onClick={() => setEditingSector(null)} className="text-[10px] h-7">
-                        CANCEL
-                      </Button>
-                    )}
-                  </div>
-                  {editingSector && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleDeleteClick(editingSector)}
-                      className="text-red-500 hover:text-red-600 text-[10px] h-7"
-                    >
-                      DELETE LEVEL
-                    </Button>
+                <div className={cn("flex-1 overflow-y-auto border",
+                  isPastel ? "bg-[#32354C] border-[#4A4D6C]" : "bg-[#0A0A0A] border-neutral-800")}>
+                  {sectors.length === 0 ? (
+                    <div className={cn("p-4 text-center text-[10px]",
+                      isPastel ? "text-[#7B7E9C]" : "text-neutral-600")}>
+                      No levels created yet. Click "Add Top Level" to start.
+                    </div>
+                  ) : (
+                    buildTree().map(sector => renderTreeNode(sector))
                   )}
                 </div>
               </div>
 
-              <SectionHeader>HIERARCHY TREE</SectionHeader>
-              <div className={cn("flex-1 overflow-y-auto border",
-                isPastel ? "bg-[#32354C] border-[#4A4D6C]" : "bg-[#0A0A0A] border-neutral-800")}>
-                {sectors.length === 0 ? (
-                  <div className={cn("p-4 text-center text-[10px]",
-                    isPastel ? "text-[#7B7E9C]" : "text-neutral-600")}>
-                    No levels created yet. Add your first level above.
-                  </div>
-                ) : (
-                  buildTree().map(sector => renderTreeNode(sector))
-                )}
+              {/* Right side: Editor Panel */}
+              <div className="w-80 flex flex-col">
+                <h3 className={cn("text-[10px] font-bold uppercase tracking-widest mb-2",
+                  isPastel ? "text-[#A5A8C0]" : "text-neutral-400")}>
+                  {editingSector ? 'EDIT LEVEL' : 'ADD NEW LEVEL'}
+                </h3>
+                <div className={cn("flex-1 space-y-3 p-3 border",
+                  isPastel ? "bg-[#32354C] border-[#4A4D6C]" : "bg-[#0A0A0A] border-neutral-800")}>
+                  {editingSector || !selectedSector ? (
+                    <>
+                      {selectedSector && !editingSector && (
+                        <div className={cn("text-[10px] p-2 border-l-2 mb-3",
+                          isPastel ? "border-[#9B8B6B] text-[#9B9EBC]" : "border-orange-500 text-neutral-400")}>
+                          Adding child level under: <strong className={cn(
+                            isPastel ? "text-[#E8E9F0]" : "text-white"
+                          )}>{selectedSector.name}</strong>
+                        </div>
+                      )}
+
+                      <div>
+                        <Label className={cn("text-[10px] uppercase tracking-wider",
+                          isPastel ? "text-[#A5A8C0]" : "text-neutral-500")}>NAME</Label>
+                        <Input
+                          value={currentTarget.name}
+                          onChange={(e) => editingSector 
+                            ? setEditingSector({ ...editingSector, name: e.target.value })
+                            : setNewSector({ ...newSector, name: e.target.value })
+                          }
+                          placeholder="e.g., Advanced Materials"
+                          className={cn("mt-1 text-[11px] h-7",
+                            isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
+                            isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
+                        />
+                      </div>
+
+                      {editingSector && (
+                        <div>
+                          <Label className={cn("text-[10px] uppercase tracking-wider",
+                            isPastel ? "text-[#A5A8C0]" : "text-neutral-500")}>MOVE TO PARENT</Label>
+                          <select
+                            value={editingSector.parent_id || ''}
+                            onChange={(e) => setEditingSector({ ...editingSector, parent_id: e.target.value || null })}
+                            className={cn("mt-1 w-full text-[11px] px-2 py-1 border",
+                              isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                              isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300")}
+                          >
+                            <option value="">TOP LEVEL</option>
+                            {sectors
+                              .filter(s => s.id !== editingSector.id)
+                              .map(s => {
+                                let depth = 0;
+                                let current = s;
+                                while (current.parent_id) {
+                                  depth++;
+                                  current = sectors.find(p => p.id === current.parent_id) || { parent_id: null };
+                                }
+                                const prefix = "  ".repeat(depth) + (depth > 0 ? "└─ " : "");
+                                return (
+                                  <option key={s.id} value={s.id}>{prefix}{s.name}</option>
+                                );
+                              })}
+                          </select>
+                        </div>
+                      )}
+
+                      <div>
+                        <Label className={cn("text-[10px] uppercase tracking-wider",
+                          isPastel ? "text-[#A5A8C0]" : "text-neutral-500")}>KEYWORDS</Label>
+                        <Input
+                          value={newKeyword}
+                          onChange={(e) => setNewKeyword(e.target.value)}
+                          onKeyDown={handleAddKeyword}
+                          placeholder="Press Enter to add"
+                          className={cn("mt-1 text-[11px] h-7",
+                            isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
+                            isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
+                        />
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {(currentTarget.keywords || []).map((kw, idx) => (
+                            <Badge key={idx} className={cn("text-[9px]",
+                              isPastel ? "bg-[#9B8B6B] text-white" :
+                              isDark ? "bg-neutral-800 text-neutral-300" : "bg-gray-200 text-gray-800")}>
+                              {kw}
+                              <button onClick={() => handleRemoveKeyword(idx, !!editingSector)} className="ml-1">
+                                <X className="w-2 h-2" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2 pt-2">
+                        <Button 
+                          onClick={handleSaveSector} 
+                          size="sm" 
+                          disabled={!currentTarget.name}
+                          className={cn("text-white text-[10px] h-7",
+                            isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}
+                        >
+                          {editingSector ? 'UPDATE LEVEL' : 'ADD LEVEL'}
+                        </Button>
+                        {editingSector && (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setEditingSector(null);
+                                setSelectedSector(null);
+                              }}
+                              className={cn("text-[10px] h-7",
+                                isPastel ? "border-[#4A4D6C] text-[#D0D2E0]" : "")}
+                            >
+                              CANCEL
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleDeleteClick(editingSector)}
+                              className="text-red-500 hover:text-red-600 hover:bg-red-500/10 text-[10px] h-7"
+                            >
+                              DELETE LEVEL
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className={cn("text-[10px] text-center py-8",
+                      isPastel ? "text-[#7B7E9C]" : "text-neutral-600")}>
+                      Select a level from the tree to edit, or click "Add Level" to create a new one.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
