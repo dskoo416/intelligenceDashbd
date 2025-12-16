@@ -701,20 +701,23 @@ export default function SettingsModal({
                   />
                 </div>
                 <div>
-                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">LEVEL 1</Label>
+                  <Label className={cn("text-[10px] uppercase tracking-wider",
+                    isPastel ? "text-[#A5A8C0]" : "text-neutral-500")}>LEVEL 1</Label>
                   <select
                     value={editingRSS ? editingRSS.sector_id : newRSSSource.sector_id}
                     onChange={(e) => {
+                      const sectorId = e.target.value;
                       if (editingRSS) {
-                        setEditingRSS({ ...editingRSS, sector_id: e.target.value });
+                        setEditingRSS({ ...editingRSS, sector_id: sectorId });
+                        setSelectedSectorForRSS(sectors.find(s => s.id === sectorId));
                       } else {
-                        setNewRSSSource({ ...newRSSSource, sector_id: e.target.value, subsector: '', subsubsector: '' });
-                        setSelectedSectorForRSS(sectors.find(s => s.id === e.target.value));
+                        setNewRSSSource({ ...newRSSSource, sector_id: sectorId, subsector: '', subsubsector: '' });
+                        setSelectedSectorForRSS(sectors.find(s => s.id === sectorId));
                       }
                     }}
-                    className={cn("mt-1 w-full text-[11px] px-2 py-1",
-                      isPastel ? "bg-[#2B2D42] border border-[#4A4D6C] text-white" :
-                      "bg-[#0D0D0D] border border-neutral-700 text-white")}
+                    className={cn("mt-1 w-full text-[11px] px-2 py-1 border",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      "bg-[#0D0D0D] border-neutral-700 text-white")}
                   >
                     <option value="">SELECT LEVEL 1</option>
                     {sectors.map((sector) => (
@@ -783,32 +786,31 @@ export default function SettingsModal({
                 )}
               </div>
 
-              <SectionHeader extra={
-                <div className="flex gap-2 ml-2">
-                  <select
-                    value={selectedSectorForRSS?.id || 'all'}
-                    onChange={(e) => setSelectedSectorForRSS(e.target.value === 'all' ? null : sectors.find(s => s.id === e.target.value))}
-                    className={cn("text-[9px] h-5 px-2",
-                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
-                      "bg-[#0D0D0D] border-neutral-700 text-white")}
-                  >
-                    <option value="all">ALL LEVELS</option>
-                    {sectors.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                  <Button 
-                    onClick={removeDuplicateRSS} 
-                    size="sm" 
-                    variant="ghost"
-                    className={cn("text-[9px] h-5",
-                      isPastel ? "text-[#9B9EBC] hover:text-white" :
-                      "text-neutral-500 hover:text-white")}
-                  >
-                    REMOVE DUPLICATES
-                  </Button>
-                </div>
-              }>EXISTING RSS SOURCES</SectionHeader>
+              <SectionHeader>EXISTING RSS SOURCES</SectionHeader>
+              <div className="flex justify-between items-center mb-2">
+                <select
+                  value={selectedSectorForRSS?.id || 'all'}
+                  onChange={(e) => setSelectedSectorForRSS(e.target.value === 'all' ? null : sectors.find(s => s.id === e.target.value))}
+                  className={cn("text-[9px] h-5 px-2",
+                    isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                    "bg-[#0D0D0D] border-neutral-700 text-white")}
+                >
+                  <option value="all">ALL LEVELS</option>
+                  {sectors.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <Button 
+                  onClick={removeDuplicateRSS} 
+                  size="sm" 
+                  variant="ghost"
+                  className={cn("text-[9px] h-5",
+                    isPastel ? "text-[#9B9EBC] hover:text-white" :
+                    "text-neutral-500 hover:text-white")}
+                >
+                  REMOVE DUPLICATES
+                </Button>
+              </div>
               <div className="space-y-1">
                 {rssSources.length === 0 ? (
                   <p className={cn("text-[10px] py-4 text-center",

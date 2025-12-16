@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { cn } from "@/lib/utils";
 import { RefreshCw, ExternalLink, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ export default function PolicyUpdatesCard({ theme }) {
   const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const contentRef = React.useRef(null);
+  const queryClient = useQueryClient();
 
   const { data: settingsData = [] } = useQuery({
     queryKey: ['appSettings'],
@@ -106,7 +107,7 @@ You often return URLs that go to 404 or Not Found pages.
 You must fix that.
 
 TASK SUMMARY
-Build a JSON object of 12–18 updates with:
+Build a JSON object of 20-30 updates with:
 - agency
 - title
 - link
@@ -123,13 +124,13 @@ Only use these as starting points:
 - https://www.bis.gov/press-room
 - https://www.energy.gov/newsroom
 
-TOPICS (last 90 days)
+TOPICS (last 60 days)
 Include only articles that clearly match at least one of:
 - Tariffs, Section 301, Section 232
 - Export controls, Entity List
 - Sanctions, trade restrictions
 - Anti-dumping or countervailing duties
-- Batteries, EVs, semiconductors, steel, aluminum, rare earths
+- Batteries, EVs, semiconductors, steel, aluminum, rare earths, critical minerals
 
 AGENCY IDS AND DOMAINS
 Every article must use one of these agency ids and matching domains:
@@ -192,9 +193,10 @@ For each update:
   "fact_sheet"
 
 FILTERING
-- Only include articles from the last 90 days.
+- Only include articles from the last 60 days.
 - Every article must match at least one of the target topics.
 - If you are uncertain about relevance, skip the article.
+- Prioritize recent articles (last 30 days) over older ones.
 
 OUTPUT FORMAT
 Return ONLY this JSON structure, with no markdown and no extra text:
