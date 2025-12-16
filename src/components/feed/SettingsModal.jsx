@@ -322,7 +322,7 @@ export default function SettingsModal({
           <div className="flex gap-6">
             {[
               { id: 'general', label: 'GENERAL' },
-              { id: 'sectors', label: 'SECTORS' },
+              { id: 'levels', label: 'LEVELS' },
               { id: 'collections', label: 'COLLECTIONS' },
               { id: 'rss', label: 'RSS SOURCES' },
               { id: 'ai', label: 'AI CONFIG' },
@@ -369,20 +369,7 @@ export default function SettingsModal({
                 />
               </SettingRow>
 
-              <SettingRow label="TEXT SIZE">
-                <SegmentedControl
-                  options={[
-                    { value: 'small', label: 'S' },
-                    { value: 'medium', label: 'M' },
-                    { value: 'large', label: 'L' }
-                  ]}
-                  value={localStorage.getItem('textSize') || 'medium'}
-                  onChange={(value) => {
-                    localStorage.setItem('textSize', value);
-                    window.location.reload();
-                  }}
-                />
-              </SettingRow>
+
 
               <SectionHeader>AUTO-REFRESH</SectionHeader>
               <SettingRow label="AUTO-RELOAD GIST">
@@ -447,7 +434,7 @@ export default function SettingsModal({
               </SettingRow>
 
               {localSettings?.clock_display !== 'none' && (
-                <SettingRow label={localSettings?.clock_display === 'dual' ? 'PRIMARY TZ' : 'TIMEZONE'}>
+                <SettingRow label={localSettings?.clock_display === 'dual' ? 'PRIMARY TIME ZONE' : 'TIME ZONE'}>
                   <select
                     value={localSettings?.clock_timezone_1 || 'America/New_York'}
                     onChange={(e) => {
@@ -472,7 +459,7 @@ export default function SettingsModal({
               )}
 
               {localSettings?.clock_display === 'dual' && (
-                <SettingRow label="SECONDARY TZ" divider={false}>
+                <SettingRow label="SECONDARY TIME ZONE" divider={false}>
                   <select
                     value={localSettings?.clock_timezone_2 || 'Asia/Seoul'}
                     onChange={(e) => {
@@ -498,9 +485,9 @@ export default function SettingsModal({
             </div>
           )}
 
-          {activeTab === 'sectors' && (
+          {activeTab === 'levels' && (
             <div>
-              <SectionHeader>{editingSector ? 'EDIT SECTOR' : 'ADD NEW SECTOR'}</SectionHeader>
+              <SectionHeader>{editingSector ? 'EDIT LEVEL 1' : 'ADD NEW LEVEL 1'}</SectionHeader>
               <div className="space-y-3 mb-4">
                 <div>
                   <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">NAME</Label>
@@ -516,12 +503,12 @@ export default function SettingsModal({
                 </div>
                 
                 <div>
-                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">SUBSECTORS</Label>
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">LEVEL 2</Label>
                   <div className="flex gap-1 mt-1">
                     <Input
                       value={newSubsector}
                       onChange={(e) => setNewSubsector(e.target.value)}
-                      placeholder="Add subsector"
+                      placeholder="Add level 2"
                       className="bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSubsector(!!editingSector))}
                     />
@@ -566,7 +553,7 @@ export default function SettingsModal({
 
                 <div className="flex gap-2">
                   <Button onClick={handleSaveSector} size="sm" className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7">
-                    {editingSector ? 'UPDATE' : 'ADD'} SECTOR
+                    {editingSector ? 'UPDATE' : 'ADD'} LEVEL 1
                   </Button>
                   {editingSector && (
                     <Button variant="ghost" size="sm" onClick={() => setEditingSector(null)} className="text-[10px] h-7">
@@ -576,7 +563,7 @@ export default function SettingsModal({
                 </div>
               </div>
               
-              <SectionHeader>EXISTING SECTORS</SectionHeader>
+              <SectionHeader>EXISTING LEVELS</SectionHeader>
               <div className="space-y-1">
                 {sectors.map((sector, index) => (
                   <div key={sector.id} className="flex items-center justify-between py-2 border-b border-neutral-800">
@@ -839,7 +826,7 @@ export default function SettingsModal({
               <SectionHeader>DEFAULT INSTRUCTIONS</SectionHeader>
               <div className="space-y-3">
                 <div>
-                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">GIST INSTRUCTIONS</Label>
+                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">SUMMARY INSTRUCTIONS</Label>
                   <Textarea
                     value={localSettings?.default_gist_instructions || ''}
                     onChange={(e) => setLocalSettings({ ...localSettings, default_gist_instructions: e.target.value })}
