@@ -235,7 +235,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     }));
     
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `${instructions}\n\n${keywords ? `Priority keywords: ${keywords}\n\n` : ''}Articles:\n${JSON.stringify(articleData)}\n\nSelect the 3-4 most featured articles and explain why each is important.`,
+      prompt: `${instructions}\n\n${keywords ? `Priority keywords: ${keywords}\n\n` : ''}Articles:\n${JSON.stringify(articleData)}\n\nSelect exactly 12 most featured articles and explain why each is important.`,
       response_json_schema: {
         type: 'object',
         properties: {
@@ -247,7 +247,9 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
                 index: { type: 'number' },
                 reasoning: { type: 'string' }
               }
-            }
+            },
+            minItems: 12,
+            maxItems: 12
           }
         }
       }

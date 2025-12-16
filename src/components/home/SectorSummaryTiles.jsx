@@ -112,15 +112,17 @@ export default function SectorSummaryTiles({ theme }) {
         isPastel ? "border-[#4A4D6C]" :
         isDark ? "border-[#262629]" : "border-gray-300")}>
         <div className="flex items-center gap-2">
-          <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
-            isPastel ? "text-[#A5A8C0]" :
-            isDark ? "text-neutral-500" : "text-gray-700")}>LEVEL 1 SUMMARY</h3>
           {currentSummary && (
-            <span className={cn("text-[9px] uppercase font-semibold",
-              isPastel ? "text-[#9B8B6B]" :
-              isDark ? "text-orange-500" : "text-orange-600")}>
-              {currentSummary.sectorName}
-            </span>
+            <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
+              isPastel ? "text-[#A5A8C0]" :
+              isDark ? "text-neutral-500" : "text-gray-700")}>
+              <span className={cn("font-semibold",
+                isPastel ? "text-[#9B8B6B]" :
+                isDark ? "text-orange-500" : "text-orange-600")}>
+                {currentSummary.sectorName}
+              </span>
+              {" SUMMARY"}
+            </h3>
           )}
         </div>
         <div className="flex items-center gap-1">
