@@ -6,8 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, ChevronUp, ChevronDown } from 'lucide-react';
+import { X, Plus, ChevronUp, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function SettingsModal({ 
   isOpen, 
@@ -43,10 +53,20 @@ export default function SettingsModal({
   const [bulkErrors, setBulkErrors] = useState([]);
   const [bulkSuccess, setBulkSuccess] = useState(null);
   const [editingRSS, setEditingRSS] = useState(null);
+  const [expandedNodes, setExpandedNodes] = useState(() => {
+    const saved = localStorage.getItem('sector_tree_expanded');
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [sectorToDelete, setSectorToDelete] = useState(null);
 
   useEffect(() => {
     setLocalSettings(settings);
   }, [settings]);
+
+  useEffect(() => {
+    localStorage.setItem('sector_tree_expanded', JSON.stringify(expandedNodes));
+  }, [expandedNodes]);
 
   useEffect(() => {
     if (isOpen && !activeTab) {
@@ -126,8 +146,84 @@ export default function SettingsModal({
       setEditingSector(null);
     } else if (newSector.name) {
       await onSaveSector(newSector);
-      setNewSector({ name: '', keywords: [], subsectors: [] });
+      setNewSector({ name: '', keywords: [], subsectors: [], parent_id: null });
     }
+  };
+
+  const toggleNode = (sectorId) => {
+    setExpandedNodes(prev => ({
+      ...prev,
+      [sectorId]: !prev[sectorId]
+    }));
+  };
+
+  const handleDeleteClick = (sector) => {
+    const children = sectors.filter(s => s.parent_id === sector.id);
+    setSectorToDelete({ sector, childCount: children.length });
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (sectorToDelete) {
+      await onDeleteSector(sectorToDelete.sector.id);
+      setDeleteConfirmOpen(false);
+      setSectorToDelete(null);
+    }
+  };
+
+  const buildTree = (parentId = null) => {
+    return sectors
+      .filter(s => s.parent_id === parentId)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  };
+
+  const renderTreeNode = (sector, depth = 0) => {
+    const children = buildTree(sector.id);
+    const hasChildren = children.length > 0;
+    const isExpanded = expandedNodes[sector.id] !== false;
+    const indentClass = depth > 0 ? `ml-${depth * 4}` : "";
+    
+    return (
+      <React.Fragment key={sector.id}>
+        <div 
+          className={cn(
+            "flex items-center justify-between py-1.5 border-b cursor-pointer hover:bg-opacity-10 transition-colors",
+            isPastel ? "border-[#4A4D6C] hover:bg-white" : "border-neutral-800 hover:bg-white",
+            editingSector?.id === sector.id && (isPastel ? "bg-[#4A4D6C]" : "bg-neutral-800")
+          )}
+          onClick={() => setEditingSector(sector)}
+          style={{ paddingLeft: `${depth * 16 + 8}px` }}
+        >
+          <div className="flex items-center gap-1.5 flex-1">
+            {hasChildren ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleNode(sector.id);
+                }}
+                className={cn("p-0.5 transition-transform", isExpanded && "rotate-90")}
+              >
+                <ChevronRight className={cn("w-3 h-3", 
+                  isPastel ? "text-[#7B7E9C]" : "text-neutral-500")} />
+              </button>
+            ) : (
+              <div className="w-4" />
+            )}
+            <span className={cn("text-[11px]",
+              isPastel ? "text-[#E8E9F0]" : "text-white")}>
+              {sector.name}
+            </span>
+            {sector.keywords && sector.keywords.length > 0 && (
+              <span className={cn("text-[9px]", 
+                isPastel ? "text-[#7B7E9C]" : "text-neutral-600")}>
+                ({sector.keywords.length} keywords)
+              </span>
+            )}
+          </div>
+        </div>
+        {hasChildren && isExpanded && children.map(child => renderTreeNode(child, depth + 1))}
+      </React.Fragment>
+    );
   };
 
   const handleSaveRSSSource = async () => {
@@ -493,9 +589,10 @@ export default function SettingsModal({
           )}
 
           {activeTab === 'levels' && (
-            <div>
+            <div className="h-full flex flex-col">
               <SectionHeader>{editingSector ? 'EDIT LEVEL' : 'ADD NEW LEVEL'}</SectionHeader>
-              <div className="space-y-3 mb-4">
+              <div className={cn("space-y-3 mb-4 p-3 border",
+                isPastel ? "bg-[#32354C] border-[#4A4D6C]" : "bg-[#0A0A0A] border-neutral-800")}>
                 <div>
                   <Label className={cn("text-[10px] uppercase tracking-wider",
                     isPastel ? "text-[#A5A8C0]" :
@@ -528,9 +625,13 @@ export default function SettingsModal({
                       isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300")}
                   >
                     <option value="">TOP LEVEL</option>
-                    {sectors.filter(s => !editingSector || s.id !== editingSector.id).map(s => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
+                    {sectors.filter(s => !editingSector || s.id !== editingSector.id).map(s => {
+                      const parent = sectors.find(p => p.id === s.parent_id);
+                      const prefix = parent ? "  └─ " : "";
+                      return (
+                        <option key={s.id} value={s.id}>{prefix}{s.name}</option>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -561,97 +662,89 @@ export default function SettingsModal({
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <Button onClick={handleSaveSector} size="sm" className={cn("text-white text-[10px] h-7",
-                    isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}>
-                    {editingSector ? 'UPDATE' : 'ADD'} LEVEL
-                  </Button>
+                <div className="flex gap-2 justify-between">
+                  <div className="flex gap-2">
+                    <Button onClick={handleSaveSector} size="sm" className={cn("text-white text-[10px] h-7",
+                      isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}>
+                      {editingSector ? 'UPDATE' : 'ADD'} LEVEL
+                    </Button>
+                    {editingSector && (
+                      <Button variant="ghost" size="sm" onClick={() => setEditingSector(null)} className="text-[10px] h-7">
+                        CANCEL
+                      </Button>
+                    )}
+                  </div>
                   {editingSector && (
-                    <Button variant="ghost" size="sm" onClick={() => setEditingSector(null)} className="text-[10px] h-7">
-                      CANCEL
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleDeleteClick(editingSector)}
+                      className="text-red-500 hover:text-red-600 text-[10px] h-7"
+                    >
+                      DELETE LEVEL
                     </Button>
                   )}
                 </div>
               </div>
 
-              <SectionHeader>EXISTING LEVELS</SectionHeader>
-              <div className="space-y-1">
-                {sectors.map((sector, index) => {
-                  const parent = sectors.find(s => s.id === sector.parent_id);
-                  const indentClass = sector.parent_id ? (parent?.parent_id ? "ml-8" : "ml-4") : "";
-                  const canIndent = index > 0;
-                  const canOutdent = sector.parent_id;
-                  const prevSector = index > 0 ? sectors[index - 1] : null;
-
-                  return (
-                    <div key={sector.id} className={cn("flex items-center justify-between py-1.5 border-b",
-                      isPastel ? "border-[#4A4D6C]" : "border-neutral-800")}>
-                      <div className={cn("flex items-center gap-1.5", indentClass)}>
-                        <div className="flex flex-col gap-0 w-4">
-                          <button 
-                            onClick={() => handleMoveUp(index)} 
-                            disabled={index === 0}
-                            className={cn("p-0", 
-                              index === 0 ? (isPastel ? "text-[#4A4D6C]" : "text-neutral-800") : 
-                              (isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white"))}
-                          >
-                            <ChevronUp className="w-2.5 h-2.5" />
-                          </button>
-                          <div className="flex items-center justify-center">
-                            {canOutdent && (
-                              <button 
-                                onClick={() => {
-                                  const grandparent = parent?.parent_id;
-                                  onSaveSector({ ...sector, parent_id: grandparent || null });
-                                }}
-                                className={cn("p-0", isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white")}
-                                title="Outdent"
-                              >
-                                <span className="text-[10px] font-bold">‹</span>
-                              </button>
-                            )}
-                            {canIndent && (
-                              <button 
-                                onClick={() => {
-                                  if (prevSector) {
-                                    onSaveSector({ ...sector, parent_id: prevSector.id });
-                                  }
-                                }}
-                                className={cn("p-0", isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white")}
-                                title="Indent"
-                              >
-                                <span className="text-[10px] font-bold">›</span>
-                              </button>
-                            )}
-                          </div>
-                          <button 
-                            onClick={() => handleMoveDown(index)} 
-                            disabled={index === sectors.length - 1}
-                            className={cn("p-0", 
-                              index === sectors.length - 1 ? (isPastel ? "text-[#4A4D6C]" : "text-neutral-800") : 
-                              (isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white"))}
-                          >
-                            <ChevronDown className="w-2.5 h-2.5" />
-                          </button>
-                        </div>
-                        <span className={cn("text-[11px]",
-                          isPastel ? "text-[#E8E9F0]" : "text-white")}>{sector.name}</span>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => setEditingSector(sector)} className={cn("text-[10px] h-6",
-                          isPastel ? "text-[#9B9EBC]" : "text-neutral-400")}>
-                          EDIT
-                        </Button>
-                        <Button size="sm" variant="ghost" className="text-red-500 text-[10px] h-6" onClick={() => onDeleteSector(sector.id)}>
-                          DELETE
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
+              <SectionHeader>HIERARCHY TREE</SectionHeader>
+              <div className={cn("flex-1 overflow-y-auto border",
+                isPastel ? "bg-[#32354C] border-[#4A4D6C]" : "bg-[#0A0A0A] border-neutral-800")}>
+                {sectors.length === 0 ? (
+                  <div className={cn("p-4 text-center text-[10px]",
+                    isPastel ? "text-[#7B7E9C]" : "text-neutral-600")}>
+                    No levels created yet. Add your first level above.
+                  </div>
+                ) : (
+                  buildTree().map(sector => renderTreeNode(sector))
+                )}
               </div>
             </div>
           )}
+
+          <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+            <AlertDialogContent className={cn(
+              isPastel ? "bg-[#2B2D42] border-[#4A4D6C]" : "bg-[#0A0A0A] border-neutral-800"
+            )}>
+              <AlertDialogHeader>
+                <AlertDialogTitle className={cn(
+                  isPastel ? "text-[#E8E9F0]" : "text-white"
+                )}>
+                  Delete Level?
+                </AlertDialogTitle>
+                <AlertDialogDescription className={cn(
+                  isPastel ? "text-[#9B9EBC]" : "text-neutral-400"
+                )}>
+                  {sectorToDelete && (
+                    <>
+                      Are you sure you want to delete "<strong>{sectorToDelete.sector.name}</strong>"?
+                      {sectorToDelete.childCount > 0 && (
+                        <div className="mt-2 text-red-400 font-medium">
+                          ⚠️ This will permanently delete this level and all {sectorToDelete.childCount} child level(s) beneath it.
+                        </div>
+                      )}
+                      <div className="mt-2">
+                        This action cannot be undone.
+                      </div>
+                    </>
+                  )}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className={cn(
+                  isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-[#D0D2E0]" : "bg-neutral-900 border-neutral-700"
+                )}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={confirmDelete}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           {activeTab === 'collections' && (
             <div>
