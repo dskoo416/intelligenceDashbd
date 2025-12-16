@@ -516,6 +516,27 @@ export default function SettingsModal({
                 <div>
                   <Label className={cn("text-[10px] uppercase tracking-wider",
                     isPastel ? "text-[#A5A8C0]" :
+                    "text-neutral-500")}>PARENT LEVEL</Label>
+                  <select
+                    value={currentTarget.parent_id || ''}
+                    onChange={(e) => editingSector
+                      ? setEditingSector({ ...editingSector, parent_id: e.target.value || null })
+                      : setNewSector({ ...newSector, parent_id: e.target.value || null })
+                    }
+                    className={cn("mt-1 w-full text-[11px] px-2 py-1 border",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300")}
+                  >
+                    <option value="">TOP LEVEL</option>
+                    {sectors.filter(s => !editingSector || s.id !== editingSector.id).map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <Label className={cn("text-[10px] uppercase tracking-wider",
+                    isPastel ? "text-[#A5A8C0]" :
                     "text-neutral-500")}>KEYWORDS</Label>
                   <Input
                     value={newKeyword}
@@ -556,13 +577,16 @@ export default function SettingsModal({
               <SectionHeader>EXISTING LEVELS</SectionHeader>
               <div className="space-y-1">
                 {sectors.map((sector, index) => {
-                  const level = sector.level || 1;
-                  const indentClass = level === 2 ? "ml-6" : level === 3 ? "ml-12" : "";
+                  const parent = sectors.find(s => s.id === sector.parent_id);
+                  const indentClass = sector.parent_id ? (parent?.parent_id ? "ml-12" : "ml-6") : "";
+                  const canIndent = index > 0 && !sector.parent_id;
+                  const prevSector = index > 0 ? sectors[index - 1] : null;
+
                   return (
                     <div key={sector.id} className={cn("flex items-center justify-between py-2 border-b",
                       isPastel ? "border-[#4A4D6C]" : "border-neutral-800")}>
                       <div className={cn("flex items-center gap-2", indentClass)}>
-                        <div className="flex gap-0.5">
+                        <div className="flex flex-col gap-0">
                           <button 
                             onClick={() => handleMoveUp(index)} 
                             disabled={index === 0}
@@ -574,16 +598,17 @@ export default function SettingsModal({
                           </button>
                           <button 
                             onClick={() => {
-                              const newLevel = Math.min(3, (sector.level || 1) + 1);
-                              onSaveSector({ ...sector, level: newLevel });
+                              if (canIndent && prevSector) {
+                                onSaveSector({ ...sector, parent_id: prevSector.id });
+                              }
                             }}
-                            disabled={level >= 3}
+                            disabled={!canIndent}
                             className={cn("p-0.5", 
-                              level >= 3 ? (isPastel ? "text-[#4A4D6C]" : "text-neutral-800") : 
+                              !canIndent ? (isPastel ? "text-[#4A4D6C]" : "text-neutral-800") : 
                               (isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white"))}
-                            title="Indent (increase level)"
+                            title="Indent to become sub-level"
                           >
-                            <span className="text-xs">›</span>
+                            <span className="text-xs font-bold">›</span>
                           </button>
                           <button 
                             onClick={() => handleMoveDown(index)} 
