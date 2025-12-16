@@ -578,46 +578,60 @@ export default function SettingsModal({
               <div className="space-y-1">
                 {sectors.map((sector, index) => {
                   const parent = sectors.find(s => s.id === sector.parent_id);
-                  const indentClass = sector.parent_id ? (parent?.parent_id ? "ml-12" : "ml-6") : "";
-                  const canIndent = index > 0 && !sector.parent_id;
+                  const indentClass = sector.parent_id ? (parent?.parent_id ? "ml-8" : "ml-4") : "";
+                  const canIndent = index > 0;
+                  const canOutdent = sector.parent_id;
                   const prevSector = index > 0 ? sectors[index - 1] : null;
 
                   return (
-                    <div key={sector.id} className={cn("flex items-center justify-between py-2 border-b",
+                    <div key={sector.id} className={cn("flex items-center justify-between py-1.5 border-b",
                       isPastel ? "border-[#4A4D6C]" : "border-neutral-800")}>
-                      <div className={cn("flex items-center gap-2", indentClass)}>
-                        <div className="flex flex-col gap-0">
+                      <div className={cn("flex items-center gap-1.5", indentClass)}>
+                        <div className="flex flex-col gap-0 w-4">
                           <button 
                             onClick={() => handleMoveUp(index)} 
                             disabled={index === 0}
-                            className={cn("p-0.5", 
+                            className={cn("p-0", 
                               index === 0 ? (isPastel ? "text-[#4A4D6C]" : "text-neutral-800") : 
                               (isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white"))}
                           >
-                            <ChevronUp className="w-3 h-3" />
+                            <ChevronUp className="w-2.5 h-2.5" />
                           </button>
-                          <button 
-                            onClick={() => {
-                              if (canIndent && prevSector) {
-                                onSaveSector({ ...sector, parent_id: prevSector.id });
-                              }
-                            }}
-                            disabled={!canIndent}
-                            className={cn("p-0.5", 
-                              !canIndent ? (isPastel ? "text-[#4A4D6C]" : "text-neutral-800") : 
-                              (isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white"))}
-                            title="Indent to become sub-level"
-                          >
-                            <span className="text-xs font-bold">›</span>
-                          </button>
+                          <div className="flex items-center justify-center">
+                            {canOutdent && (
+                              <button 
+                                onClick={() => {
+                                  const grandparent = parent?.parent_id;
+                                  onSaveSector({ ...sector, parent_id: grandparent || null });
+                                }}
+                                className={cn("p-0", isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white")}
+                                title="Outdent"
+                              >
+                                <span className="text-[10px] font-bold">‹</span>
+                              </button>
+                            )}
+                            {canIndent && (
+                              <button 
+                                onClick={() => {
+                                  if (prevSector) {
+                                    onSaveSector({ ...sector, parent_id: prevSector.id });
+                                  }
+                                }}
+                                className={cn("p-0", isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white")}
+                                title="Indent"
+                              >
+                                <span className="text-[10px] font-bold">›</span>
+                              </button>
+                            )}
+                          </div>
                           <button 
                             onClick={() => handleMoveDown(index)} 
                             disabled={index === sectors.length - 1}
-                            className={cn("p-0.5", 
+                            className={cn("p-0", 
                               index === sectors.length - 1 ? (isPastel ? "text-[#4A4D6C]" : "text-neutral-800") : 
                               (isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white"))}
                           >
-                            <ChevronDown className="w-3 h-3" />
+                            <ChevronDown className="w-2.5 h-2.5" />
                           </button>
                         </div>
                         <span className={cn("text-[11px]",
