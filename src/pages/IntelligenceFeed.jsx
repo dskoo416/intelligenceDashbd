@@ -145,6 +145,9 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     }
 
     if (sectorSources.length === 0) {
+      setArticles([]);
+      setGist('');
+      setCriticalArticles([]);
       setIsLoadingArticles(false);
       return;
     }
@@ -184,6 +187,20 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   }, [activeSector, activeSubsector, fetchArticles]);
 
   const generateGist = async () => {
+    if (!activeSector) return;
+    
+    const sectorSources = rssSources.filter(s => 
+      s.sector_id === activeSector.id && 
+      s.is_active !== false &&
+      (!activeSubsector || s.subsector === activeSubsector)
+    );
+
+    if (sectorSources.length === 0) {
+      setGist('');
+      setIsLoadingGist(false);
+      return;
+    }
+
     if (articles.length === 0) return;
     
     setIsLoadingGist(true);
@@ -219,6 +236,20 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   };
 
   const generateCritical = async () => {
+    if (!activeSector) return;
+    
+    const sectorSources = rssSources.filter(s => 
+      s.sector_id === activeSector.id && 
+      s.is_active !== false &&
+      (!activeSubsector || s.subsector === activeSubsector)
+    );
+
+    if (sectorSources.length === 0) {
+      setCriticalArticles([]);
+      setIsLoadingCritical(false);
+      return;
+    }
+
     if (articles.length === 0) return;
     
     setIsLoadingCritical(true);
