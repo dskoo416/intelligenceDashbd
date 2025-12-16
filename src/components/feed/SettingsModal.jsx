@@ -469,7 +469,9 @@ export default function SettingsModal({
                       setLocalSettings(newSettings);
                       onUpdateSettings(newSettings);
                     }}
-                    className="bg-[#0D0D0D] border border-neutral-700 text-white text-[10px] px-2 py-1 uppercase"
+                    className={cn("text-[10px] px-2 py-1 uppercase border",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
                   >
                     <option value="America/New_York">EST (NEW YORK)</option>
                     <option value="America/Chicago">CST (CHICAGO)</option>
@@ -508,9 +510,6 @@ export default function SettingsModal({
                   />
                 </div>
                 
-                <div>
-
-
                 <div>
                   <Label className={cn("text-[10px] uppercase tracking-wider",
                     isPastel ? "text-[#A5A8C0]" :
