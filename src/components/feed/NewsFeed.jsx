@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Plus, Calendar, Search, X, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from "@/lib/utils";
@@ -17,11 +17,28 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
   const [currentPage, setCurrentPage] = useState(1);
   const [tempDateFilter, setTempDateFilter] = useState(null);
   const articlesPerPage = 20;
+  const [cachedArticles, setCachedArticles] = useState([]);
+
+  useEffect(() => {
+    const cached = localStorage.getItem('news_feed_cache');
+    if (cached) {
+      setCachedArticles(JSON.parse(cached));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (articles.length > 0) {
+      localStorage.setItem('news_feed_cache', JSON.stringify(articles));
+      setCachedArticles(articles);
+    }
+  }, [articles]);
+
+  const displayArticles = articles.length > 0 ? articles : cachedArticles;
   
-  const totalPages = Math.ceil(articles.length / articlesPerPage);
+  const totalPages = Math.ceil(displayArticles.length / articlesPerPage);
   const startIndex = (currentPage - 1) * articlesPerPage;
   const endIndex = startIndex + articlesPerPage;
-  const paginatedArticles = articles.slice(startIndex, endIndex);
+  const paginatedArticles = displayArticles.slice(startIndex, endIndex);
 
   return (
     <div className={cn(
@@ -51,7 +68,7 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
             <span className={cn("text-xs", 
               isPastel ? "text-[#9B9EBC]" :
               isDark ? "text-neutral-600" : "text-gray-400")}>
-              {articles.length} articles
+              {displayArticles.length} articles
             </span>
 
             <Popover>
@@ -220,7 +237,7 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
             isPastel ? "text-[#D0D2E0]" :
             isDark ? "text-neutral-400" : "text-gray-500")}>Fetching news...</span>
         </div>
-      ) : articles.length > 0 ? (
+      ) : displayArticles.length > 0 ? (
         <>
           <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
             {paginatedArticles.map((article, idx) => (
