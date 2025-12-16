@@ -179,7 +179,13 @@ export default function SettingsModal({
 
   const buildTree = (parentId = null) => {
     return sectors
-      .filter(s => s.parent_id === parentId)
+      .filter(s => (s.parent_id === parentId) || (parentId === null && !s.parent_id))
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  };
+
+  const getAllRootNodes = () => {
+    return sectors
+      .filter(s => !s.parent_id || s.parent_id === null)
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   };
 
@@ -625,7 +631,7 @@ export default function SettingsModal({
                       No levels created yet. Click "Add Top Level" to start.
                     </div>
                   ) : (
-                    buildTree().map(sector => renderTreeNode(sector))
+                    getAllRootNodes().map(sector => renderTreeNode(sector, 0))
                   )}
                 </div>
               </div>
