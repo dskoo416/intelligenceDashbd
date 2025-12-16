@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { cn } from "@/lib/utils";
-import SectorSnapshotStrip from '@/components/home/SectorSnapshotStrip';
+import SectorSummaryTiles from '@/components/home/SectorSummaryTiles';
 import FeaturedSectorTiles from '@/components/home/FeaturedSectorTiles';
 import PolicyUpdatesCard from '@/components/home/PolicyUpdatesCard';
 import TickerCard from '@/components/home/TickerCard';
@@ -27,9 +27,9 @@ export default function Home({ sidebarOpen }) {
       isDark ? "bg-[#0A0A0A]" : "bg-gray-50"
     )}>
       <div className="flex flex-col gap-3 h-full">
-        {/* Top Strip - Sector Snapshot */}
+        {/* Top Strip - Level 1 Summary */}
         <div className="flex-shrink-0">
-          <SectorSnapshotStrip theme={settings.theme} />
+          <SectorSummaryTiles theme={settings.theme} />
         </div>
 
         {/* Top Row - 3 Featured Tiles + Policy Updates */}

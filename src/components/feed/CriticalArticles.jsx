@@ -1,12 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 export default function CriticalArticles({ articles, isLoading, onRefresh, theme }) {
   const isDark = theme === 'dark';
   const isPastel = theme === 'pastel';
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const saved = localStorage.getItem('featured_expanded');
+    return saved === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('featured_expanded', isExpanded);
+  }, [isExpanded]);
+
+  const displayCount = isExpanded ? 12 : 4;
+  const gridCols = isExpanded ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4';
 
   return (
     <div className={cn(
@@ -33,11 +44,27 @@ export default function CriticalArticles({ articles, isLoading, onRefresh, theme
               isDark ? "text-amber-500/50" : "text-amber-600")} />
           </Button>
         </div>
-        <span className={cn("text-xs", 
-          isPastel ? "text-[#9B9EBC]" :
-          isDark ? "text-neutral-600" : "text-gray-400")}>
-          AI Curated
-        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="h-6 px-2 gap-1"
+        >
+          <span className={cn("text-xs", 
+            isPastel ? "text-[#9B9EBC]" :
+            isDark ? "text-neutral-400" : "text-gray-600")}>
+            {isExpanded ? 'Collapse' : 'Expand'}
+          </span>
+          {isExpanded ? (
+            <ChevronUp className={cn("w-3 h-3", 
+              isPastel ? "text-[#9B9EBC]" :
+              isDark ? "text-neutral-400" : "text-gray-600")} />
+          ) : (
+            <ChevronDown className={cn("w-3 h-3", 
+              isPastel ? "text-[#9B9EBC]" :
+              isDark ? "text-neutral-400" : "text-gray-600")} />
+          )}
+        </Button>
       </div>
       
       {isLoading ? (
@@ -47,8 +74,8 @@ export default function CriticalArticles({ articles, isLoading, onRefresh, theme
             isDark ? "text-neutral-400" : "text-gray-500")}>Analyzing articles...</span>
         </div>
       ) : articles.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {articles.slice(0, 4).map((article, idx) => (
+        <div className={cn("grid gap-3", gridCols)}>
+          {articles.slice(0, displayCount).map((article, idx) => (
             <a
               key={idx}
               href={article.link}
