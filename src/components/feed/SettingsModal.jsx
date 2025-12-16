@@ -445,7 +445,9 @@ export default function SettingsModal({
                       setLocalSettings(newSettings);
                       onUpdateSettings(newSettings);
                     }}
-                    className="bg-[#0D0D0D] border border-neutral-700 text-white text-[10px] px-2 py-1 uppercase"
+                    className={cn("text-[10px] px-2 py-1 uppercase border",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      "bg-[#0D0D0D] border-neutral-700 text-white")}
                   >
                     <option value="America/New_York">EST (NEW YORK)</option>
                     <option value="America/Chicago">CST (CHICAGO)</option>
@@ -472,7 +474,7 @@ export default function SettingsModal({
                     }}
                     className={cn("text-[10px] px-2 py-1 uppercase border",
                       isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
-                      isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
+                      "bg-[#0D0D0D] border-neutral-700 text-white")}
                   >
                     <option value="America/New_York">EST (NEW YORK)</option>
                     <option value="America/Chicago">CST (CHICAGO)</option>
@@ -492,7 +494,7 @@ export default function SettingsModal({
 
           {activeTab === 'levels' && (
             <div>
-              <SectionHeader>{editingSector ? 'EDIT LEVEL 1' : 'ADD NEW LEVEL 1'}</SectionHeader>
+              <SectionHeader>{editingSector ? 'EDIT LEVEL' : 'ADD NEW LEVEL'}</SectionHeader>
               <div className="space-y-3 mb-4">
                 <div>
                   <Label className={cn("text-[10px] uppercase tracking-wider",
@@ -506,11 +508,11 @@ export default function SettingsModal({
                     }
                     placeholder="e.g., Advanced Materials"
                     className={cn("mt-1 text-[11px] h-7",
-                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
                       isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
                   />
                 </div>
-                
+
                 <div>
                   <Label className={cn("text-[10px] uppercase tracking-wider",
                     isPastel ? "text-[#A5A8C0]" :
@@ -521,13 +523,13 @@ export default function SettingsModal({
                     onKeyDown={handleAddKeyword}
                     placeholder="Press Enter to add"
                     className={cn("mt-1 text-[11px] h-7",
-                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
                       isDark ? "bg-[#0D0D0D] border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
                   />
                   <div className="flex flex-wrap gap-1 mt-2">
                     {(currentTarget.keywords || []).map((kw, idx) => (
                       <Badge key={idx} className={cn("text-[9px]",
-                        isPastel ? "bg-[#42456C] text-white" :
+                        isPastel ? "bg-[#9B8B6B] text-white" :
                         isDark ? "bg-neutral-800 text-neutral-300" : "bg-gray-200 text-gray-800")}>
                         {kw}
                         <button onClick={() => handleRemoveKeyword(idx, !!editingSector)} className="ml-1">
@@ -539,8 +541,9 @@ export default function SettingsModal({
                 </div>
 
                 <div className="flex gap-2">
-                  <Button onClick={handleSaveSector} size="sm" className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7">
-                    {editingSector ? 'UPDATE' : 'ADD'} LEVEL 1
+                  <Button onClick={handleSaveSector} size="sm" className={cn("text-white text-[10px] h-7",
+                    isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}>
+                    {editingSector ? 'UPDATE' : 'ADD'} LEVEL
                   </Button>
                   {editingSector && (
                     <Button variant="ghost" size="sm" onClick={() => setEditingSector(null)} className="text-[10px] h-7">
@@ -549,40 +552,64 @@ export default function SettingsModal({
                   )}
                 </div>
               </div>
-              
+
               <SectionHeader>EXISTING LEVELS</SectionHeader>
               <div className="space-y-1">
-                {sectors.map((sector, index) => (
-                  <div key={sector.id} className="flex items-center justify-between py-2 border-b border-neutral-800">
-                    <div className="flex items-center gap-2">
-                      <div className="flex flex-col gap-0.5">
-                        <button 
-                          onClick={() => handleMoveUp(index)} 
-                          disabled={index === 0}
-                          className={cn("p-0.5", index === 0 ? "text-neutral-800" : "text-neutral-600 hover:text-white")}
-                        >
-                          <ChevronUp className="w-3 h-3" />
-                        </button>
-                        <button 
-                          onClick={() => handleMoveDown(index)} 
-                          disabled={index === sectors.length - 1}
-                          className={cn("p-0.5", index === sectors.length - 1 ? "text-neutral-800" : "text-neutral-600 hover:text-white")}
-                        >
-                          <ChevronDown className="w-3 h-3" />
-                        </button>
+                {sectors.map((sector, index) => {
+                  const level = sector.level || 1;
+                  const indentClass = level === 2 ? "ml-6" : level === 3 ? "ml-12" : "";
+                  return (
+                    <div key={sector.id} className={cn("flex items-center justify-between py-2 border-b",
+                      isPastel ? "border-[#4A4D6C]" : "border-neutral-800")}>
+                      <div className={cn("flex items-center gap-2", indentClass)}>
+                        <div className="flex gap-0.5">
+                          <button 
+                            onClick={() => handleMoveUp(index)} 
+                            disabled={index === 0}
+                            className={cn("p-0.5", 
+                              index === 0 ? (isPastel ? "text-[#4A4D6C]" : "text-neutral-800") : 
+                              (isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white"))}
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </button>
+                          <button 
+                            onClick={() => {
+                              const newLevel = Math.min(3, (sector.level || 1) + 1);
+                              onSaveSector({ ...sector, level: newLevel });
+                            }}
+                            disabled={level >= 3}
+                            className={cn("p-0.5", 
+                              level >= 3 ? (isPastel ? "text-[#4A4D6C]" : "text-neutral-800") : 
+                              (isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white"))}
+                            title="Indent (increase level)"
+                          >
+                            <span className="text-xs">›</span>
+                          </button>
+                          <button 
+                            onClick={() => handleMoveDown(index)} 
+                            disabled={index === sectors.length - 1}
+                            className={cn("p-0.5", 
+                              index === sectors.length - 1 ? (isPastel ? "text-[#4A4D6C]" : "text-neutral-800") : 
+                              (isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white"))}
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <span className={cn("text-[11px]",
+                          isPastel ? "text-[#E8E9F0]" : "text-white")}>{sector.name}</span>
                       </div>
-                      <span className="text-[11px] text-white">{sector.name}</span>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => setEditingSector(sector)} className={cn("text-[10px] h-6",
+                          isPastel ? "text-[#9B9EBC]" : "text-neutral-400")}>
+                          EDIT
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-red-500 text-[10px] h-6" onClick={() => onDeleteSector(sector.id)}>
+                          DELETE
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => setEditingSector(sector)} className="text-[10px] h-6 text-neutral-400">
-                        EDIT
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-red-500 text-[10px] h-6" onClick={() => onDeleteSector(sector.id)}>
-                        DELETE
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -592,7 +619,8 @@ export default function SettingsModal({
               <SectionHeader>{editingCollection ? 'EDIT COLLECTION' : 'ADD NEW COLLECTION'}</SectionHeader>
               <div className="space-y-3 mb-4">
                 <div>
-                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">NAME</Label>
+                  <Label className={cn("text-[10px] uppercase tracking-wider",
+                    isPastel ? "text-[#A5A8C0]" : "text-neutral-500")}>NAME</Label>
                   <Input
                     value={editingCollection ? editingCollection.name : newCollection.name}
                     onChange={(e) => editingCollection 
@@ -600,7 +628,9 @@ export default function SettingsModal({
                       : setNewCollection({ name: e.target.value })
                     }
                     placeholder="e.g., Important Articles"
-                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
+                    className={cn("mt-1 text-[11px] h-7",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
+                      "bg-[#0D0D0D] border-neutral-700 text-white")}
                   />
                 </div>
                 <div className="flex gap-2">
@@ -615,7 +645,8 @@ export default function SettingsModal({
                       }
                     }} 
                     size="sm" 
-                    className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7"
+                    className={cn("text-white text-[10px] h-7",
+                      isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}
                   >
                     {editingCollection ? 'UPDATE' : 'ADD'} COLLECTION
                   </Button>
@@ -630,31 +661,39 @@ export default function SettingsModal({
               <SectionHeader>EXISTING COLLECTIONS</SectionHeader>
               <div className="space-y-1">
                 {collections?.length === 0 ? (
-                  <p className="text-neutral-600 text-[10px] py-4 text-center">NO COLLECTIONS CREATED YET</p>
+                  <p className={cn("text-[10px] py-4 text-center",
+                    isPastel ? "text-[#7B7E9C]" : "text-neutral-600")}>NO COLLECTIONS CREATED YET</p>
                 ) : (
                   collections?.map((collection, index) => (
-                    <div key={collection.id} className="flex items-center justify-between py-2 border-b border-neutral-800">
+                    <div key={collection.id} className={cn("flex items-center justify-between py-2 border-b",
+                      isPastel ? "border-[#4A4D6C]" : "border-neutral-800")}>
                       <div className="flex items-center gap-2">
                         <div className="flex flex-col gap-0.5">
                           <button 
                             onClick={() => onReorderCollections(index, Math.max(0, index - 1))} 
                             disabled={index === 0}
-                            className={cn("p-0.5", index === 0 ? "text-neutral-800" : "text-neutral-600 hover:text-white")}
+                            className={cn("p-0.5", 
+                              index === 0 ? (isPastel ? "text-[#4A4D6C]" : "text-neutral-800") : 
+                              (isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white"))}
                           >
                             <ChevronUp className="w-3 h-3" />
                           </button>
                           <button 
                             onClick={() => onReorderCollections(index, Math.min(collections.length - 1, index + 1))} 
                             disabled={index === collections.length - 1}
-                            className={cn("p-0.5", index === collections.length - 1 ? "text-neutral-800" : "text-neutral-600 hover:text-white")}
+                            className={cn("p-0.5", 
+                              index === collections.length - 1 ? (isPastel ? "text-[#4A4D6C]" : "text-neutral-800") : 
+                              (isPastel ? "text-[#7B7E9C] hover:text-white" : "text-neutral-600 hover:text-white"))}
                           >
                             <ChevronDown className="w-3 h-3" />
                           </button>
                         </div>
-                        <span className="text-[11px] text-white">{collection.name}</span>
+                        <span className={cn("text-[11px]",
+                          isPastel ? "text-[#E8E9F0]" : "text-white")}>{collection.name}</span>
                       </div>
                       <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => setEditingCollection(collection)} className="text-[10px] h-6 text-neutral-400">
+                        <Button size="sm" variant="ghost" onClick={() => setEditingCollection(collection)} className={cn("text-[10px] h-6",
+                          isPastel ? "text-[#9B9EBC]" : "text-neutral-400")}>
                           EDIT
                         </Button>
                         <Button size="sm" variant="ghost" className="text-red-500 text-[10px] h-6" onClick={() => onDeleteCollection(collection.id)}>
@@ -673,7 +712,8 @@ export default function SettingsModal({
               <SectionHeader>ADD SINGLE RSS SOURCE</SectionHeader>
               <div className="space-y-2 mb-4">
                 <div>
-                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">SOURCE NAME</Label>
+                  <Label className={cn("text-[10px] uppercase tracking-wider",
+                    isPastel ? "text-[#A5A8C0]" : "text-neutral-500")}>SOURCE NAME</Label>
                   <Input
                     value={editingRSS ? editingRSS.name : newRSSSource.name}
                     onChange={(e) => editingRSS 
@@ -682,12 +722,13 @@ export default function SettingsModal({
                     }
                     placeholder="e.g., Reuters"
                     className={cn("mt-1 text-[11px] h-7",
-                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
                       "bg-[#0D0D0D] border-neutral-700 text-white")}
                   />
-                </div>
-                <div>
-                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">RSS FEED URL</Label>
+                  </div>
+                  <div>
+                  <Label className={cn("text-[10px] uppercase tracking-wider",
+                    isPastel ? "text-[#A5A8C0]" : "text-neutral-500")}>RSS FEED URL</Label>
                   <Input
                     value={editingRSS ? editingRSS.url : newRSSSource.url}
                     onChange={(e) => editingRSS
@@ -696,7 +737,7 @@ export default function SettingsModal({
                     }
                     placeholder="https://example.com/rss"
                     className={cn("mt-1 text-[11px] h-7",
-                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
                       "bg-[#0D0D0D] border-neutral-700 text-white")}
                   />
                 </div>
@@ -738,7 +779,8 @@ export default function SettingsModal({
                       }
                     }} 
                     size="sm" 
-                    className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7"
+                    className={cn("text-white text-[10px] h-7",
+                      isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}
                   >
                     {editingRSS ? 'UPDATE' : 'ADD'} RSS SOURCE
                   </Button>
@@ -757,16 +799,20 @@ export default function SettingsModal({
 
               <SectionHeader>BULK ADD RSS SOURCES</SectionHeader>
               <div className="space-y-2 mb-4">
-                <p className="text-[10px] text-neutral-500">
+                <p className={cn("text-[10px]",
+                  isPastel ? "text-[#9B9EBC]" : "text-neutral-500")}>
                   Format: Source Name, RSS URL, Sector, Subsector (optional)
                 </p>
                 <Textarea
                   value={bulkRSSText}
                   onChange={(e) => setBulkRSSText(e.target.value)}
                   placeholder="Reuters Tech, https://example.com/rss, Technology, AI"
-                  className="bg-[#0D0D0D] border-neutral-700 text-white min-h-[100px] font-mono text-[10px]"
+                  className={cn("min-h-[100px] font-mono text-[10px]",
+                    isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
+                    "bg-[#0D0D0D] border-neutral-700 text-white")}
                 />
-                <Button onClick={handleBulkAddRSS} size="sm" className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7">
+                <Button onClick={handleBulkAddRSS} size="sm" className={cn("text-white text-[10px] h-7",
+                  isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}>
                   ADD SOURCES IN BULK
                 </Button>
 
@@ -787,11 +833,11 @@ export default function SettingsModal({
               </div>
 
               <SectionHeader>EXISTING RSS SOURCES</SectionHeader>
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between items-center mb-2 gap-3">
                 <select
                   value={selectedSectorForRSS?.id || 'all'}
                   onChange={(e) => setSelectedSectorForRSS(e.target.value === 'all' ? null : sectors.find(s => s.id === e.target.value))}
-                  className={cn("text-[9px] h-5 px-2",
+                  className={cn("text-[9px] h-5 px-2 border",
                     isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
                     "bg-[#0D0D0D] border-neutral-700 text-white")}
                 >
@@ -804,7 +850,7 @@ export default function SettingsModal({
                   onClick={removeDuplicateRSS} 
                   size="sm" 
                   variant="ghost"
-                  className={cn("text-[9px] h-5",
+                  className={cn("text-[9px] h-5 ml-auto",
                     isPastel ? "text-[#9B9EBC] hover:text-white" :
                     "text-neutral-500 hover:text-white")}
                 >
@@ -883,7 +929,9 @@ export default function SettingsModal({
                     value={localSettings?.custom_api_key || ''}
                     onChange={(e) => setLocalSettings({ ...localSettings, custom_api_key: e.target.value })}
                     placeholder="Enter your API key"
-                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
+                    className={cn("mt-1 text-[11px] h-7",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
+                      "bg-[#0D0D0D] border-neutral-700 text-white")}
                   />
                 </div>
               )}
@@ -896,22 +944,28 @@ export default function SettingsModal({
                     value={localSettings?.default_gist_instructions || ''}
                     onChange={(e) => setLocalSettings({ ...localSettings, default_gist_instructions: e.target.value })}
                     placeholder="Instructions for AI..."
-                    className="mt-1 bg-[#0D0D0D] border-neutral-700 min-h-[60px] text-white text-[10px]"
+                    className={cn("mt-1 min-h-[60px] text-[10px]",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
+                      "bg-[#0D0D0D] border-neutral-700 text-white")}
                   />
-                </div>
-                <div>
-                  <Label className="text-[10px] text-neutral-500 uppercase tracking-wider">FEATURED ARTICLE INSTRUCTIONS</Label>
+                  </div>
+                  <div>
+                  <Label className={cn("text-[10px] uppercase tracking-wider",
+                    isPastel ? "text-[#A5A8C0]" : "text-neutral-500")}>FEATURED ARTICLE INSTRUCTIONS</Label>
                   <Textarea
                     value={localSettings?.default_critical_instructions || ''}
                     onChange={(e) => setLocalSettings({ ...localSettings, default_critical_instructions: e.target.value })}
                     placeholder="Instructions for AI..."
-                    className="mt-1 bg-[#0D0D0D] border-neutral-700 min-h-[60px] text-white text-[10px]"
+                    className={cn("mt-1 min-h-[60px] text-[10px]",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
+                      "bg-[#0D0D0D] border-neutral-700 text-white")}
                   />
                 </div>
                 <Button 
                   onClick={() => onUpdateSettings(localSettings)}
                   size="sm"
-                  className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7"
+                  className={cn("text-white text-[10px] h-7",
+                    isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}
                 >
                   SAVE AI SETTINGS
                 </Button>
@@ -942,7 +996,9 @@ export default function SettingsModal({
                     value={localSettings?.export_email || ''}
                     onChange={(e) => setLocalSettings({ ...localSettings, export_email: e.target.value })}
                     placeholder="your@email.com"
-                    className="mt-1 bg-[#0D0D0D] border-neutral-700 text-white text-[11px] h-7"
+                    className={cn("mt-1 text-[11px] h-7",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white placeholder:text-[#7B7E9C]" :
+                      "bg-[#0D0D0D] border-neutral-700 text-white")}
                   />
                 </div>
               )}
@@ -976,7 +1032,8 @@ export default function SettingsModal({
                 <Button 
                   onClick={() => onUpdateSettings(localSettings)}
                   size="sm"
-                  className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] h-7"
+                  className={cn("text-white text-[10px] h-7",
+                    isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}
                 >
                   SAVE EXPORT SETTINGS
                 </Button>
