@@ -9,11 +9,11 @@ export default function CriticalArticles({ articles, isLoading, onRefresh, theme
   const isPastel = theme === 'pastel';
   const [isExpanded, setIsExpanded] = useState(() => {
     const saved = localStorage.getItem('featured_expanded');
-    return saved === 'true';
+    return saved === null ? true : saved === 'true';
   });
 
   useEffect(() => {
-    localStorage.setItem('featured_expanded', isExpanded);
+    localStorage.setItem('featured_expanded', String(isExpanded));
   }, [isExpanded]);
 
   const displayCount = 12; // Always show 12 articles
