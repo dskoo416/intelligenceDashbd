@@ -304,7 +304,8 @@ export default function TickerCard({ theme }) {
         </div>
       </div>
       
-      <div className="flex-1 p-2 relative">
+      {/* Chart Area */}
+      <div className="p-2" style={{ height: '180px' }}>
         {tickers.length === 0 ? (
           <div className={cn("flex flex-col items-center justify-center h-full text-[10px] gap-2",
             isPastel ? "text-[#7B7E9C]" :
@@ -323,24 +324,9 @@ export default function TickerCard({ theme }) {
         ) : currentTicker ? (
           <>
             <div className="flex items-center justify-between mb-2">
-              <div>
-                <h4 className={cn("text-[10px] font-semibold",
-                  isPastel ? "text-[#E8E9F0]" :
-                  isDark ? "text-white" : "text-gray-900")}>{currentTicker.label}</h4>
-                {currentData && (
-                  <div className="flex items-center gap-2">
-                    <span className={cn("text-[14px] font-bold",
-                      isPastel ? "text-white" :
-                      isDark ? "text-white" : "text-gray-900")}>
-                      {formatPrice(currentData.price, currentTicker.symbol)}
-                    </span>
-                    <span className={cn("text-[10px]",
-                      currentData.positive ? "text-green-500" : "text-red-500")}>
-                      {currentData.positive ? '+' : ''}{currentData.change.toFixed(2)} ({currentData.positive ? '+' : ''}{currentData.changePercent.toFixed(2)}%)
-                    </span>
-                  </div>
-                )}
-              </div>
+              <h4 className={cn("text-[10px] font-semibold",
+                isPastel ? "text-[#E8E9F0]" :
+                isDark ? "text-white" : "text-gray-900")}>{currentTicker.label}</h4>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
@@ -400,6 +386,64 @@ export default function TickerCard({ theme }) {
           </>
         ) : null}
       </div>
+      
+      {/* Ticker List */}
+      {tickers.length > 0 && (
+        <div className={cn("border-t", 
+          isPastel ? "border-[#4A4D6C] bg-[#2F3248]" :
+          isDark ? "border-[#1F1F1F] bg-[#0F0F0F]" : "border-gray-300 bg-gray-50")}>
+          <div className={cn("divide-y",
+            isPastel ? "divide-[#4A4D6C]" :
+            isDark ? "divide-[#1F1F1F]" : "divide-gray-200")}>
+            {tickers.map((ticker, idx) => {
+              const data = tickerData[ticker.symbol];
+              const isActive = currentIndex === idx;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentIndex(idx)}
+                  className={cn(
+                    "w-full px-2 py-1 flex items-center justify-between transition-colors relative",
+                    isPastel ? "hover:bg-[#42456C]" :
+                    isDark ? "hover:bg-[#1A1A1A]" : "hover:bg-gray-100",
+                    isActive && (isPastel ? "bg-[#42456C]" : isDark ? "bg-[#1A1A1A]" : "bg-gray-100")
+                  )}
+                >
+                  {isActive && (
+                    <div className={cn("absolute left-0 top-0 bottom-0 w-[2px]", 
+                      isPastel ? "bg-[#9B8B6B]" :
+                      isDark ? "bg-orange-500" : "bg-orange-600")} />
+                  )}
+                  <span className={cn("text-[9px] font-medium text-left pl-1", 
+                    isPastel ? "text-[#D0D2E0]" :
+                    isDark ? "text-neutral-400" : "text-gray-700")}>
+                    {ticker.label}
+                  </span>
+                  {data ? (
+                    <div className="flex items-center gap-2">
+                      <span className={cn("text-[9px] font-mono font-bold", 
+                        isPastel ? "text-white" :
+                        isDark ? "text-white" : "text-gray-900")}>
+                        {formatPrice(data.price, ticker.symbol)}
+                      </span>
+                      <span className={cn("text-[9px] font-mono", 
+                        data.positive 
+                          ? (isPastel ? "text-[#6B9B9B]" : isDark ? "text-[#2D8659]" : "text-green-600") 
+                          : (isPastel ? "text-[#9B6B7B]" : isDark ? "text-[#8B3A3A]" : "text-red-600"))}>
+                        {data.positive ? '+' : ''}{data.change.toFixed(2)} ({data.positive ? '+' : ''}{data.changePercent.toFixed(2)}%)
+                      </span>
+                    </div>
+                  ) : (
+                    <span className={cn("text-[8px]", 
+                      isPastel ? "text-[#7B7E9C]" :
+                      isDark ? "text-neutral-700" : "text-gray-400")}>Loading...</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

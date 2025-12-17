@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import GistPanel from '@/components/feed/GistPanel';
@@ -6,63 +6,18 @@ import CriticalArticles from '@/components/feed/CriticalArticles';
 import NewsFeed from '@/components/feed/NewsFeed';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
-
-const parseRSS = async (url) => {
-  try {
-    const corsProxy = 'https://api.allorigins.win/raw?url=';
-    const response = await fetch(corsProxy + encodeURIComponent(url));
-    const text = await response.text();
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, 'text/xml');
-    
-    const items = xml.querySelectorAll('item');
-    const articles = [];
-    
-    items.forEach((item) => {
-      articles.push({
-        title: item.querySelector('title')?.textContent || '',
-        link: item.querySelector('link')?.textContent || '',
-        description: item.querySelector('description')?.textContent?.replace(/<[^>]*>/g, '').slice(0, 200) || '',
-        pubDate: item.querySelector('pubDate')?.textContent || null,
-      });
-    });
-    
-    return articles;
-  } catch (error) {
-    console.error('Error parsing RSS:', error);
-    return [];
-  }
-};
+import { useFeedData } from '@/components/hooks/useFeedData';
 
 export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   const queryClient = useQueryClient();
-  const [dataCache, setDataCache] = useState({});
   const [dateFilter, setDateFilter] = useState(null);
   const [searchFilter, setSearchFilter] = useState('');
-  
-  const sectorKey = activeSector?.id || 'none';
-  const cachedData = dataCache[sectorKey] || {
-    articles: [],
-    criticalArticles: [],
-    gist: '',
-    isLoadingArticles: false,
-    isLoadingGist: false,
-    isLoadingCritical: false,
-  };
-
-  const [articles, setArticles] = useState(cachedData.articles);
-  const [criticalArticles, setCriticalArticles] = useState(cachedData.criticalArticles);
-  const [gist, setGist] = useState(cachedData.gist);
-  const [isLoadingArticles, setIsLoadingArticles] = useState(false);
+  const [gist, setGist] = useState('');
+  const [criticalArticles, setCriticalArticles] = useState([]);
   const [isLoadingGist, setIsLoadingGist] = useState(false);
   const [isLoadingCritical, setIsLoadingCritical] = useState(false);
 
-  const updateCache = (key, updates) => {
-    setDataCache(prev => ({
-      ...prev,
-      [key]: { ...(prev[key] || {}), ...updates }
-    }));
-  };
+  const { articles, isLoadingArticles, fetchArticles, sectorKey } = useFeedData(activeSector, activeSubsector);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -96,6 +51,16 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
 
   const savedCache = cacheData[0];
 
+  useEffect(() => {
+    if (savedCache) {
+      setGist(savedCache.gist || '');
+      setCriticalArticles(savedCache.critical_articles || []);
+    } else {
+      setGist('');
+      setCriticalArticles([]);
+    }
+  }, [savedCache]);
+
   const { data: savedArticles = [] } = useQuery({
     queryKey: ['savedArticles'],
     queryFn: () => base44.entities.SavedArticle.list(),
@@ -117,74 +82,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     },
   });
 
-  const fetchArticles = useCallback(async (forceRefresh = false) => {
-    const key = activeSector?.id || 'main';
-    const cachedStr = localStorage.getItem(`articles_${key}`);
-    const cached = cachedStr ? JSON.parse(cachedStr) : null;
 
-    if (cached?.articles?.length > 0 && !forceRefresh) {
-      setArticles(cached.articles);
-      setGist(cached.gist || savedCache?.gist || '');
-      setCriticalArticles(cached.criticalArticles || savedCache?.critical_articles || []);
-      setIsLoadingArticles(false);
-      return;
-    }
-
-    if (savedCache && !forceRefresh) {
-      setGist(savedCache.gist || '');
-      setCriticalArticles(savedCache.critical_articles || []);
-    }
-    
-    setIsLoadingArticles(true);
-
-    let sectorSources;
-    if (activeSector) {
-      sectorSources = rssSources.filter(s => s.sector_id === activeSector.id && s.is_active !== false);
-    } else {
-      sectorSources = rssSources.filter(s => s.is_active !== false);
-    }
-
-    if (sectorSources.length === 0) {
-      setArticles([]);
-      setGist('');
-      setCriticalArticles([]);
-      setIsLoadingArticles(false);
-      return;
-    }
-
-    const newArticles = [];
-
-    for (const source of sectorSources) {
-      const sourceArticles = await parseRSS(source.url);
-      const sector = sectors.find(s => s.id === source.sector_id);
-      newArticles.push(...sourceArticles.map(a => ({ 
-        ...a, 
-        source: source.name,
-        sector: sector?.name || '',
-        subsector: source.subsector || '',
-        subsubsector: source.subsubsector || ''
-      })));
-    }
-    
-    const existingArticles = cached?.articles || [];
-    const existingLinks = new Set(existingArticles.map(a => a.link));
-    const uniqueNew = newArticles.filter(a => !existingLinks.has(a.link));
-    
-    const combined = [...uniqueNew, ...existingArticles];
-    
-    combined.sort((a, b) => {
-      if (!a.pubDate || !b.pubDate) return 0;
-      return new Date(b.pubDate) - new Date(a.pubDate);
-    });
-    
-    setArticles(combined);
-    localStorage.setItem(`articles_${key}`, JSON.stringify({ articles: combined }));
-    setIsLoadingArticles(false);
-  }, [activeSector, rssSources, sectors, savedCache]);
-
-  useEffect(() => {
-    fetchArticles(false);
-  }, [activeSector, activeSubsector, fetchArticles]);
 
   const generateGist = async () => {
     if (!activeSector) return;
@@ -319,12 +217,24 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   };
 
   const filteredArticles = articles.filter(a => {
-    // Filter by level: only show articles explicitly tagged with this level
+    // Strict level filtering - articles must match the selected level or descendants
     if (activeSector) {
-      // Must match exact sector - no parent spillover
-      if (a.sector !== activeSector.name) return false;
+      // Get all descendant sector IDs
+      const getAllDescendants = (parentId) => {
+        const children = sectors.filter(s => s.parent_id === parentId);
+        let descendants = [...children];
+        children.forEach(child => {
+          descendants = [...descendants, ...getAllDescendants(child.id)];
+        });
+        return descendants;
+      };
+      
+      const descendants = getAllDescendants(activeSector.id);
+      const validSectorIds = [activeSector.id, ...descendants.map(d => d.id)];
+      
+      // Article must belong to this level or its descendants
+      if (!a.sectorId || !validSectorIds.includes(a.sectorId)) return false;
     }
-    // If no sector selected (Main view), show all articles
     
     if (dateFilter && a.pubDate) {
       const articleDate = new Date(a.pubDate);

@@ -466,7 +466,9 @@ export default function Layout({ children, currentPageName }) {
           </div>
         )}
 
-        {childrenWithProps}
+        {currentPageName === 'Home' 
+          ? React.cloneElement(children, { activeSector })
+          : childrenWithProps}
       </div>
 
       <SettingsModal
