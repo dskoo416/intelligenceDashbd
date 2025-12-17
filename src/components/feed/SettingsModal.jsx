@@ -108,9 +108,10 @@ export default function SettingsModal({
   const handleRemoveKeyword = (index, isEditing) => {
     const target = isEditing ? editingSector : newSector;
     const setter = isEditing ? setEditingSector : setNewSector;
+    const newKeywords = (target.keywords || []).filter((_, i) => i !== index);
     setter({
       ...target,
-      keywords: target.keywords.filter((_, i) => i !== index)
+      keywords: newKeywords
     });
   };
 
@@ -160,12 +161,19 @@ export default function SettingsModal({
 
   const handleSaveSector = async () => {
     if (editingSector) {
-      await onSaveSector(editingSector);
+      await onSaveSector({
+        ...editingSector,
+        keywords: editingSector.keywords || []
+      });
       setEditingSector(null);
       setSelectedSector(null);
     } else if (newSector.name) {
       const parentId = selectedSector?.id || null;
-      await onSaveSector({ ...newSector, parent_id: parentId });
+      await onSaveSector({ 
+        ...newSector, 
+        parent_id: parentId,
+        keywords: newSector.keywords || []
+      });
       setNewSector({ name: '', keywords: [] });
       if (parentId) {
         setExpandedNodes(prev => ({ ...prev, [parentId]: true }));

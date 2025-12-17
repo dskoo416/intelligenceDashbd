@@ -16,8 +16,8 @@ export default function CriticalArticles({ articles, isLoading, onRefresh, theme
     localStorage.setItem('featured_expanded', String(isExpanded));
   }, [isExpanded]);
 
-  const displayCount = 12; // Always show 12 articles
-  const gridCols = isExpanded ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4';
+  const displayCount = isExpanded ? 12 : 4;
+  const gridCols = 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4';
 
   return (
     <div className={cn(
