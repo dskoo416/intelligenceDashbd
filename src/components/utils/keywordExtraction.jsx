@@ -25,7 +25,11 @@ const JUNK_TOKENS = new Set([
   'cdn', 'jpeg', 'jpg', 'png', 'gif', 'mp4', 'pdf', 'click', 'read', 'more',
   'report', 'figure', 'table', 'image', 'photo', 'video', 'link', 'src', 'alt',
   'title', 'class', 'width', 'height', 'style', 'amp', 'rss', 'feed', 'utm',
-  'www', 'com', 'net', 'org', 'html', 'xml', 'json', 'api', 'img', 'svg'
+  'www', 'com', 'net', 'org', 'html', 'xml', 'json', 'api', 'img', 'svg',
+  'display', 'block', 'margin', 'auto', 'layer', 'async', 'decoding', 'loading',
+  'post', 'pagetype', 'taxonomy', 'guide', 'attachment', 'thumb', 'view', 'size',
+  'angle', 'every', 'driver', 'cars', 'layout', 'rendering', 'template', 'metadata',
+  'slug', 'footer', 'header', 'sidebar', 'content', 'widget', 'plugin', 'module'
 ]);
 
 const SECTOR_KEYWORDS = {
@@ -144,7 +148,12 @@ export function extractKeywordsFromArticles(articles, options = {}) {
   const tokens = rawTokens
     .filter(isValidToken)
     .map(stemToken)
-    .filter(token => !excludeWords.includes(token));
+    .filter(token => {
+      // Exclude exact matches
+      if (excludeWords.includes(token)) return false;
+      // Exclude if token contains any exclude word
+      return !excludeWords.some(exclude => token.includes(exclude.toLowerCase()));
+    });
   
   // Count unigrams
   const unigramCounts = {};
@@ -162,10 +171,14 @@ export function extractKeywordsFromArticles(articles, options = {}) {
   // Merge bigrams with unigrams (prefer bigrams with count >= 2)
   const allKeywords = {};
   
-  // Add significant bigrams first
+  // Add significant bigrams first (filter out CMS phrases)
   Object.entries(bigramCounts).forEach(([bigram, count]) => {
     if (count >= 2) {
-      allKeywords[bigram] = count;
+      // Skip CMS/UI artifacts
+      const isCMSPhrase = /\b(post|layer|display|margin|block|auto|view|size|angle|driver|cars|taxonomy|guide|attachment|thumb)\b/.test(bigram);
+      if (!isCMSPhrase) {
+        allKeywords[bigram] = count;
+      }
     }
   });
   
@@ -211,16 +224,18 @@ export function extractKeywordsFromArticles(articles, options = {}) {
     }
   }
   
-  // Apply include words filter
+  // Apply include words with weighting
   if (includeWords.length > 0) {
-    const temp = {};
     Object.entries(filteredKeywords).forEach(([keyword, count]) => {
-      const matches = includeWords.some(inc => keyword.includes(inc.toLowerCase()));
-      if (matches) {
-        temp[keyword] = count;
-      }
+      includeWords.forEach(item => {
+        const word = typeof item === 'string' ? item : item.word;
+        const weight = typeof item === 'string' ? 1 : (item.weight || 1);
+        
+        if (keyword.toLowerCase().includes(word.toLowerCase())) {
+          filteredKeywords[keyword] = Math.round(count * weight);
+        }
+      });
     });
-    filteredKeywords = temp;
   }
   
   // Sort and take top N
