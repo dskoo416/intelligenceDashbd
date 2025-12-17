@@ -988,7 +988,7 @@ export default function SettingsModal({
                 </div>
                 <div>
                   <Label className={cn("text-[10px] uppercase tracking-wider",
-                    isPastel ? "text-[#A5A8C0]" : "text-neutral-500")}>LEVEL 1</Label>
+                    isPastel ? "text-[#A5A8C0]" : "text-neutral-500")}>LEVEL</Label>
                   <select
                     value={editingRSS ? editingRSS.sector_id : newRSSSource.sector_id}
                     onChange={(e) => {
@@ -1005,12 +1005,21 @@ export default function SettingsModal({
                       isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
                       "bg-[#0D0D0D] border-neutral-700 text-white")}
                   >
-                    <option value="">SELECT LEVEL 1</option>
-                    {sectors.map((sector) => (
-                      <option key={sector.id} value={sector.id}>
-                        {sector.name}
-                      </option>
-                    ))}
+                    <option value="">SELECT LEVEL</option>
+                    {sectors.map((sector) => {
+                      let depth = 0;
+                      let current = sector;
+                      while (current.parent_id) {
+                        depth++;
+                        current = sectors.find(p => p.id === current.parent_id) || { parent_id: null };
+                      }
+                      const prefix = "  ".repeat(depth) + (depth > 0 ? "└─ " : "");
+                      return (
+                        <option key={sector.id} value={sector.id}>
+                          {prefix}{sector.name}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 <div className="flex gap-2">

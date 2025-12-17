@@ -319,11 +319,9 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   };
 
   const filteredArticles = articles.filter(a => {
-    // Filter by subsector if selected
-    if (activeSubsector) {
-      if (a.subsector !== activeSubsector.name) return false;
-    } else if (activeSector) {
-      // Only filter by sector if a sector is selected and no subsector
+    // Filter by level: only show articles explicitly tagged with this level
+    if (activeSector) {
+      // Must match exact sector - no parent spillover
       if (a.sector !== activeSector.name) return false;
     }
     // If no sector selected (Main view), show all articles
