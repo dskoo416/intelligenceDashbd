@@ -9,7 +9,7 @@ import TickerCard from '@/components/home/TickerCard';
 import KeywordHeatmapCard from '@/components/home/KeywordHeatmapCard';
 import MarketShareCard from '@/components/home/MarketShareCard';
 
-export default function Home({ sidebarOpen }) {
+export default function Home({ sidebarOpen, activeSector }) {
   const { data: settingsData = [] } = useQuery({
     queryKey: ['appSettings'],
     queryFn: () => base44.entities.AppSettings.list(),
@@ -35,7 +35,7 @@ export default function Home({ sidebarOpen }) {
         {/* Top Row - 3 Featured Tiles + Policy Updates */}
         <div className="grid grid-cols-4 gap-3 flex-shrink-0" style={{ height: '280px' }}>
           <div className="col-span-3 h-full overflow-hidden">
-            <FeaturedSectorTiles theme={settings.theme} />
+            <FeaturedSectorTiles theme={settings.theme} activeSector={activeSector} />
           </div>
           <div className="h-full overflow-hidden">
             <PolicyUpdatesCard theme={settings.theme} />
