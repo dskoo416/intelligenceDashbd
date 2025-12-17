@@ -29,7 +29,24 @@ const JUNK_TOKENS = new Set([
   'display', 'block', 'margin', 'auto', 'layer', 'async', 'decoding', 'loading',
   'post', 'pagetype', 'taxonomy', 'guide', 'attachment', 'thumb', 'view', 'size',
   'angle', 'every', 'driver', 'cars', 'layout', 'rendering', 'template', 'metadata',
-  'slug', 'footer', 'header', 'sidebar', 'content', 'widget', 'plugin', 'module'
+  'slug', 'footer', 'header', 'sidebar', 'content', 'widget', 'plugin', 'module',
+  'bone', 'evgo', 'exro', 'expand', 'integrated', 'nearly', 'way', 'author', 'comment', 'blog'
+]);
+
+const HARD_FIREWALL_PATTERNS = [
+  /\b(align|left|right|center|margin|padding|hspace|vspace)\b/i,
+  /\b(display|block|inline|target|blank)\b/i,
+  /\b(post|pagetype|taxonomy|attachment|thumb|author|view|comment|guide|blog|article)\b/i,
+  /\b(click|expand|auto|integrated|every|nearly|way)\b/i,
+  /\b(bone|drive|driver|driving|target|product)\b/i
+];
+
+const DOMAIN_TERMS = new Set([
+  'battery', 'energy', 'vehicle', 'grid', 'storage', 'lithium', 'cathode',
+  'solid', 'state', 'material', 'electric', 'charging', 'network', 'cell',
+  'manufacturing', 'supply', 'chain', 'recycling', 'mineral', 'refining',
+  'naphtha', 'ethylene', 'propylene', 'petrochemical', 'pharmaceutical',
+  'drug', 'therapy', 'clinical', 'trial', 'patent', 'fda', 'biotech'
 ]);
 
 const SECTOR_KEYWORDS = {
@@ -93,9 +110,29 @@ function isValidToken(token) {
   // Junk tokens
   if (JUNK_TOKENS.has(token)) return false;
   
+  // Hard firewall patterns
+  if (HARD_FIREWALL_PATTERNS.some(pattern => pattern.test(token))) return false;
+  
   // Contains junk patterns
   const junkPatterns = ['http', 'www', '.com', 'utm_', 'amp', 'rss', 'feed'];
   if (junkPatterns.some(pattern => token.includes(pattern))) return false;
+  
+  return true;
+}
+
+function isValidPhrase(phrase) {
+  // Apply hard firewall to phrases
+  if (HARD_FIREWALL_PATTERNS.some(pattern => pattern.test(phrase))) return false;
+  
+  // Reject layout/rendering phrases
+  if (/\b(align|display|margin|target|blank|hspace|vspace)\s+\w+/.test(phrase)) return false;
+  
+  // Require at least one domain term for multi-word phrases
+  const words = phrase.split(' ');
+  if (words.length > 1) {
+    const hasDomainTerm = words.some(w => DOMAIN_TERMS.has(w));
+    if (!hasDomainTerm) return false;
+  }
   
   return true;
 }
@@ -171,14 +208,10 @@ export function extractKeywordsFromArticles(articles, options = {}) {
   // Merge bigrams with unigrams (prefer bigrams with count >= 2)
   const allKeywords = {};
   
-  // Add significant bigrams first (filter out CMS phrases)
+  // Add significant bigrams first (filter with hard firewall)
   Object.entries(bigramCounts).forEach(([bigram, count]) => {
-    if (count >= 2) {
-      // Skip CMS/UI artifacts
-      const isCMSPhrase = /\b(post|layer|display|margin|block|auto|view|size|angle|driver|cars|taxonomy|guide|attachment|thumb)\b/.test(bigram);
-      if (!isCMSPhrase) {
-        allKeywords[bigram] = count;
-      }
+    if (count >= 2 && isValidPhrase(bigram)) {
+      allKeywords[bigram] = count;
     }
   });
   
@@ -238,8 +271,20 @@ export function extractKeywordsFromArticles(articles, options = {}) {
     });
   }
   
+  // Final firewall check and collapse variants
+  const cleaned = {};
+  Object.entries(filteredKeywords).forEach(([keyword, count]) => {
+    // Final firewall check
+    if (!isValidPhrase(keyword)) return;
+    
+    // Remove single-word non-domain terms under 4 chars
+    if (!keyword.includes(' ') && keyword.length < 4 && !DOMAIN_TERMS.has(keyword)) return;
+    
+    cleaned[keyword] = count;
+  });
+  
   // Sort and take top N
-  const sortedKeywords = Object.entries(filteredKeywords)
+  const sortedKeywords = Object.entries(cleaned)
     .sort((a, b) => b[1] - a[1])
     .slice(0, topN)
     .map(([word, count]) => ({ word, count }));
