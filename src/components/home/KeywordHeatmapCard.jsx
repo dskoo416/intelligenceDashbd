@@ -211,24 +211,46 @@ export default function KeywordHeatmapCard({ theme }) {
   const [activityData, setActivityData] = useState([]);
   const [customKeyword, setCustomKeyword] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [includeWords, setIncludeWords] = useState(() => {
-    const saved = localStorage.getItem('keyword_include_words');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [excludeWords, setExcludeWords] = useState(() => {
-    const saved = localStorage.getItem('keyword_exclude_words');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [includeWords, setIncludeWords] = useState([]);
+  const [excludeWords, setExcludeWords] = useState([]);
   const [newIncludeWord, setNewIncludeWord] = useState('');
   const [newExcludeWord, setNewExcludeWord] = useState('');
 
-  useEffect(() => {
-    localStorage.setItem('keyword_include_words', JSON.stringify(includeWords));
-  }, [includeWords]);
+  const { data: keywordSettings = [] } = useQuery({
+    queryKey: ['keywordSettings'],
+    queryFn: () => base44.entities.KeywordSettings.list(),
+  });
 
   useEffect(() => {
-    localStorage.setItem('keyword_exclude_words', JSON.stringify(excludeWords));
-  }, [excludeWords]);
+    if (keywordSettings.length > 0) {
+      const sectorKey = selectedSector?.id || 'all';
+      const settings = keywordSettings.find(s => s.sector_key === sectorKey);
+      if (settings) {
+        setIncludeWords(settings.include_words || []);
+        setExcludeWords(settings.exclude_words || []);
+      } else {
+        setIncludeWords([]);
+        setExcludeWords([]);
+      }
+    }
+  }, [keywordSettings, selectedSector]);
+
+  const saveKeywordSettings = async (newInclude, newExclude) => {
+    const sectorKey = selectedSector?.id || 'all';
+    const existing = keywordSettings.find(s => s.sector_key === sectorKey);
+    
+    const data = {
+      sector_key: sectorKey,
+      include_words: newInclude,
+      exclude_words: newExclude
+    };
+
+    if (existing) {
+      await base44.entities.KeywordSettings.update(existing.id, data);
+    } else {
+      await base44.entities.KeywordSettings.create(data);
+    }
+  };
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -425,14 +447,16 @@ export default function KeywordHeatmapCard({ theme }) {
                     <div>
                       <Label className={cn("text-xs mb-1 block",
                         isPastel ? "text-[#E8E9F0]" :
-                        isDark ? "text-neutral-300" : "text-gray-700")}>Include Words</Label>
+                        isDark ? "text-neutral-300" : "text-gray-700")}>Include Words (with weight)</Label>
                       <div className="flex gap-1 mb-1">
                         <Input
                           value={newIncludeWord}
                           onChange={(e) => setNewIncludeWord(e.target.value)}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && newIncludeWord.trim()) {
-                              setIncludeWords([...includeWords, newIncludeWord.trim()]);
+                              const updated = [...includeWords, { word: newIncludeWord.trim(), weight: 1 }];
+                              setIncludeWords(updated);
+                              saveKeywordSettings(updated, excludeWords);
                               setNewIncludeWord('');
                             }
                           }}
@@ -442,14 +466,44 @@ export default function KeywordHeatmapCard({ theme }) {
                             isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
                         />
                       </div>
-                      <div className="flex flex-wrap gap-1">
-                        {includeWords.map((word, idx) => (
-                          <Badge key={idx} variant="secondary" className={cn("text-xs",
-                            isPastel ? "bg-[#9B8B6B] text-white" :
-                            isDark ? "bg-orange-600 text-white" : "")}>
-                            {word}
-                            <button onClick={() => setIncludeWords(includeWords.filter((_, i) => i !== idx))} className="ml-1">×</button>
-                          </Badge>
+                      <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+                        {includeWords.map((item, idx) => (
+                          <div key={idx} className={cn("flex items-center gap-1 px-2 py-0.5 text-xs border",
+                            isPastel ? "bg-[#9B8B6B] border-[#9B8B6B] text-white" :
+                            isDark ? "bg-orange-600 border-orange-600 text-white" : "bg-orange-600 border-orange-600 text-white")}>
+                            <span>{item.word}</span>
+                            <div className="flex items-center gap-0.5 ml-1 border-l pl-1 border-white/30">
+                              <button
+                                onClick={() => {
+                                  const updated = includeWords.map((w, i) => 
+                                    i === idx ? { ...w, weight: Math.max(1, w.weight - 1) } : w
+                                  );
+                                  setIncludeWords(updated);
+                                  saveKeywordSettings(updated, excludeWords);
+                                }}
+                                className="hover:bg-white/20 px-1"
+                              >−</button>
+                              <span className="text-[10px] min-w-[16px] text-center">{item.weight}</span>
+                              <button
+                                onClick={() => {
+                                  const updated = includeWords.map((w, i) => 
+                                    i === idx ? { ...w, weight: Math.min(10, w.weight + 1) } : w
+                                  );
+                                  setIncludeWords(updated);
+                                  saveKeywordSettings(updated, excludeWords);
+                                }}
+                                className="hover:bg-white/20 px-1"
+                              >+</button>
+                            </div>
+                            <button 
+                              onClick={() => {
+                                const updated = includeWords.filter((_, i) => i !== idx);
+                                setIncludeWords(updated);
+                                saveKeywordSettings(updated, excludeWords);
+                              }} 
+                              className="ml-1 hover:bg-white/20"
+                            >×</button>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -463,7 +517,9 @@ export default function KeywordHeatmapCard({ theme }) {
                           onChange={(e) => setNewExcludeWord(e.target.value)}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && newExcludeWord.trim()) {
-                              setExcludeWords([...excludeWords, newExcludeWord.trim()]);
+                              const updated = [...excludeWords, newExcludeWord.trim()];
+                              setExcludeWords(updated);
+                              saveKeywordSettings(includeWords, updated);
                               setNewExcludeWord('');
                             }
                           }}
@@ -473,13 +529,20 @@ export default function KeywordHeatmapCard({ theme }) {
                             isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
                         />
                       </div>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
                         {excludeWords.map((word, idx) => (
                           <Badge key={idx} variant="secondary" className={cn("text-xs",
-                            isPastel ? "bg-[#9B8B6B] text-white" :
-                            isDark ? "bg-orange-600 text-white" : "")}>
+                            isPastel ? "bg-red-600 text-white" :
+                            isDark ? "bg-red-600 text-white" : "bg-red-600 text-white")}>
                             {word}
-                            <button onClick={() => setExcludeWords(excludeWords.filter((_, i) => i !== idx))} className="ml-1">×</button>
+                            <button 
+                              onClick={() => {
+                                const updated = excludeWords.filter((_, i) => i !== idx);
+                                setExcludeWords(updated);
+                                saveKeywordSettings(includeWords, updated);
+                              }} 
+                              className="ml-1"
+                            >×</button>
                           </Badge>
                         ))}
                       </div>
