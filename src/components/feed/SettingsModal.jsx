@@ -56,7 +56,13 @@ export default function SettingsModal({
   const [editingRSS, setEditingRSS] = useState(null);
   const [expandedNodes, setExpandedNodes] = useState(() => {
     const saved = localStorage.getItem('sector_tree_expanded');
-    return saved ? JSON.parse(saved) : {};
+    if (saved) return JSON.parse(saved);
+    // Default: expand all nodes on first load
+    const allExpanded = {};
+    sectors.forEach(s => {
+      if (s.id) allExpanded[s.id] = true;
+    });
+    return allExpanded;
   });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [sectorToDelete, setSectorToDelete] = useState(null);
@@ -68,6 +74,17 @@ export default function SettingsModal({
   useEffect(() => {
     localStorage.setItem('sector_tree_expanded', JSON.stringify(expandedNodes));
   }, [expandedNodes]);
+
+  // Expand all nodes when sectors are loaded for the first time
+  useEffect(() => {
+    if (sectors.length > 0 && Object.keys(expandedNodes).length === 0) {
+      const allExpanded = {};
+      sectors.forEach(s => {
+        if (s.id) allExpanded[s.id] = true;
+      });
+      setExpandedNodes(allExpanded);
+    }
+  }, [sectors]);
 
   useEffect(() => {
     if (isOpen && !activeTab) {
@@ -192,7 +209,7 @@ export default function SettingsModal({
   const renderTreeNode = (sector, depth = 0) => {
     const children = buildTree(sector.id);
     const hasChildren = children.length > 0;
-    const isExpanded = expandedNodes[sector.id] !== false;
+    const isExpanded = expandedNodes[sector.id] === true || expandedNodes[sector.id] === undefined;
     const isSelected = selectedSector?.id === sector.id || editingSector?.id === sector.id;
     
     return (
@@ -227,12 +244,6 @@ export default function SettingsModal({
             isPastel ? "text-[#E8E9F0]" : "text-white")}>
             {sector.name}
           </span>
-          {sector.keywords && sector.keywords.length > 0 && (
-            <span className={cn("text-[9px]", 
-              isPastel ? "text-[#7B7E9C]" : "text-neutral-600")}>
-              ({sector.keywords.length})
-            </span>
-          )}
         </div>
         {hasChildren && isExpanded && children.map(child => renderTreeNode(child, depth + 1))}
       </React.Fragment>
@@ -610,18 +621,35 @@ export default function SettingsModal({
                     isPastel ? "text-[#A5A8C0]" : "text-neutral-400")}>
                     HIERARCHY TREE
                   </h3>
-                  <Button 
-                    size="sm" 
-                    onClick={() => {
-                      setNewSector({ name: '', keywords: [] });
-                      setEditingSector(null);
-                    }}
-                    className={cn("text-white text-[9px] h-6 px-2",
-                      isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    ADD {selectedSector ? 'CHILD' : 'TOP'} LEVEL
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button 
+                      size="sm" 
+                      onClick={() => {
+                        setSelectedSector(null);
+                        setNewSector({ name: '', keywords: [] });
+                        setEditingSector(null);
+                      }}
+                      className={cn("text-white text-[9px] h-6 px-2",
+                        isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      ADD TOP LEVEL
+                    </Button>
+                    {selectedSector && (
+                      <Button 
+                        size="sm" 
+                        onClick={() => {
+                          setNewSector({ name: '', keywords: [] });
+                          setEditingSector(null);
+                        }}
+                        className={cn("text-white text-[9px] h-6 px-2",
+                          isPastel ? "bg-[#6A6D8C] hover:bg-[#5A5D7C]" : "bg-orange-500 hover:bg-orange-600")}
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        ADD CHILD
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className={cn("flex-1 overflow-y-auto border",
                   isPastel ? "bg-[#32354C] border-[#4A4D6C]" : "bg-[#0A0A0A] border-neutral-800")}>
@@ -644,7 +672,7 @@ export default function SettingsModal({
                 </h3>
                 <div className={cn("flex-1 space-y-3 p-3 border",
                   isPastel ? "bg-[#32354C] border-[#4A4D6C]" : "bg-[#0A0A0A] border-neutral-800")}>
-                  {editingSector || !selectedSector ? (
+                  {editingSector || (newSector && !editingSector) ? (
                     <>
                       {selectedSector && !editingSector && (
                         <div className={cn("text-[10px] p-2 border-l-2 mb-3",
@@ -652,6 +680,15 @@ export default function SettingsModal({
                           Adding child level under: <strong className={cn(
                             isPastel ? "text-[#E8E9F0]" : "text-white"
                           )}>{selectedSector.name}</strong>
+                        </div>
+                      )}
+
+                      {!selectedSector && !editingSector && (
+                        <div className={cn("text-[10px] p-2 border-l-2 mb-3",
+                          isPastel ? "border-[#9B8B6B] text-[#9B9EBC]" : "border-orange-500 text-neutral-400")}>
+                          Adding new <strong className={cn(
+                            isPastel ? "text-[#E8E9F0]" : "text-white"
+                          )}>TOP LEVEL</strong>
                         </div>
                       )}
 
@@ -766,7 +803,11 @@ export default function SettingsModal({
                   ) : (
                     <div className={cn("text-[10px] text-center py-8",
                       isPastel ? "text-[#7B7E9C]" : "text-neutral-600")}>
-                      Select a level from the tree to edit, or click "Add Level" to create a new one.
+                      Select a level from the tree to edit it.
+                      <br/><br/>
+                      Click <strong>"Add Top Level"</strong> to create a root level,
+                      <br/>
+                      or select a parent and click <strong>"Add Child"</strong>.
                     </div>
                   )}
                 </div>
