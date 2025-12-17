@@ -8,18 +8,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
-
-const DEFAULT_TICKER_CONFIG = [
-  { label: 'WTI', symbol: 'CL=F' },
-  { label: 'Brent', symbol: 'BZ=F' },
-  { label: 'Lithium', symbol: 'LIT' },
-  { label: 'Naphtha', symbol: 'NQ=F' },
-  { label: 'USD/KRW', symbol: 'KRW=X' },
-  { label: 'USD/CNY', symbol: 'CNY=X' },
-  { label: 'Natural Gas', symbol: 'NG=F' },
-];
 
 const fetchQuote = async (symbol, duration = '30') => {
   try {
@@ -53,19 +41,15 @@ const fetchQuote = async (symbol, duration = '30') => {
     const change = currentPrice - previousClose;
     const changePercent = (change / previousClose) * 100;
     
-    // Build chart data with appropriate time format based on duration
     const chartData = timestamps.map((time, idx) => {
       const date = new Date(time * 1000);
       let formattedTime;
       
       if (duration === '1') {
-        // 1D: show time of day (HH:MM)
         formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
       } else if (duration === '7' || duration === '30') {
-        // 5D and 1M: show day labels (MMM D)
         formattedTime = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       } else {
-        // 3M and 1Y: show month labels (MMM)
         formattedTime = date.toLocaleDateString('en-US', { month: 'short' });
       }
       
@@ -91,70 +75,93 @@ const fetchQuote = async (symbol, duration = '30') => {
 export default function TickerCard({ theme }) {
   const isDark = theme === 'dark';
   const isPastel = theme === 'pastel';
-  const [tickerConfig, setTickerConfig] = useState(DEFAULT_TICKER_CONFIG);
-  const [editingConfig, setEditingConfig] = useState(DEFAULT_TICKER_CONFIG);
+  const queryClient = useQueryClient();
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [tickerData, setTickerData] = useState({});
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [selectedTicker, setSelectedTicker] = useState(DEFAULT_TICKER_CONFIG[0]);
-  const [chartDuration, setChartDuration] = useState(() => localStorage.getItem('ticker_chart_duration') || '30');
+  const [isLoading, setIsLoading] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [tickers, setTickers] = useState([]);
+  const [newLabel, setNewLabel] = useState('');
+  const [newSymbol, setNewSymbol] = useState('');
+  const [chartDuration, setChartDuration] = useState('30');
 
-  const { data: settingsData = [] } = useQuery({
-    queryKey: ['appSettings'],
-    queryFn: () => base44.entities.AppSettings.list(),
+  const { data: tickerConfig = [] } = useQuery({
+    queryKey: ['tickerConfig'],
+    queryFn: () => base44.entities.TickerConfig.list(),
   });
 
   useEffect(() => {
-    const duration = settingsData[0]?.ticker_chart_duration || localStorage.getItem('ticker_chart_duration') || '30';
-    setChartDuration(duration);
-  }, [settingsData]);
-
-  useEffect(() => {
-    const cached = localStorage.getItem('ticker_config');
-    if (cached) {
-      const config = JSON.parse(cached);
-      setTickerConfig(config);
-      setEditingConfig(config);
-      setSelectedTicker(config[0]);
-    }
-  }, []);
-
-  useEffect(() => {
     if (tickerConfig.length > 0) {
-      refreshTickers();
-      const interval = setInterval(refreshTickers, 60000);
+      const config = tickerConfig[0];
+      setTickers(config.tickers || []);
+      setChartDuration(config.chart_duration || '30');
+    }
+  }, [tickerConfig]);
+
+  useEffect(() => {
+    if (tickers.length > 0) {
+      loadTickerData();
+      const interval = setInterval(loadTickerData, 60000);
       return () => clearInterval(interval);
     }
-  }, [chartDuration]);
+  }, [tickers, chartDuration]);
 
-  useEffect(() => {
-    // Refetch data when duration changes
-    if (selectedTicker.symbol) {
-      const refetchSelected = async () => {
-        setIsRefreshing(true);
-        const quote = await fetchQuote(selectedTicker.symbol, chartDuration);
-        if (quote) {
-          setTickerData(prev => ({ ...prev, [selectedTicker.symbol]: quote }));
-        }
-        setIsRefreshing(false);
-      };
-      refetchSelected();
+  const loadTickerData = async () => {
+    setIsLoading(true);
+    const data = {};
+    for (const ticker of tickers) {
+      const quote = await fetchQuote(ticker.symbol, chartDuration);
+      if (quote) data[ticker.symbol] = quote;
     }
-  }, [chartDuration]);
-
-  const refreshTickers = async () => {
-    setIsRefreshing(true);
-    const newData = {};
-    
-    for (const config of tickerConfig) {
-      const quote = await fetchQuote(config.symbol, chartDuration);
-      if (quote) {
-        newData[config.symbol] = quote;
-      }
-    }
-    
-    setTickerData(newData);
-    setIsRefreshing(false);
+    setTickerData(data);
+    setIsLoading(false);
   };
+
+  const handleSave = async () => {
+    const config = tickerConfig[0];
+    const data = {
+      tickers,
+      chart_duration: chartDuration
+    };
+    
+    if (config) {
+      await base44.entities.TickerConfig.update(config.id, data);
+    } else {
+      await base44.entities.TickerConfig.create(data);
+    }
+    
+    queryClient.invalidateQueries({ queryKey: ['tickerConfig'] });
+    setSettingsOpen(false);
+    setCurrentIndex(0);
+    setTickerData({});
+  };
+
+  const handleDelete = async (index) => {
+    const updated = tickers.filter((_, i) => i !== index);
+    setTickers(updated);
+    
+    const config = tickerConfig[0];
+    if (config) {
+      await base44.entities.TickerConfig.update(config.id, { tickers: updated, chart_duration: chartDuration });
+      queryClient.invalidateQueries({ queryKey: ['tickerConfig'] });
+    }
+    
+    if (currentIndex >= updated.length) {
+      setCurrentIndex(Math.max(0, updated.length - 1));
+    }
+    setTickerData({});
+  };
+
+  const handleAddTicker = () => {
+    if (newLabel && newSymbol) {
+      setTickers([...tickers, { label: newLabel, symbol: newSymbol }]);
+      setNewLabel('');
+      setNewSymbol('');
+    }
+  };
+
+  const currentTicker = tickers[currentIndex];
+  const currentData = currentTicker ? tickerData[currentTicker.symbol] : null;
 
   const formatPrice = (price, symbol) => {
     if (symbol.includes('=X')) return price.toFixed(2);
@@ -162,13 +169,11 @@ export default function TickerCard({ theme }) {
     return price.toFixed(2);
   };
 
-  const selectedData = tickerData[selectedTicker.symbol];
-
   return (
-    <div className={cn("h-full flex flex-col rounded", 
-      isPastel ? "bg-[#3A3D5C] border border-[#4A4D6C] shadow-sm" :
-      isDark ? "bg-[#131313] border border-[#1F1F1F] shadow-sm" : "bg-white border border-gray-300 shadow-sm")}>
-      <div className={cn("flex items-center justify-between px-2 py-1 border-b", 
+    <div className={cn("h-full flex flex-col border", 
+      isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+      isDark ? "bg-[#131313] border-[#1F1F1F]" : "bg-white border-gray-300")}>
+      <div className={cn("px-2 py-1 border-b flex items-center justify-between", 
         isPastel ? "border-[#4A4D6C]" :
         isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
         <h3 className={cn("text-[10px] font-semibold uppercase tracking-wider", 
@@ -178,15 +183,15 @@ export default function TickerCard({ theme }) {
           <Button 
             size="sm" 
             variant="ghost" 
-            onClick={refreshTickers}
-            disabled={isRefreshing}
+            onClick={loadTickerData}
+            disabled={isLoading || tickers.length === 0}
             className="h-4 w-4 p-0"
           >
-            <RefreshCw className={cn("w-2.5 h-2.5", isRefreshing && "animate-spin", 
+            <RefreshCw className={cn("w-2.5 h-2.5", isLoading && "animate-spin", 
               isPastel ? "text-[#7B7E9C]" :
               isDark ? "text-neutral-600" : "text-gray-500")} />
           </Button>
-          <Popover>
+          <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>
             <PopoverTrigger asChild>
               <Button size="sm" variant="ghost" className="h-4 w-4 p-0">
                 <Settings className={cn("w-2.5 h-2.5", 
@@ -201,58 +206,69 @@ export default function TickerCard({ theme }) {
                 <h4 className={cn("font-medium text-[10px] uppercase",
                   isPastel ? "text-[#E8E9F0]" :
                   isDark ? "text-white" : "text-gray-900")}>Tickers</h4>
-                {editingConfig.map((config, idx) => (
+                {tickers.map((ticker, idx) => (
                   <div key={idx} className="flex gap-1 items-center">
                     <Input
-                      value={config.label}
+                      value={ticker.label}
                       onChange={(e) => {
-                        const newConfig = [...editingConfig];
-                        newConfig[idx] = { ...newConfig[idx], label: e.target.value };
-                        setEditingConfig(newConfig);
+                        const updated = [...tickers];
+                        updated[idx] = { ...updated[idx], label: e.target.value };
+                        setTickers(updated);
                       }}
                       className={cn("h-6 text-[10px] flex-1",
                         isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
-                        isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
+                        isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
                       placeholder="Label"
                     />
                     <Input
-                      value={config.symbol}
+                      value={ticker.symbol}
                       onChange={(e) => {
-                        const newConfig = [...editingConfig];
-                        newConfig[idx] = { ...newConfig[idx], symbol: e.target.value };
-                        setEditingConfig(newConfig);
+                        const updated = [...tickers];
+                        updated[idx] = { ...updated[idx], symbol: e.target.value };
+                        setTickers(updated);
                       }}
                       placeholder="Symbol"
                       className={cn("h-6 text-[10px] flex-1",
                         isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
-                        isDark ? "bg-neutral-900 border-neutral-700 text-white" : "bg-white border-gray-300 text-gray-900")}
+                        isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
                     />
                     <Button 
                       size="sm" 
                       variant="ghost"
-                      onClick={() => {
-                        const newConfig = editingConfig.filter((_, i) => i !== idx);
-                        setEditingConfig(newConfig);
-                      }}
+                      onClick={() => handleDelete(idx)}
                       className="h-6 w-6 p-0 text-[10px] text-red-500"
                     >
                       ×
                     </Button>
                   </div>
                 ))}
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => {
-                    setEditingConfig([...editingConfig, { label: 'New', symbol: 'CL=F' }]);
-                  }}
-                  className="w-full h-6 text-[10px]"
-                >
-                  + Add
-                </Button>
+                <div className="flex gap-1">
+                  <Input
+                    value={newLabel}
+                    onChange={(e) => setNewLabel(e.target.value)}
+                    placeholder="Label"
+                    className={cn("h-6 text-[10px] flex-1",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
+                  />
+                  <Input
+                    value={newSymbol}
+                    onChange={(e) => setNewSymbol(e.target.value)}
+                    placeholder="Symbol"
+                    className={cn("h-6 text-[10px] flex-1",
+                      isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                      isDark ? "bg-neutral-900 border-neutral-700 text-white" : "")}
+                  />
+                  <Button 
+                    size="sm" 
+                    onClick={handleAddTicker}
+                    className="h-6 px-2 text-[10px]"
+                  >
+                    +
+                  </Button>
+                </div>
                 <div className={cn("space-y-1 pt-2 border-t",
-                  isPastel ? "border-[#4A4D6C]" :
-                  "border-neutral-700")}>
+                  isPastel ? "border-[#4A4D6C]" : "border-neutral-700")}>
                   <Label className={cn("text-[10px] uppercase",
                     isPastel ? "text-[#A5A8C0]" :
                     isDark ? "text-neutral-400" : "text-gray-600")}>Duration</Label>
@@ -260,13 +276,7 @@ export default function TickerCard({ theme }) {
                     {['1', '7', '30', '365', 'ytd'].map(days => (
                       <button
                         key={days}
-                        onClick={async () => {
-                          if (settingsData[0]?.id) {
-                            await base44.entities.AppSettings.update(settingsData[0].id, { ticker_chart_duration: days });
-                          }
-                          localStorage.setItem('ticker_chart_duration', days);
-                          setChartDuration(days);
-                        }}
+                        onClick={() => setChartDuration(days)}
                         className={cn(
                           "text-[9px] uppercase px-1 py-0.5 transition-colors border",
                           chartDuration === days
@@ -283,10 +293,7 @@ export default function TickerCard({ theme }) {
                 </div>
                 <Button 
                   size="sm" 
-                  onClick={() => {
-                    setTickerConfig(editingConfig);
-                    localStorage.setItem('ticker_config', JSON.stringify(editingConfig));
-                  }}
+                  onClick={handleSave}
                   className="w-full h-6 text-[10px]"
                 >
                   Save
@@ -297,137 +304,101 @@ export default function TickerCard({ theme }) {
         </div>
       </div>
       
-      {/* Top Half - Chart */}
-      <div className="flex flex-col" style={{ height: '180px' }}>
-        <div className={cn("px-2 py-1 border-b flex items-center justify-between", 
-          isPastel ? "border-[#4A4D6C]" :
-          isDark ? "border-[#1F1F1F]" : "border-gray-300")}>
-          <h4 className={cn("text-[9px] font-semibold uppercase tracking-wider", 
-            isPastel ? "text-[#A5A8C0]" :
-            isDark ? "text-neutral-500" : "text-gray-700")}>
-            {selectedTicker.symbol}
-          </h4>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => {
-                const currentIndex = tickerConfig.findIndex(t => t.symbol === selectedTicker.symbol);
-                const prevIndex = currentIndex === 0 ? tickerConfig.length - 1 : currentIndex - 1;
-                setSelectedTicker(tickerConfig[prevIndex]);
-              }}
-              className={cn("p-0.5 transition-colors", 
-                isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" :
-                isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
+      <div className="flex-1 p-2 relative">
+        {tickers.length === 0 ? (
+          <div className={cn("flex flex-col items-center justify-center h-full text-[10px] gap-2",
+            isPastel ? "text-[#7B7E9C]" :
+            isDark ? "text-neutral-700" : "text-gray-500")}>
+            <span>No tickers configured</span>
+            <Button 
+              size="sm" 
+              onClick={() => setSettingsOpen(true)}
+              className={cn("h-6 text-[9px]",
+                isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" :
+                "bg-orange-600 hover:bg-orange-700")}
             >
-              <ChevronLeft className="w-3 h-3" />
-            </button>
-            <button
-              onClick={() => {
-                const currentIndex = tickerConfig.findIndex(t => t.symbol === selectedTicker.symbol);
-                const nextIndex = currentIndex === tickerConfig.length - 1 ? 0 : currentIndex + 1;
-                setSelectedTicker(tickerConfig[nextIndex]);
-              }}
-              className={cn("p-0.5 transition-colors", 
-                isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0]" :
-                isDark ? "text-neutral-600 hover:text-neutral-400" : "text-gray-500 hover:text-gray-700")}
-            >
-              <ChevronRight className="w-3 h-3" />
-            </button>
+              Add Ticker
+            </Button>
           </div>
-        </div>
-        <div className={cn("flex-1", 
-          isPastel ? "bg-[#32354C]" :
-          isDark ? "bg-[#0A0A0A]" : "bg-gray-50")}>
-          {selectedData?.chartData && selectedData.chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={selectedData.chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={
-                  isPastel ? '#4A4D6C' :
-                  isDark ? '#1A1A1A' : '#e5e7eb'} />
-                <XAxis 
-                  dataKey="time" 
-                  tick={{ fontSize: 7, fill: isPastel ? '#9B9EBC' : isDark ? '#525252' : '#9ca3af' }}
-                  stroke={isPastel ? '#4A4D6C' : isDark ? '#1F1F1F' : '#e5e7eb'}
-                  tickLine={false}
-                  interval="preserveStartEnd"
-                />
-                <YAxis 
-                  domain={['auto', 'auto']}
-                  tick={{ fontSize: 7, fill: isPastel ? '#9B9EBC' : isDark ? '#525252' : '#9ca3af' }}
-                  stroke={isPastel ? '#4A4D6C' : isDark ? '#1F1F1F' : '#e5e7eb'}
-                  tickLine={false}
-                  width={35}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="price" 
-                  stroke={selectedData.positive ? (isDark ? '#2D8659' : '#16a34a') : (isDark ? '#8B3A3A' : '#dc2626')} 
-                  strokeWidth={1.5}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className={cn("flex items-center justify-center h-full text-[9px]", 
-              isPastel ? "text-[#7B7E9C]" :
-              isDark ? "text-neutral-700" : "text-gray-400")}>
-              {isRefreshing ? 'Loading...' : 'No chart data'}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Bottom Half - Ticker List */}
-        <div className={cn("border-t", 
-          isPastel ? "border-[#4A4D6C] bg-[#2F3248]" :
-          isDark ? "border-[#1F1F1F] bg-[#0F0F0F]" : "border-gray-300 bg-gray-50")}>
-        <div className="divide-y divide-[#1F1F1F]">
-          {tickerConfig.map((config) => {
-            const data = tickerData[config.symbol];
-            const isActive = selectedTicker.symbol === config.symbol;
-            return (
-              <button
-                key={config.symbol}
-                onClick={() => setSelectedTicker(config)}
-                className={cn(
-                  "w-full px-2 py-1 flex items-center justify-between transition-colors relative",
-                  isPastel ? "hover:bg-[#42456C]" :
-                  isDark ? "hover:bg-[#1A1A1A]" : "hover:bg-gray-100",
-                  isActive && (isPastel ? "bg-[#42456C]" : isDark ? "bg-[#1A1A1A]" : "bg-gray-100")
-                )}
-              >
-                {isActive && (
-                  <div className={cn("absolute left-0 top-0 bottom-0 w-[2px]", 
-                    isPastel ? "bg-[#9B8B6B]" :
-                    isDark ? "bg-orange-500" : "bg-orange-600")} />
-                )}
-                <span className={cn("text-[9px] font-medium text-left pl-1", 
-                  isPastel ? "text-[#D0D2E0]" :
-                  isDark ? "text-neutral-400" : "text-gray-700")}>
-                  {config.label}
-                </span>
-                {data ? (
+        ) : currentTicker ? (
+          <>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h4 className={cn("text-[10px] font-semibold",
+                  isPastel ? "text-[#E8E9F0]" :
+                  isDark ? "text-white" : "text-gray-900")}>{currentTicker.label}</h4>
+                {currentData && (
                   <div className="flex items-center gap-2">
-                    <span className={cn("text-[9px] font-mono font-bold", 
+                    <span className={cn("text-[14px] font-bold",
                       isPastel ? "text-white" :
                       isDark ? "text-white" : "text-gray-900")}>
-                      {formatPrice(data.price, config.symbol)}
+                      {formatPrice(currentData.price, currentTicker.symbol)}
                     </span>
-                    <span className={cn("text-[9px] font-mono", 
-                      data.positive 
-                        ? (isPastel ? "text-[#6B9B9B]" : isDark ? "text-[#2D8659]" : "text-green-600") 
-                        : (isPastel ? "text-[#9B6B7B]" : isDark ? "text-[#8B3A3A]" : "text-red-600"))}>
-                      {data.positive ? '+' : ''}{data.change.toFixed(2)} ({data.positive ? '+' : ''}{data.changePercent.toFixed(2)}%)
+                    <span className={cn("text-[10px]",
+                      currentData.positive ? "text-green-500" : "text-red-500")}>
+                      {currentData.positive ? '+' : ''}{currentData.change.toFixed(2)} ({currentData.positive ? '+' : ''}{currentData.changePercent.toFixed(2)}%)
                     </span>
                   </div>
-                ) : (
-                  <span className={cn("text-[8px]", 
-                    isPastel ? "text-[#7B7E9C]" :
-                    isDark ? "text-neutral-700" : "text-gray-400")}>Loading...</span>
                 )}
-              </button>
-            );
-          })}
-        </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+                  disabled={currentIndex === 0}
+                  className={cn("p-0.5",
+                    isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0] disabled:opacity-30" :
+                    isDark ? "text-neutral-600 hover:text-neutral-400 disabled:opacity-30" : "text-gray-500 hover:text-gray-700 disabled:opacity-30")}
+                >
+                  <ChevronLeft className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() => setCurrentIndex(Math.min(tickers.length - 1, currentIndex + 1))}
+                  disabled={currentIndex === tickers.length - 1}
+                  className={cn("p-0.5",
+                    isPastel ? "text-[#7B7E9C] hover:text-[#A5A8C0] disabled:opacity-30" :
+                    isDark ? "text-neutral-600 hover:text-neutral-400 disabled:opacity-30" : "text-gray-500 hover:text-gray-700 disabled:opacity-30")}
+                >
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+            {currentData?.chartData && currentData.chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="85%">
+                <LineChart data={currentData.chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={
+                    isPastel ? '#4A4D6C' :
+                    isDark ? '#1A1A1A' : '#e5e7eb'} />
+                  <XAxis 
+                    dataKey="time" 
+                    tick={{ fontSize: 7, fill: isPastel ? '#9B9EBC' : isDark ? '#525252' : '#9ca3af' }}
+                    stroke={isPastel ? '#4A4D6C' : isDark ? '#1F1F1F' : '#e5e7eb'}
+                    tickLine={false}
+                  />
+                  <YAxis 
+                    domain={['auto', 'auto']}
+                    tick={{ fontSize: 7, fill: isPastel ? '#9B9EBC' : isDark ? '#525252' : '#9ca3af' }}
+                    stroke={isPastel ? '#4A4D6C' : isDark ? '#1F1F1F' : '#e5e7eb'}
+                    tickLine={false}
+                    width={35}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="price" 
+                    stroke={currentData.positive ? '#16a34a' : '#dc2626'} 
+                    strokeWidth={1.5}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className={cn("flex items-center justify-center h-full text-[9px]",
+                isPastel ? "text-[#7B7E9C]" :
+                isDark ? "text-neutral-700" : "text-gray-400")}>
+                {isLoading ? 'Loading...' : 'No chart data'}
+              </div>
+            )}
+          </>
+        ) : null}
       </div>
     </div>
   );
