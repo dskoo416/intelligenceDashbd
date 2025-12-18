@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { cleanTitle } from '@/components/utils/titleCleanup';
 
 export default function CriticalArticles({ articles, isLoading, onRefresh, theme }) {
   const isDark = theme === 'dark';
@@ -90,7 +91,7 @@ export default function CriticalArticles({ articles, isLoading, onRefresh, theme
               <h4 className={cn("text-sm font-medium line-clamp-2 mb-2", 
                 isPastel ? "text-white" :
                 isDark ? "text-white" : "text-gray-900")}>
-                {article.title}
+                {cleanTitle(article.title)}
               </h4>
               <div className="flex items-center gap-2">
                 <span className={cn("text-xs", 
