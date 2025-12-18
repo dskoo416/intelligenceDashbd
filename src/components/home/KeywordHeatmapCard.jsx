@@ -280,7 +280,10 @@ export default function KeywordHeatmapCard({ theme }) {
     const cached = localStorage.getItem(`keyword_heatmap_${selectedSector?.id || 'all'}`);
     if (cached) {
       const data = JSON.parse(cached);
+      // Cached data only has word and count, no articles
       setKeywordData(data);
+    } else {
+      setKeywordData([]);
     }
   }, [selectedSector]);
 
@@ -310,10 +313,14 @@ export default function KeywordHeatmapCard({ theme }) {
       excludeWords
     });
 
-    const sortedKeywords = keywords.map(kw => ({ ...kw, articles: allArticles }));
-
-    setKeywordData(sortedKeywords);
-    localStorage.setItem(`keyword_heatmap_${selectedSector?.id || 'all'}`, JSON.stringify(sortedKeywords));
+    // Store articles separately in memory, don't persist to localStorage
+    const keywordsWithArticles = keywords.map(kw => ({ ...kw, articles: allArticles }));
+    
+    setKeywordData(keywordsWithArticles);
+    
+    // Only store keyword counts, not articles (to avoid quota issues)
+    const keywordsForStorage = keywords.map(({ word, count }) => ({ word, count }));
+    localStorage.setItem(`keyword_heatmap_${selectedSector?.id || 'all'}`, JSON.stringify(keywordsForStorage));
     setIsLoading(false);
   };
 
@@ -370,16 +377,31 @@ export default function KeywordHeatmapCard({ theme }) {
     setIsLoading(false);
   };
 
-  const handleKeywordClick = (keyword) => {
-    const articles = keywordData.find(k => k.word === keyword)?.articles || [];
-    const filtered = articles.filter(a => {
+  const handleKeywordClick = async (keyword) => {
+    setSelectedKeyword(keyword);
+    setRelatedArticles([]);
+    setDialogOpen(true);
+    
+    // Fetch articles on demand
+    const allArticles = [];
+    const sourcesToAnalyze = selectedSector
+      ? rssSources.filter(s => s.sector_id === selectedSector.id && s.is_active !== false)
+      : rssSources.filter(s => s.is_active !== false);
+
+    for (const source of sourcesToAnalyze.slice(0, 10)) {
+      const articles = await parseRSS(source.url);
+      const sector = sectors.find(s => s.id === source.sector_id);
+      articles.forEach(article => {
+        allArticles.push({ ...article, source: source.name, sector: sector?.name });
+      });
+    }
+    
+    const filtered = allArticles.filter(a => {
       const text = `${a.title} ${a.description}`.toLowerCase();
       return text.includes(keyword.toLowerCase());
     }).slice(0, 20);
     
-    setSelectedKeyword(keyword);
     setRelatedArticles(filtered);
-    setDialogOpen(true);
   };
 
   const handleSaveArticle = async (article) => {
