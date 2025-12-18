@@ -318,6 +318,8 @@ export default function KeywordHeatmapCard({ theme }) {
   };
 
   const analyzeActivity = async () => {
+    if (activityKeywords.length === 0) return;
+    
     setIsLoading(true);
     const timeSeriesData = {};
     
@@ -329,34 +331,40 @@ export default function KeywordHeatmapCard({ theme }) {
       articles.forEach(article => {
         if (!article.pubDate) return;
         
-        const date = new Date(article.pubDate);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        
-        if (!timeSeriesData[monthKey]) {
-          timeSeriesData[monthKey] = {};
-        }
-        
-        const text = `${article.title} ${article.description}`.toLowerCase();
-        
-        activityKeywords.forEach(keyword => {
-          const count = (text.match(new RegExp(keyword.toLowerCase(), 'g')) || []).length;
-          if (count > 0) {
-            timeSeriesData[monthKey][keyword] = (timeSeriesData[monthKey][keyword] || 0) + count;
+        try {
+          const date = new Date(article.pubDate);
+          if (isNaN(date.getTime())) return;
+          
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          
+          if (!timeSeriesData[monthKey]) {
+            timeSeriesData[monthKey] = {};
           }
-        });
+          
+          const text = `${article.title || ''} ${article.description || ''}`.toLowerCase();
+          
+          activityKeywords.forEach(keyword => {
+            const regex = new RegExp(keyword.toLowerCase(), 'gi');
+            const matches = text.match(regex);
+            const count = matches ? matches.length : 0;
+            if (count > 0) {
+              timeSeriesData[monthKey][keyword] = (timeSeriesData[monthKey][keyword] || 0) + count;
+            }
+          });
+        } catch (error) {
+          console.error('Error processing article date:', error);
+        }
       });
     }
 
-    const chartData = Object.keys(timeSeriesData)
-      .sort()
-      .slice(-12)
-      .map(month => {
-        const dataPoint = { month };
-        activityKeywords.forEach(keyword => {
-          dataPoint[keyword] = timeSeriesData[month][keyword] || 0;
-        });
-        return dataPoint;
+    const sortedMonths = Object.keys(timeSeriesData).sort();
+    const chartData = sortedMonths.slice(-12).map(month => {
+      const dataPoint = { month };
+      activityKeywords.forEach(keyword => {
+        dataPoint[keyword] = timeSeriesData[month]?.[keyword] || 0;
       });
+      return dataPoint;
+    });
 
     setActivityData(chartData);
     setIsLoading(false);

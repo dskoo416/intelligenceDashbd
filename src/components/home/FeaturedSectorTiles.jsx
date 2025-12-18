@@ -55,28 +55,36 @@ export default function FeaturedSectorTiles({ theme, activeSector }) {
   });
 
   useEffect(() => {
-    // If activeSector is selected, show its top 4 articles directly
-    if (activeSector && feedArticles.length > 0) {
-      setFeaturedArticles([{
-        sector: activeSector.name,
-        articles: feedArticles.slice(0, 4),
-        sectorId: activeSector.id
-      }]);
-    } else {
-      // Default: show first 3 sectors
+    // Always show first 3 Level 1 sectors
+    if (sectors.length > 0) {
+      const level1Sectors = sectors.filter(s => !s.parent_id || s.parent_id === null);
       const cached = localStorage.getItem('home_featured_tiles');
+      
       if (cached) {
-        setFeaturedArticles(JSON.parse(cached));
-      } else if (sectors.length > 0) {
-        const featured = sectors.slice(0, 3).map(sector => ({
+        const cachedData = JSON.parse(cached);
+        // Filter to only Level 1 sectors
+        const filteredCache = cachedData.filter(c => 
+          level1Sectors.some(s => s.id === c.sectorId)
+        ).slice(0, 3);
+        
+        if (filteredCache.length > 0) {
+          setFeaturedArticles(filteredCache);
+        } else {
+          setFeaturedArticles(level1Sectors.slice(0, 3).map(sector => ({
+            sector: sector.name,
+            articles: [],
+            sectorId: sector.id
+          })));
+        }
+      } else {
+        setFeaturedArticles(level1Sectors.slice(0, 3).map(sector => ({
           sector: sector.name,
           articles: [],
           sectorId: sector.id
-        }));
-        setFeaturedArticles(featured);
+        })));
       }
     }
-  }, [activeSector, feedArticles, sectors]);
+  }, [sectors]);
 
   const loadFeaturedForSector = async (sectorIdx) => {
     const sector = sectors[sectorIdx];
@@ -186,7 +194,7 @@ export default function FeaturedSectorTiles({ theme, activeSector }) {
             <div className={cn("text-[10px]", 
               isPastel ? "text-[#7B7E9C]" :
               isDark ? "text-neutral-600" : "text-gray-500")}>
-              {isLoadingArticles ? 'Loading...' : 'Select a level to view featured articles'}
+              Click refresh to load featured articles
             </div>
           )}
           </div>

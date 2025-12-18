@@ -109,11 +109,20 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     const articleSummaries = articles.slice(0, 15).map(a => `- ${a.title}: ${a.description}`).join('\n');
     
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `${instructions}\n\nArticles:\n${articleSummaries}\n\nProvide a 2-3 paragraph intelligence summary:`,
+      prompt: `${instructions}\n\nArticles:\n${articleSummaries}\n\nProvide a comprehensive 6-8 sentence summary:`,
     });
     
     setGist(result);
-    updateCache(sectorKey, { gist: result });
+    
+    // Update Home cache as well for sync
+    const homeSummaries = JSON.parse(localStorage.getItem('sector_summaries') || '[]');
+    const updated = homeSummaries.map(s => 
+      s.sectorId === activeSector.id ? { ...s, summary: result } : s
+    );
+    if (!updated.some(s => s.sectorId === activeSector.id)) {
+      updated.push({ sectorId: activeSector.id, sectorName: activeSector.name, summary: result });
+    }
+    localStorage.setItem('sector_summaries', JSON.stringify(updated));
     
     if (activeSector) {
       const subsectorName = activeSubsector?.name || '';

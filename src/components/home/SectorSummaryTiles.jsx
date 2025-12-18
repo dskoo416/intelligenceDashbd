@@ -49,11 +49,21 @@ export default function SectorSummaryTiles({ theme }) {
   });
 
   useEffect(() => {
-    const cached = localStorage.getItem('sector_summaries');
-    if (cached) {
-      setSummaries(JSON.parse(cached));
-    } else if (sectors.length > 0) {
-      setSummaries(sectors.map(s => ({ sectorId: s.id, sectorName: s.name, summary: '' })));
+    if (sectors.length > 0) {
+      // Only show Level 1 (root) sectors
+      const level1Sectors = sectors.filter(s => !s.parent_id || s.parent_id === null);
+      const cached = localStorage.getItem('sector_summaries');
+      
+      if (cached) {
+        const cachedData = JSON.parse(cached);
+        // Filter to only include Level 1 sectors
+        const filteredCache = cachedData.filter(c => 
+          level1Sectors.some(s => s.id === c.sectorId)
+        );
+        setSummaries(filteredCache.length > 0 ? filteredCache : level1Sectors.map(s => ({ sectorId: s.id, sectorName: s.name, summary: '' })));
+      } else {
+        setSummaries(level1Sectors.map(s => ({ sectorId: s.id, sectorName: s.name, summary: '' })));
+      }
     }
   }, [sectors]);
 
@@ -63,6 +73,9 @@ export default function SectorSummaryTiles({ theme }) {
 
     setLoadingStates(prev => ({ ...prev, [sectorId]: true }));
 
+    // Also update Intelligence Feed cache with same summary
+    const cacheKey = `gist_${sectorId}`;
+    
     const sectorSources = rssSources.filter(s => s.sector_id === sector.id && s.is_active !== false);
     let articles = [];
 
@@ -77,17 +90,22 @@ export default function SectorSummaryTiles({ theme }) {
       const articleSummaries = articles.slice(0, 10).map(a => `- ${a.title}: ${a.description}`).join('\n');
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Provide a comprehensive 6-8 sentence snapshot summary for ${sector.name} level 1 based on these recent articles. Include key developments, trends, and important insights:\n\n${articleSummaries}\n\nProvide only the detailed summary with no extra text:`,
+        prompt: `Provide a comprehensive 6-8 sentence snapshot summary for ${sector.name} based on these recent articles. Include key developments, trends, and important insights:\n\n${articleSummaries}\n\nProvide only the detailed summary with no extra text:`,
       });
 
       summary = result;
     }
 
+    // Update both caches
     setSummaries(prev => {
       const updated = prev.map(s => 
         s.sectorId === sectorId ? { ...s, summary } : s
       );
       localStorage.setItem('sector_summaries', JSON.stringify(updated));
+      
+      // Also update gist cache for Intelligence Feed
+      localStorage.setItem(cacheKey, JSON.stringify({ gist: summary }));
+      
       return updated;
     });
 
