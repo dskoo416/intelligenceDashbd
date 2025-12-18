@@ -56,7 +56,10 @@ export function useFeedData(activeSector, activeSubsector) {
       return cached.articles;
     }
     
-    setIsLoadingArticles(true);
+    // Don't clear existing articles when refreshing
+    if (!forceRefresh || articles.length === 0) {
+      setIsLoadingArticles(true);
+    }
 
     let sectorSources;
     if (activeSector) {
@@ -103,10 +106,12 @@ export function useFeedData(activeSector, activeSubsector) {
       })));
     }
     
-    const existingArticles = cached?.articles || [];
+    // When refreshing, keep existing articles and prepend new ones
+    const existingArticles = forceRefresh && articles.length > 0 ? articles : (cached?.articles || []);
     const existingLinks = new Set(existingArticles.map(a => a.link));
     const uniqueNew = newArticles.filter(a => !existingLinks.has(a.link));
     
+    // Prepend new articles to existing ones
     const combined = [...uniqueNew, ...existingArticles];
     
     combined.sort((a, b) => {
