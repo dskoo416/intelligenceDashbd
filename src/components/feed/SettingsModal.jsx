@@ -1063,7 +1063,7 @@ export default function SettingsModal({
               <div className="space-y-2 mb-4">
                 <p className={cn("text-[10px]",
                   isPastel ? "text-[#9B9EBC]" : "text-neutral-500")}>
-                  Format: Source Name, RSS URL, Sector, Subsector (optional)
+                  Format: Source Name, RSS URL, Level
                 </p>
                 <Textarea
                   value={bulkRSSText}
