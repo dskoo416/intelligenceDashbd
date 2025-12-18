@@ -233,7 +233,7 @@ export default function MenuBar({
             >
               {autoLoadGist && <CheckCircle2 className="w-3 h-3 mr-2 text-orange-500" />}
               {!autoLoadGist && <div className="w-3 h-3 mr-2" />}
-              Auto Load Gist
+              Auto Load Summaries
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={onToggleAutoLoadCritical}
