@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Plus, Calendar, Search, X, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Calendar, Search, X, RefreshCw, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { cleanTitle } from '@/components/utils/titleCleanup';
+import { toast } from 'sonner';
 
 
-export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFilter, onSearchFilter, dateFilter, searchFilter, sectorName, savedArticleIds, theme, onRefresh }) {
+export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFilter, onSearchFilter, dateFilter, searchFilter, sectorName, savedArticleIds, theme, onRefresh, sectorKeywords }) {
   const isDark = theme === 'dark';
   const isPastel = theme === 'pastel';
   const [showSearch, setShowSearch] = useState(false);
@@ -18,6 +20,8 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
   const [tempDateFilter, setTempDateFilter] = useState(null);
   const articlesPerPage = 20;
   const [cachedArticles, setCachedArticles] = useState([]);
+  const [showKeywords, setShowKeywords] = useState(false);
+  const [activeKeyword, setActiveKeyword] = useState('all');
 
   useEffect(() => {
     const cached = localStorage.getItem('news_feed_cache');
@@ -34,11 +38,24 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
   }, [articles]);
 
   const displayArticles = articles.length > 0 ? articles : cachedArticles;
+
+  // Apply keyword filtering
+  const keywordFilteredArticles = activeKeyword === 'all' 
+    ? displayArticles 
+    : displayArticles.filter(article => {
+        const searchText = `${cleanTitle(article.title)} ${article.description || ''}`.toLowerCase();
+        return searchText.includes(activeKeyword.toLowerCase());
+      });
   
-  const totalPages = Math.ceil(displayArticles.length / articlesPerPage);
+  const totalPages = Math.ceil(keywordFilteredArticles.length / articlesPerPage);
   const startIndex = (currentPage - 1) * articlesPerPage;
   const endIndex = startIndex + articlesPerPage;
-  const paginatedArticles = displayArticles.slice(startIndex, endIndex);
+  const paginatedArticles = keywordFilteredArticles.slice(startIndex, endIndex);
+
+  // Reset to page 1 when keyword filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeKeyword]);
 
   return (
     <div className={cn(
@@ -56,10 +73,17 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={onRefresh}
+            onClick={() => {
+              toast.promise(onRefresh(), {
+                loading: 'Fetching latest news...',
+                success: 'News updated',
+                error: 'Failed to fetch news'
+              });
+            }}
+            disabled={isLoading}
             className="h-5 w-5 p-0"
           >
-            <RefreshCw className={cn("w-3 h-3", 
+            <RefreshCw className={cn("w-3 h-3", isLoading && "animate-spin",
               isPastel ? "text-[#7B7E9C]" :
               isDark ? "text-neutral-500" : "text-gray-500")} />
           </Button>
@@ -68,8 +92,21 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
             <span className={cn("text-xs", 
               isPastel ? "text-[#9B9EBC]" :
               isDark ? "text-neutral-600" : "text-gray-400")}>
-              {displayArticles.length} articles
+              {keywordFilteredArticles.length} articles
             </span>
+
+            {sectorKeywords && sectorKeywords.length > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowKeywords(!showKeywords)}
+                className="h-7 w-7 p-0"
+              >
+                <Tag className={cn("w-3.5 h-3.5", showKeywords ? "text-orange-500" : 
+                  isPastel ? "text-[#7B7E9C]" :
+                  isDark ? "text-neutral-500" : "text-gray-500")} />
+              </Button>
+            )}
 
             <Popover>
             <PopoverTrigger asChild>
@@ -206,6 +243,42 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
         </div>
       </div>
 
+      {showKeywords && sectorKeywords && sectorKeywords.length > 0 && (
+        <div className={cn("mb-3 pb-2 border-b overflow-x-auto",
+          isPastel ? "border-[#4A4D6C]" :
+          isDark ? "border-neutral-800" : "border-gray-200")}>
+          <div className="flex items-center gap-2 min-w-max">
+            <button
+              onClick={() => setActiveKeyword('all')}
+              className={cn(
+                "px-2.5 py-1 text-xs font-medium transition-all whitespace-nowrap",
+                activeKeyword === 'all'
+                  ? (isPastel ? "bg-[#9B8B6B] text-white" : "bg-orange-500 text-white")
+                  : (isPastel ? "bg-[#4A4D6C] text-[#D0D2E0] hover:bg-[#5A5D7C]" :
+                    isDark ? "bg-neutral-800 text-neutral-400 hover:bg-neutral-700" : "bg-gray-100 text-gray-700 hover:bg-gray-200")
+              )}
+            >
+              All
+            </button>
+            {sectorKeywords.map((keyword, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveKeyword(keyword)}
+                className={cn(
+                  "px-2.5 py-1 text-xs font-medium transition-all whitespace-nowrap",
+                  activeKeyword === keyword
+                    ? (isPastel ? "bg-[#9B8B6B] text-white" : "bg-orange-500 text-white")
+                    : (isPastel ? "bg-[#4A4D6C] text-[#D0D2E0] hover:bg-[#5A5D7C]" :
+                      isDark ? "bg-neutral-800 text-neutral-400 hover:bg-neutral-700" : "bg-gray-100 text-gray-700 hover:bg-gray-200")
+                )}
+              >
+                {keyword}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {showSearch && (
         <div className="mb-3">
           <div className="relative">
@@ -231,13 +304,7 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
         </div>
       )}
       
-      {isLoading ? (
-        <div className="py-8">
-          <span className={cn("text-sm", 
-            isPastel ? "text-[#D0D2E0]" :
-            isDark ? "text-neutral-400" : "text-gray-500")}>Fetching news...</span>
-        </div>
-      ) : displayArticles.length > 0 ? (
+      {displayArticles.length > 0 ? (
         <>
           <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
             {paginatedArticles.map((article, idx) => (
@@ -258,7 +325,7 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
                       <h4 className={cn("text-sm font-medium truncate", 
                         isPastel ? "text-[#E8E9F0]" :
                         isDark ? "text-neutral-200" : "text-gray-800")}>
-                        {article.title}
+                        {cleanTitle(article.title)}
                       </h4>
                       <span className={cn("text-xs whitespace-nowrap", 
                         isPastel ? "text-[#9B9EBC]" :
@@ -308,7 +375,7 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <h4 className={cn("text-sm font-medium line-clamp-1", isDark ? "text-neutral-200" : "text-gray-800")}>
-                        {article.title}
+                        {cleanTitle(article.title)}
                       </h4>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className={cn("text-xs", isDark ? "text-neutral-500" : "text-gray-500")}>{article.source}</span>

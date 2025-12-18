@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useFeedData } from '@/components/hooks/useFeedData';
+import { cleanTitle } from '@/components/utils/titleCleanup';
 
 const parseRSS = async (url) => {
   try {
@@ -172,7 +173,7 @@ export default function FeaturedSectorTiles({ theme, activeSector }) {
                     isPastel ? "text-[#E8E9F0] hover:text-white" :
                     isDark ? "text-neutral-300 hover:text-white" : "text-gray-700 hover:text-gray-900")}
                 >
-                  {article.title}
+                  {cleanTitle(article.title)}
                 </a>
                 <div className={cn("text-[8px] mt-0.5", 
                   isPastel ? "text-[#7B7E9C]" :
