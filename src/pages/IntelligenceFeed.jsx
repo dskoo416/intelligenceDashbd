@@ -217,23 +217,13 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   };
 
   const filteredArticles = articles.filter(a => {
-    // Strict level filtering - articles must match the selected level or descendants
+    // HARD FILTER: Strict level filtering - no spillover allowed
     if (activeSector) {
-      // Get all descendant sector IDs
-      const getAllDescendants = (parentId) => {
-        const children = sectors.filter(s => s.parent_id === parentId);
-        let descendants = [...children];
-        children.forEach(child => {
-          descendants = [...descendants, ...getAllDescendants(child.id)];
-        });
-        return descendants;
-      };
+      // Must match exact sectorId
+      if (a.sectorId !== activeSector.id) return false;
       
-      const descendants = getAllDescendants(activeSector.id);
-      const validSectorIds = [activeSector.id, ...descendants.map(d => d.id)];
-      
-      // Article must belong to this level or its descendants
-      if (!a.sectorId || !validSectorIds.includes(a.sectorId)) return false;
+      // If subsector is selected, must match subsector too
+      if (activeSubsector && a.subsector !== activeSubsector.name) return false;
     }
     
     if (dateFilter && a.pubDate) {

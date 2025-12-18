@@ -441,10 +441,12 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
           )}
         </>
       ) : (
-        <p className={cn("text-sm py-8", 
+        <p className={cn("text-sm py-8 text-center", 
           isPastel ? "text-[#9B9EBC]" :
           isDark ? "text-neutral-500" : "text-gray-500")}>
-          No articles available. Add RSS sources in settings.
+          {sectorName 
+            ? `No articles found for ${sectorName}. Add RSS sources in settings or clear and refresh this level.`
+            : 'No articles available. Add RSS sources in settings.'}
         </p>
       )}
     </div>

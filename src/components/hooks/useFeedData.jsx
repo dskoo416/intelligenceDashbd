@@ -61,23 +61,11 @@ export function useFeedData(activeSector, activeSubsector) {
       setIsLoadingArticles(true);
     }
 
+    // STRICT: Only fetch sources for exact selected level
     let sectorSources;
     if (activeSector) {
-      // Get all descendant sectors
-      const getAllDescendants = (parentId) => {
-        const children = sectors.filter(s => s.parent_id === parentId);
-        let descendants = [...children];
-        children.forEach(child => {
-          descendants = [...descendants, ...getAllDescendants(child.id)];
-        });
-        return descendants;
-      };
-      
-      const descendants = getAllDescendants(activeSector.id);
-      const allSectorIds = [activeSector.id, ...descendants.map(d => d.id)];
-      
       sectorSources = rssSources.filter(s => 
-        allSectorIds.includes(s.sector_id) && 
+        s.sector_id === activeSector.id && 
         s.is_active !== false &&
         (!activeSubsector || s.subsector === activeSubsector)
       );
@@ -125,6 +113,13 @@ export function useFeedData(activeSector, activeSubsector) {
     return combined;
   }, [activeSector, activeSubsector, rssSources, sectors]);
 
+  const clearArticlesForLevel = useCallback((levelKey) => {
+    localStorage.removeItem(`articles_${levelKey}`);
+    if (levelKey === sectorKey) {
+      setArticles([]);
+    }
+  }, [sectorKey]);
+
   useEffect(() => {
     // Clear cache when sector changes
     setArticles([]);
@@ -135,6 +130,7 @@ export function useFeedData(activeSector, activeSubsector) {
     articles,
     isLoadingArticles,
     fetchArticles,
-    sectorKey
+    sectorKey,
+    clearArticlesForLevel
   };
 }

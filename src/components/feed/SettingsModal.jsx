@@ -547,6 +547,45 @@ export default function SettingsModal({
                 />
               </SettingRow>
 
+              <SectionHeader>CLEAR ARTICLES</SectionHeader>
+              <div className="space-y-3 mb-4">
+                <p className={cn("text-[10px]",
+                  isPastel ? "text-[#9B9EBC]" : "text-neutral-500")}>
+                  Clear cached articles for a specific level and refetch latest content.
+                </p>
+                <select
+                  className={cn("w-full text-[10px] px-2 py-1 border",
+                    isPastel ? "bg-[#2B2D42] border-[#4A4D6C] text-white" :
+                    "bg-[#0D0D0D] border-neutral-700 text-white")}
+                  id="clearLevelSelect"
+                >
+                  <option value="">Select level to clear...</option>
+                  {sectors.map(sector => (
+                    <option key={sector.id} value={sector.id}>{sector.name}</option>
+                  ))}
+                </select>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const select = document.getElementById('clearLevelSelect');
+                    const levelId = select.value;
+                    if (!levelId) return;
+
+                    const sector = sectors.find(s => s.id === levelId);
+                    if (!sector) return;
+
+                    if (confirm(`Clear all cached articles for ${sector.name} and refetch?`)) {
+                      localStorage.removeItem(`articles_${levelId}`);
+                      window.location.reload();
+                    }
+                  }}
+                  className={cn("w-full text-[10px] h-7",
+                    isPastel ? "bg-[#9B8B6B] hover:bg-[#8B7B5B]" : "bg-orange-600 hover:bg-orange-700")}
+                >
+                  Clear and Refresh
+                </Button>
+              </div>
+
               <SectionHeader>CLOCK DISPLAY</SectionHeader>
               <SettingRow label="DISPLAY MODE">
                 <SegmentedControl
