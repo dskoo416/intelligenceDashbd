@@ -114,7 +114,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     
     setGist(result);
     
-    // Update Home cache as well for sync
+    // Update Home cache for sync
     const homeSummaries = JSON.parse(localStorage.getItem('sector_summaries') || '[]');
     const updated = homeSummaries.map(s => 
       s.sectorId === activeSector.id ? { ...s, summary: result } : s
@@ -197,9 +197,8 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
       ...articles[c.index],
       reasoning: c.reasoning
     })).filter(Boolean) || [];
-    
+
     setCriticalArticles(critical);
-    updateCache(sectorKey, { criticalArticles: critical });
     
     if (activeSector) {
       const subsectorName = activeSubsector?.name || '';
