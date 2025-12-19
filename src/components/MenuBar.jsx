@@ -120,6 +120,7 @@ export default function MenuBar({
               disabled={!canUndo}
               className={cn("text-xs rounded-none", 
                 !canUndo && "opacity-50 cursor-not-allowed",
+                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
                 isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600"
               )}
             >
@@ -130,10 +131,20 @@ export default function MenuBar({
               disabled={!canRedo}
               className={cn("text-xs rounded-none", 
                 !canRedo && "opacity-50 cursor-not-allowed",
+                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
                 isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600"
               )}
             >
               Redo
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              disabled
+              className={cn("text-xs rounded-none opacity-50 cursor-not-allowed",
+                isPastel ? "text-[#E8E9F0]" :
+                isDark ? "text-neutral-200" : "text-gray-700"
+              )}
+            >
+              Paste Document
             </DropdownMenuItem>
             <DropdownMenuSeparator className={cn(
             isPastel ? "bg-[#4A4D6C]" :

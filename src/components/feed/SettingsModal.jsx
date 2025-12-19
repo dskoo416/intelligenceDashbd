@@ -454,8 +454,8 @@ export default function SettingsModal({
             {[
               { id: 'general', label: 'GENERAL' },
               { id: 'levels', label: 'LEVELS' },
-              { id: 'collections', label: 'COLLECTIONS' },
               { id: 'rss', label: 'RSS SOURCES' },
+              { id: 'collections', label: 'COLLECTIONS' },
               { id: 'ai', label: 'AI CONFIG' },
               { id: 'export', label: 'EXPORT' }
             ].map(tab => (
@@ -1309,8 +1309,9 @@ export default function SettingsModal({
                 { value: 'title', label: 'TITLE' },
                 { value: 'link', label: 'LINK' },
                 { value: 'source', label: 'SOURCE' },
-                { value: 'sector', label: 'SECTOR' },
-                { value: 'subsector', label: 'SUBSECTOR' },
+                { value: 'level1', label: 'LEVEL 1' },
+                { value: 'level2', label: 'LEVEL 2' },
+                { value: 'level3', label: 'LEVEL 3' },
                 { value: 'date', label: 'DATE' },
                 { value: 'description', label: 'DESCRIPTION' },
                 { value: 'collections', label: 'COLLECTIONS' }
