@@ -215,6 +215,8 @@ export default function KeywordHeatmapCard({ theme }) {
   const [excludeWords, setExcludeWords] = useState([]);
   const [newIncludeWord, setNewIncludeWord] = useState('');
   const [newExcludeWord, setNewExcludeWord] = useState('');
+  const [activitySector, setActivitySector] = useState(null);
+  const [activityTimeframe, setActivityTimeframe] = useState(30);
 
   const { data: keywordSettings = [] } = useQuery({
     queryKey: ['keywordSettings'],
@@ -330,7 +332,9 @@ export default function KeywordHeatmapCard({ theme }) {
     setIsLoading(true);
     const timeSeriesData = {};
     
-    const sourcesToAnalyze = rssSources.filter(s => s.is_active !== false);
+    const sourcesToAnalyze = activitySector
+      ? rssSources.filter(s => s.sector_id === activitySector.id && s.is_active !== false)
+      : rssSources.filter(s => s.is_active !== false);
 
     for (const source of sourcesToAnalyze.slice(0, 15)) {
       const articles = await parseRSS(source.url);
@@ -341,6 +345,10 @@ export default function KeywordHeatmapCard({ theme }) {
         try {
           const date = new Date(article.pubDate);
           if (isNaN(date.getTime())) return;
+          
+          const cutoffDate = new Date();
+          cutoffDate.setDate(cutoffDate.getDate() - activityTimeframe);
+          if (date < cutoffDate) return;
           
           const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
           
@@ -651,6 +659,37 @@ export default function KeywordHeatmapCard({ theme }) {
           isPastel ? "bg-[#32354C]" :
           isDark ? "bg-[#0A0A0A]" : "bg-gray-50")}>
           <div className="p-2 space-y-1">
+            <div className="flex items-center gap-1 mb-2">
+              <Select value={activitySector?.id || 'all'} onValueChange={(value) => {
+                const sector = value === 'all' ? null : sectors.find(s => s.id === value);
+                setActivitySector(sector);
+              }}>
+                <SelectTrigger className={cn("h-5 flex-1 text-[9px]",
+                  isPastel ? "bg-[#2B2D42] border-[#4A4D6C]" :
+                  isDark ? "bg-neutral-900 border-neutral-700" : "")}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className={isDark ? "bg-neutral-800 border-neutral-700" : ""}>
+                  <SelectItem value="all">All Sectors</SelectItem>
+                  {sectors.map(s => (
+                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={activityTimeframe.toString()} onValueChange={(value) => setActivityTimeframe(Number(value))}>
+                <SelectTrigger className={cn("h-5 w-20 text-[9px]",
+                  isPastel ? "bg-[#2B2D42] border-[#4A4D6C]" :
+                  isDark ? "bg-neutral-900 border-neutral-700" : "")}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className={isDark ? "bg-neutral-800 border-neutral-700" : ""}>
+                  <SelectItem value="30">30d</SelectItem>
+                  <SelectItem value="60">60d</SelectItem>
+                  <SelectItem value="90">90d</SelectItem>
+                  <SelectItem value="180">180d</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex flex-wrap gap-1 mb-1">
               {suggestedWords.map(word => (
                 <button
