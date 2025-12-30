@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import ChangelogModal from '@/components/ChangelogModal';
 
 export default function MenuBar({ 
   theme, 
@@ -44,6 +45,7 @@ export default function MenuBar({
   const isDark = theme === 'dark';
   const isPastel = theme === 'pastel';
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -93,7 +95,7 @@ export default function MenuBar({
         isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-gray-200"
       )}>
         <div className="flex items-center gap-1">
-        {/* Actions */}
+        {/* File */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
@@ -101,20 +103,75 @@ export default function MenuBar({
               isPastel ? "text-[#E8E9F0] hover:bg-[#9B8B6B]/10 hover:text-[#9B8B6B]" :
               isDark ? "text-neutral-300 hover:bg-orange-500/10 hover:text-orange-400" : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
             )}>
-              Actions
+              File
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className={cn("rounded-none", 
             isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
             isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
             <DropdownMenuItem 
-              onClick={() => window.history.back()}
+              onClick={onRefresh}
               className={cn("text-xs rounded-none", 
                 isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
                 isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
             >
-              Back
+              Refresh
             </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={onExport}
+              className={cn("text-xs rounded-none", 
+                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
+                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
+            >
+              Export
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className={cn(
+            isPastel ? "bg-[#4A4D6C]" :
+            isDark ? "bg-neutral-700" : "bg-gray-200")} />
+            <DropdownMenuItem 
+              onClick={onToggleAutoLoadGist}
+              className={cn("text-xs rounded-none flex items-center justify-between", 
+                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
+                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
+            >
+              <span>Auto Load Summaries</span>
+              {autoLoadGist && <CheckCircle2 className="w-3 h-3 text-orange-500" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={onToggleAutoLoadCritical}
+              className={cn("text-xs rounded-none flex items-center justify-between", 
+                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
+                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
+            >
+              <span>Auto Load Featured</span>
+              {autoLoadCritical && <CheckCircle2 className="w-3 h-3 text-orange-500" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={onToggleAutoLoadNews}
+              className={cn("text-xs rounded-none flex items-center justify-between", 
+                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
+                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
+            >
+              <span>Auto Load News</span>
+              {autoLoadNews && <CheckCircle2 className="w-3 h-3 text-orange-500" />}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Edit */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className={cn(
+              "px-2 py-0.5 text-[11px] font-medium transition-colors",
+              isPastel ? "text-[#E8E9F0] hover:bg-[#9B8B6B]/10 hover:text-[#9B8B6B]" :
+              isDark ? "text-neutral-300 hover:bg-orange-500/10 hover:text-orange-400" : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+            )}>
+              Edit
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className={cn("rounded-none", 
+            isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
+            isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
             <DropdownMenuItem 
               onClick={onUndo}
               disabled={!canUndo}
@@ -137,6 +194,9 @@ export default function MenuBar({
             >
               Redo
             </DropdownMenuItem>
+            <DropdownMenuSeparator className={cn(
+            isPastel ? "bg-[#4A4D6C]" :
+            isDark ? "bg-neutral-700" : "bg-gray-200")} />
             <DropdownMenuItem 
               disabled
               className={cn("text-xs rounded-none opacity-50 cursor-not-allowed",
@@ -144,71 +204,11 @@ export default function MenuBar({
                 isDark ? "text-neutral-200" : "text-gray-700"
               )}
             >
-              Paste Document
+              Paste
             </DropdownMenuItem>
             <DropdownMenuSeparator className={cn(
             isPastel ? "bg-[#4A4D6C]" :
             isDark ? "bg-neutral-700" : "bg-gray-200")} />
-            <DropdownMenuItem 
-              onClick={onRefresh}
-              className={cn("text-xs rounded-none", 
-                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
-                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
-            >
-              Refresh
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={onExport}
-              className={cn("text-xs rounded-none", 
-                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
-                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
-            >
-              Export
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className={cn(
-            isPastel ? "bg-[#4A4D6C]" :
-            isDark ? "bg-neutral-700" : "bg-gray-200")} />
-            <DropdownMenuItem 
-              onClick={() => window.location.href = '/'}
-              className={cn("text-xs rounded-none", 
-                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
-                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
-            >
-              Home
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={onNavigateToIntelligence}
-              className={cn("text-xs rounded-none", 
-                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
-                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
-            >
-              Intelligence Feed
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={onNavigateToSaved}
-              className={cn("text-xs rounded-none", 
-                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
-                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
-            >
-              Saved
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Edit */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className={cn(
-              "px-2 py-0.5 text-[11px] font-medium transition-colors",
-              isPastel ? "text-[#E8E9F0] hover:bg-[#9B8B6B]/10 hover:text-[#9B8B6B]" :
-              isDark ? "text-neutral-300 hover:bg-orange-500/10 hover:text-orange-400" : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
-            )}>
-              Edit
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className={cn("rounded-none", 
-            isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
-            isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
             <DropdownMenuItem 
               onClick={onOpenSectorsSettings}
               className={cn("text-xs rounded-none", 
@@ -232,39 +232,6 @@ export default function MenuBar({
                 isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
             >
               Add Source
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className={cn(
-            isPastel ? "bg-[#4A4D6C]" :
-            isDark ? "bg-neutral-700" : "bg-gray-200")} />
-            <DropdownMenuItem 
-              onClick={onToggleAutoLoadGist}
-              className={cn("text-xs rounded-none", 
-                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
-                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
-            >
-              {autoLoadGist && <CheckCircle2 className="w-3 h-3 mr-2 text-orange-500" />}
-              {!autoLoadGist && <div className="w-3 h-3 mr-2" />}
-              Auto Load Summaries
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={onToggleAutoLoadCritical}
-              className={cn("text-xs rounded-none", 
-                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
-                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
-            >
-              {autoLoadCritical && <CheckCircle2 className="w-3 h-3 mr-2 text-orange-500" />}
-              {!autoLoadCritical && <div className="w-3 h-3 mr-2" />}
-              Auto Load Featured
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={onToggleAutoLoadNews}
-              className={cn("text-xs rounded-none", 
-                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
-                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
-            >
-              {autoLoadNews && <CheckCircle2 className="w-3 h-3 mr-2 text-orange-500" />}
-              {!autoLoadNews && <div className="w-3 h-3 mr-2" />}
-              Auto Load News
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -373,20 +340,31 @@ export default function MenuBar({
             isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
             isDark ? "bg-neutral-800 border-neutral-700" : "bg-white")}>
             <DropdownMenuItem 
-              onClick={() => setAboutOpen(true)}
-              className={cn("text-xs rounded-none", 
-                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
-                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
-            >
-              About
-            </DropdownMenuItem>
-            <DropdownMenuItem 
               onClick={onOpenSettings}
               className={cn("text-xs rounded-none", 
                 isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
                 isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
             >
               Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className={cn(
+            isPastel ? "bg-[#4A4D6C]" :
+            isDark ? "bg-neutral-700" : "bg-gray-200")} />
+            <DropdownMenuItem 
+              onClick={() => setChangelogOpen(true)}
+              className={cn("text-xs rounded-none", 
+                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
+                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
+            >
+              Changelog
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => setAboutOpen(true)}
+              className={cn("text-xs rounded-none", 
+                isPastel ? "text-[#E8E9F0] focus:bg-[#9B8B6B]/20 focus:text-[#9B8B6B]" :
+                isDark ? "text-neutral-200 focus:bg-orange-500/20 focus:text-orange-400" : "text-gray-700 focus:bg-orange-50 focus:text-orange-600")}
+            >
+              About
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -452,6 +430,12 @@ export default function MenuBar({
           </div>
         </DialogContent>
       </Dialog>
+
+      <ChangelogModal 
+        isOpen={changelogOpen} 
+        onClose={() => setChangelogOpen(false)} 
+        theme={theme}
+      />
     </>
   );
 }
