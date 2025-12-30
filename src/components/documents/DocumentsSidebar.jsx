@@ -179,17 +179,6 @@ export default function DocumentsSidebar({
               </DropdownMenuContent>
             </DropdownMenu>
             <Button
-              onClick={onPaste}
-              disabled={!hasClipboard}
-              variant="ghost"
-              className={cn("w-full text-[11px] h-7 gap-2",
-                isPastel ? "text-[#A5A8C0] hover:bg-[#42456C]" :
-                isDark ? "text-neutral-400 hover:bg-neutral-800" : "text-gray-600 hover:bg-gray-100")}
-            >
-              <FileText className="w-3 h-3" />
-              Paste
-            </Button>
-            <Button
               onClick={onOpenFoldersModal}
               variant="ghost"
               className={cn("w-full text-[11px] h-7 gap-2",
