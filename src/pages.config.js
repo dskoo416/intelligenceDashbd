@@ -1,15 +1,15 @@
-import Saved from './pages/Saved';
-import IntelligenceFeed from './pages/IntelligenceFeed';
-import Home from './pages/Home';
 import Documents from './pages/Documents';
+import Home from './pages/Home';
+import IntelligenceFeed from './pages/IntelligenceFeed';
+import Saved from './pages/Saved';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Saved": Saved,
-    "IntelligenceFeed": IntelligenceFeed,
-    "Home": Home,
     "Documents": Documents,
+    "Home": Home,
+    "IntelligenceFeed": IntelligenceFeed,
+    "Saved": Saved,
 }
 
 export const pagesConfig = {

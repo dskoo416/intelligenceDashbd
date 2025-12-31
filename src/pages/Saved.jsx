@@ -132,7 +132,10 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
 
   // Filter articles based on active view
   let filteredArticles = savedArticles;
-  if (activeView.startsWith('collection-')) {
+  if (activeView.startsWith('level:')) {
+    const level = activeView.replace('level:', '');
+    filteredArticles = savedArticles.filter((a) => (a.sector || 'Uncategorized') === level);
+  } else if (activeView.startsWith('collection-')) {
     const collectionId = activeView.replace('collection-', '');
     filteredArticles = savedArticles.filter((a) =>
       a.collection_ids?.includes(collectionId)
@@ -199,22 +202,14 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
               isDark ? "text-white" : "text-gray-900")}>
               {activeView === 'main'
                 ? 'Main'
-                : activeView.startsWith('collection-')
-                  ? collections.find(
-                      (c) => c.id === activeView.replace('collection-', '')
-                    )?.name
-                  : activeView.startsWith('month-')
-                    ? savedArticles.find((a) => {
-                        const date = new Date(a.pubDate || a.created_date);
-                        return (
-                          `${date.getFullYear()}-${String(
-                            date.getMonth() + 1
-                          ).padStart(2, '0')}` ===
-                          activeView.replace('month-', '')
-                        );
-                      }) &&
-                      new Date(
-                        savedArticles.find((a) => {
+                : activeView.startsWith('level:')
+                  ? activeView.replace('level:', '')
+                  : activeView.startsWith('collection-')
+                    ? collections.find(
+                        (c) => c.id === activeView.replace('collection-', '')
+                      )?.name
+                    : activeView.startsWith('month-')
+                      ? savedArticles.find((a) => {
                           const date = new Date(a.pubDate || a.created_date);
                           return (
                             `${date.getFullYear()}-${String(
@@ -222,12 +217,22 @@ export default function Saved({ sidebarOpen, activeView: propActiveView, onSelec
                             ).padStart(2, '0')}` ===
                             activeView.replace('month-', '')
                           );
-                        })?.pubDate || savedArticles[0]?.created_date
-                      ).toLocaleDateString('en-US', {
-                        month: 'long',
-                        year: 'numeric',
-                      })
-                    : 'Saved Articles'}
+                        }) &&
+                        new Date(
+                          savedArticles.find((a) => {
+                            const date = new Date(a.pubDate || a.created_date);
+                            return (
+                              `${date.getFullYear()}-${String(
+                                date.getMonth() + 1
+                              ).padStart(2, '0')}` ===
+                              activeView.replace('month-', '')
+                            );
+                          })?.pubDate || savedArticles[0]?.created_date
+                        ).toLocaleDateString('en-US', {
+                          month: 'long',
+                          year: 'numeric',
+                        })
+                      : 'Saved Articles'}
             </h1>
 
             <div className="flex items-center gap-2">
