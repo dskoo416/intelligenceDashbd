@@ -87,26 +87,15 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   const generateGist = async () => {
     if (!activeSector) return;
     
-    const sectorSources = rssSources.filter(s => 
-      s.sector_id === activeSector.id && 
-      s.is_active !== false &&
-      (!activeSubsector || s.subsector === activeSubsector)
-    );
-
-    if (sectorSources.length === 0) {
-      setGist('');
-      setIsLoadingGist(false);
-      return;
-    }
-
-    if (articles.length === 0) return;
+    // Use filteredArticles which includes descendants and enforces isolation
+    if (filteredArticles.length === 0) return;
     
     setIsLoadingGist(true);
     
     const instructions = activeSector?.ai_gist_instructions || settings?.default_gist_instructions || 
       'Provide a concise executive summary of the key themes and developments from these articles. Focus on actionable insights.';
     
-    const articleSummaries = articles.slice(0, 15).map(a => `- ${a.title}: ${a.description}`).join('\n');
+    const articleSummaries = filteredArticles.slice(0, 15).map(a => `- ${a.title}: ${a.description}`).join('\n');
     
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `${instructions}\n\nArticles:\n${articleSummaries}\n\nProvide a comprehensive 6-8 sentence summary:`,
@@ -145,19 +134,8 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   const generateCritical = async () => {
     if (!activeSector) return;
     
-    const sectorSources = rssSources.filter(s => 
-      s.sector_id === activeSector.id && 
-      s.is_active !== false &&
-      (!activeSubsector || s.subsector === activeSubsector)
-    );
-
-    if (sectorSources.length === 0) {
-      setCriticalArticles([]);
-      setIsLoadingCritical(false);
-      return;
-    }
-
-    if (articles.length === 0) return;
+    // Use filteredArticles which includes descendants and enforces isolation
+    if (filteredArticles.length === 0) return;
     
     setIsLoadingCritical(true);
     
@@ -166,7 +144,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     
     const keywords = activeSector?.keywords?.join(', ') || '';
     
-    const articleData = articles.slice(0, 20).map((a, i) => ({ 
+    const articleData = filteredArticles.slice(0, 20).map((a, i) => ({ 
       index: i, 
       title: a.title, 
       description: a.description 
@@ -194,7 +172,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     });
     
     const critical = result.critical_articles?.map(c => ({
-      ...articles[c.index],
+      ...filteredArticles[c.index],
       reasoning: c.reasoning
     })).filter(Boolean) || [];
 
@@ -270,6 +248,8 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
           onRefresh={generateGist}
           sectorName={activeSector?.name}
           theme={settings.theme}
+          isAggregated={activeSector && allowedLevelIds && allowedLevelIds.length > 1}
+          descendantCount={allowedLevelIds ? allowedLevelIds.length - 1 : 0}
         />
         
         <CriticalArticles 

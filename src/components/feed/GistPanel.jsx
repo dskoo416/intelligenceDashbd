@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
-export default function GistPanel({ gist, isLoading, onRefresh, sectorName, theme }) {
+export default function GistPanel({ gist, isLoading, onRefresh, sectorName, theme, isAggregated, descendantCount }) {
   const isDark = theme === 'dark';
   const isPastel = theme === 'pastel';
 
