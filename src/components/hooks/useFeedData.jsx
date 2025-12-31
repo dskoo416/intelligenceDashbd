@@ -45,6 +45,16 @@ export function useFeedData(activeSector, activeSubsector) {
 
   const sectorKey = activeSector?.id || 'main';
 
+  // Get all descendant sectors recursively
+  const getDescendantSectors = useCallback((sectorId) => {
+    const children = sectors.filter(s => s.parent_id === sectorId);
+    const descendants = [sectorId];
+    children.forEach(child => {
+      descendants.push(...getDescendantSectors(child.id));
+    });
+    return descendants;
+  }, [sectors]);
+
   const fetchArticles = useCallback(async (forceRefresh = false) => {
     const key = activeSector?.id || 'main';
     const cachedStr = localStorage.getItem(`articles_${key}`);
@@ -61,15 +71,18 @@ export function useFeedData(activeSector, activeSubsector) {
       setIsLoadingArticles(true);
     }
 
-    // STRICT: Only fetch sources for exact selected level
+    // HIERARCHICAL AGGREGATION: Roll-up only, no spillover
     let sectorSources;
     if (activeSector) {
+      // Get all descendant sectors for roll-up aggregation
+      const descendantIds = getDescendantSectors(activeSector.id);
       sectorSources = rssSources.filter(s => 
-        s.sector_id === activeSector.id && 
+        descendantIds.includes(s.sector_id) && 
         s.is_active !== false &&
         (!activeSubsector || s.subsector === activeSubsector)
       );
     } else {
+      // Main shows everything
       sectorSources = rssSources.filter(s => s.is_active !== false);
     }
 
@@ -90,7 +103,10 @@ export function useFeedData(activeSector, activeSubsector) {
         sector: sector?.name || '',
         sectorId: source.sector_id,
         subsector: source.subsector || '',
-        subsubsector: source.subsubsector || ''
+        subsubsector: source.subsubsector || '',
+        originLevel: sector?.name || '',
+        originLevelId: source.sector_id,
+        displayLevel: activeSector?.name || 'Main'
       })));
     }
     
@@ -99,16 +115,17 @@ export function useFeedData(activeSector, activeSubsector) {
     const existingLinks = new Set(existingArticles.map(a => a.link));
     const uniqueNew = newArticles.filter(a => !existingLinks.has(a.link));
     
-    // Prepend new articles to existing ones
+    // Deduplicate by URL across all sources
     const combined = [...uniqueNew, ...existingArticles];
+    const deduped = Array.from(new Map(combined.map(a => [a.link, a])).values());
     
-    combined.sort((a, b) => {
+    deduped.sort((a, b) => {
       if (!a.pubDate || !b.pubDate) return 0;
       return new Date(b.pubDate) - new Date(a.pubDate);
     });
     
     // Limit to 500 most recent articles to prevent quota issues
-    const limited = combined.slice(0, 500);
+    const limited = deduped.slice(0, 500);
     
     setArticles(limited);
     

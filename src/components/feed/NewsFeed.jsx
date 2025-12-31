@@ -348,6 +348,13 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
                         isDark ? "text-neutral-200" : "text-gray-800")}>
                         {cleanTitle(article.title)}
                       </h4>
+                      {article.originLevel && article.displayLevel && article.originLevel !== article.displayLevel && (
+                        <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-medium whitespace-nowrap",
+                          isPastel ? "bg-[#9B8B6B]/20 text-[#9B8B6B]" :
+                          "bg-orange-500/20 text-orange-500")}>
+                          {article.originLevel}
+                        </span>
+                      )}
                       <span className={cn("text-xs whitespace-nowrap", 
                         isPastel ? "text-[#9B9EBC]" :
                         isDark ? "text-neutral-600" : "text-gray-400")}>
