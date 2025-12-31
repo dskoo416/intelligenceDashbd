@@ -17,7 +17,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   const [isLoadingGist, setIsLoadingGist] = useState(false);
   const [isLoadingCritical, setIsLoadingCritical] = useState(false);
 
-  const { articles, isLoadingArticles, fetchArticles, sectorKey } = useFeedData(activeSector, activeSubsector);
+  const { articles, isLoadingArticles, fetchArticles, sectorKey, allowedLevelIds } = useFeedData(activeSector, activeSubsector);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -224,9 +224,15 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     saveArticleMutation.mutate(article);
   };
 
-  // Filter articles by date and search only
-  // Level filtering is already handled by useFeedData hook (roll-up: selected + descendants)
+  // STRICT LEVEL FILTERING: Block siblings and parents (roll-up only: selected + descendants)
   const filteredArticles = articles.filter(a => {
+    // Level filter: enforce allowed origin levels (selected + descendants only)
+    if (allowedLevelIds !== null && a.originLevelId) {
+      if (!allowedLevelIds.includes(a.originLevelId)) {
+        return false; // Block siblings, parents, and unrelated levels
+      }
+    }
+    
     // Date filter
     if (dateFilter && a.pubDate) {
       const articleDate = new Date(a.pubDate);

@@ -167,11 +167,22 @@ export function useFeedData(activeSector, activeSubsector) {
     fetchArticles(false);
   }, [activeSector?.id, activeSubsector, fetchArticles]);
 
+  // Get allowed level IDs for filtering (selected + descendants only)
+  const getAllowedLevelIds = useCallback(() => {
+    if (!activeSector) {
+      // Main view: all levels allowed
+      return null;
+    }
+    // Selected level + all descendants
+    return getDescendantSectors(activeSector.id);
+  }, [activeSector, getDescendantSectors]);
+
   return {
     articles,
     isLoadingArticles,
     fetchArticles,
     sectorKey,
-    clearArticlesForLevel
+    clearArticlesForLevel,
+    allowedLevelIds: getAllowedLevelIds()
   };
 }
