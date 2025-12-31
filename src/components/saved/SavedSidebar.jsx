@@ -12,9 +12,7 @@ export default function SavedSidebar({
 }) {
   const isDark = theme === 'dark';
   const isPastel = theme === 'pastel';
-  const [expandedMonths, setExpandedMonths] = useState(true);
-  const [expandedCollections, setExpandedCollections] = useState(true);
-
+  
   // Group articles by month
   const articlesByMonth = {};
   savedArticles.forEach(article => {
@@ -31,7 +29,30 @@ export default function SavedSidebar({
     articlesByMonth[monthKey].articles.push(article);
   });
 
+  // Group articles by level
+  const articlesByLevel = {};
+  savedArticles.forEach(article => {
+    const level = article.sector || 'Uncategorized';
+    if (!articlesByLevel[level]) articlesByLevel[level] = [];
+    articlesByLevel[level].push(article);
+  });
+
   const sortedMonths = Object.keys(articlesByMonth).sort().reverse();
+  const sortedLevels = Object.keys(articlesByLevel).sort();
+  const levelCount = sortedLevels.length;
+
+  // Auto-expand "By Level" if 2+ distinct levels
+  const [expandedMonths, setExpandedMonths] = useState(true);
+  const [expandedLevels, setExpandedLevels] = useState(() => {
+    const saved = localStorage.getItem('saved_levels_expanded');
+    if (saved !== null) return saved === 'true';
+    return levelCount >= 2;
+  });
+  const [expandedCollections, setExpandedCollections] = useState(true);
+
+  React.useEffect(() => {
+    localStorage.setItem('saved_levels_expanded', expandedLevels);
+  }, [expandedLevels]);
 
   return (
     <div className={cn("h-full border-r flex flex-col", 
@@ -99,6 +120,61 @@ export default function SavedSidebar({
                   </button>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        {/* By Level */}
+        <div className="mt-4">
+          <button
+            onClick={() => setExpandedLevels(!expandedLevels)}
+            className={cn(
+              "w-full flex items-center gap-2 px-3 py-2 rounded transition-all duration-150 text-xs font-semibold uppercase tracking-wider text-left",
+              isDark ? "text-neutral-500 hover:text-neutral-300" : "text-gray-500 hover:text-gray-700"
+            )}
+          >
+            {expandedLevels ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+            By Level
+            <span className={cn("ml-auto text-xs font-normal", 
+              isPastel ? "text-[#7B7E9C]" :
+              isDark ? "text-neutral-600" : "text-gray-400")}>
+              {levelCount}
+            </span>
+          </button>
+          
+          {expandedLevels && (
+            <div className="ml-4 mt-1 space-y-0.5">
+              {sortedLevels.length === 0 ? (
+                <div className={cn("px-3 py-1.5 text-xs", 
+                  isPastel ? "text-[#7B7E9C]" :
+                  isDark ? "text-neutral-600" : "text-gray-400")}>
+                  No levels yet
+                </div>
+              ) : (
+                sortedLevels.map(level => (
+                  <button
+                    key={level}
+                    onClick={() => onSelectView(`level:${level}`)}
+                    className={cn(
+                      "w-full text-left px-3 py-1.5 rounded transition-all duration-150 text-xs flex items-center justify-between",
+                      activeView === `level:${level}`
+                        ? "bg-orange-500/10 text-orange-500"
+                        : isPastel
+                          ? "text-[#9B9EBC] hover:text-white hover:bg-[#3A3D5C]/50"
+                          : isDark
+                            ? "text-neutral-500 hover:text-white hover:bg-neutral-800/50"
+                            : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                    )}
+                  >
+                    <span>{level}</span>
+                    <span className={cn("text-xs", 
+                      isPastel ? "text-[#7B7E9C]" :
+                      isDark ? "text-neutral-600" : "text-gray-400")}>
+                      {articlesByLevel[level].length}
+                    </span>
+                  </button>
+                ))
+              )}
             </div>
           )}
         </div>
