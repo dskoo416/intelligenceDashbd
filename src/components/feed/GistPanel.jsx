@@ -33,13 +33,22 @@ export default function GistPanel({ gist, isLoading, onRefresh, sectorName, them
               isDark ? "text-neutral-500" : "text-gray-500")} />
           </Button>
         </div>
-        {sectorName && (
-          <span className={cn("text-xs px-2 py-0.5 rounded", 
-            isPastel ? "text-[#D0D2E0] bg-[#4A4D6C]" :
-            isDark ? "text-neutral-500 bg-neutral-800" : "text-gray-500 bg-gray-100")}>
-            {sectorName}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {sectorName && (
+            <span className={cn("text-xs px-2 py-0.5 rounded", 
+              isPastel ? "text-[#D0D2E0] bg-[#4A4D6C]" :
+              isDark ? "text-neutral-500 bg-neutral-800" : "text-gray-500 bg-gray-100")}>
+              {sectorName}
+            </span>
+          )}
+          {isAggregated && descendantCount > 0 && (
+            <span className={cn("text-[9px] px-2 py-0.5 rounded font-medium uppercase tracking-wider",
+              isPastel ? "bg-[#7B7E9C]/20 text-[#7B7E9C]" :
+              "bg-neutral-500/20 text-neutral-500")}>
+              {descendantCount} sub-level{descendantCount > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
       </div>
       
       {isLoading ? (
