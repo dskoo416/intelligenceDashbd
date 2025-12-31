@@ -26,14 +26,35 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
   useEffect(() => {
     const cached = localStorage.getItem('news_feed_cache');
     if (cached) {
-      setCachedArticles(JSON.parse(cached));
+      try {
+        setCachedArticles(JSON.parse(cached));
+      } catch (e) {
+        localStorage.removeItem('news_feed_cache');
+      }
     }
   }, []);
 
   useEffect(() => {
     if (articles.length > 0) {
-      localStorage.setItem('news_feed_cache', JSON.stringify(articles));
-      setCachedArticles(articles);
+      try {
+        // Limit to 300 articles to prevent quota issues
+        const limited = articles.slice(0, 300);
+        localStorage.setItem('news_feed_cache', JSON.stringify(limited));
+        setCachedArticles(limited);
+      } catch (e) {
+        if (e.name === 'QuotaExceededError') {
+          // Clear cache and try with fewer articles
+          localStorage.removeItem('news_feed_cache');
+          try {
+            const limited = articles.slice(0, 150);
+            localStorage.setItem('news_feed_cache', JSON.stringify(limited));
+            setCachedArticles(limited);
+          } catch (e2) {
+            console.warn('Unable to cache news feed:', e2);
+            setCachedArticles(articles.slice(0, 150));
+          }
+        }
+      }
     }
   }, [articles]);
 
