@@ -224,16 +224,10 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     saveArticleMutation.mutate(article);
   };
 
+  // Filter articles by date and search only
+  // Level filtering is already handled by useFeedData hook (roll-up: selected + descendants)
   const filteredArticles = articles.filter(a => {
-    // HARD FILTER: Strict level filtering - no spillover allowed
-    if (activeSector) {
-      // Must match exact sectorId
-      if (a.sectorId !== activeSector.id) return false;
-      
-      // If subsector is selected, must match subsector too
-      if (activeSubsector && a.subsector !== activeSubsector.name) return false;
-    }
-    
+    // Date filter
     if (dateFilter && a.pubDate) {
       const articleDate = new Date(a.pubDate);
       if (dateFilter.from && dateFilter.to) {
@@ -245,9 +239,12 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
         if (articleDate.toDateString() !== fromDate.toDateString()) return false;
       }
     }
+    
+    // Search filter
     if (searchFilter && !a.title.toLowerCase().includes(searchFilter.toLowerCase())) {
       return false;
     }
+    
     return true;
   });
 
