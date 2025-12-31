@@ -107,10 +107,34 @@ export function useFeedData(activeSector, activeSubsector) {
       return new Date(b.pubDate) - new Date(a.pubDate);
     });
     
-    setArticles(combined);
-    localStorage.setItem(`articles_${key}`, JSON.stringify({ articles: combined }));
+    // Limit to 500 most recent articles to prevent quota issues
+    const limited = combined.slice(0, 500);
+    
+    setArticles(limited);
+    
+    // Try to save to localStorage with error handling
+    try {
+      localStorage.setItem(`articles_${key}`, JSON.stringify({ articles: limited }));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError') {
+        // Clear old caches and try again with fewer articles
+        const allKeys = Object.keys(localStorage);
+        allKeys.forEach(k => {
+          if (k.startsWith('articles_') && k !== `articles_${key}`) {
+            localStorage.removeItem(k);
+          }
+        });
+        try {
+          // Try with only 300 articles
+          localStorage.setItem(`articles_${key}`, JSON.stringify({ articles: limited.slice(0, 300) }));
+        } catch (e2) {
+          console.warn('Unable to cache articles:', e2);
+        }
+      }
+    }
+    
     setIsLoadingArticles(false);
-    return combined;
+    return limited;
   }, [activeSector, activeSubsector, rssSources, sectors]);
 
   const clearArticlesForLevel = useCallback((levelKey) => {
