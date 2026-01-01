@@ -25,7 +25,12 @@ const DEFAULT_KEYWORDS = [
   'tariff', 'duties', 'section 301', 'section 232', 'safeguard',
   'export control', 'entity list', 'sanctions',
   'anti-dumping', 'countervailing',
-  'battery', 'EV', 'refinery', 'steel', 'aluminum', 'graphite', 'lithium', 'rare earths'
+  'battery', 'EV', 'electric vehicle', 'refinery', 'steel', 'aluminum', 
+  'graphite', 'lithium', 'rare earths', 'semiconductor', 'chips',
+  'solar', 'wind', 'renewable', 'critical minerals', 'supply chain',
+  'trade agreement', 'USMCA', 'dumping', 'subsidy', 'reciprocal',
+  'China', 'tariff exclusion', 'tariff suspension', 'duty rate',
+  'IRA', 'Inflation Reduction Act', 'CHIPS Act', 'ITC', 'DOC'
 ];
 
 export default function PolicyUpdatesCard({ theme }) {
@@ -99,15 +104,10 @@ export default function PolicyUpdatesCard({ theme }) {
     setIsLoading(true);
 
     try {
-      const prompt = `I need you to browse official US government websites and find recent trade/industrial policy announcements.
-
-You already fetch the TITLE and CONTENT correctly.
-The BUG is with the LINK field.
-You often return URLs that go to 404 or Not Found pages.
-You must fix that.
+      const prompt = `Browse ALL of these official US government websites and find the MOST RECENT trade/industrial policy announcements from EACH agency.
 
 TASK SUMMARY
-Build a JSON object of 20-30 updates with:
+Build a JSON object with 40-60 updates total, distributed across ALL agencies listed below:
 - agency
 - title
 - link
@@ -115,22 +115,34 @@ Build a JSON object of 20-30 updates with:
 - summary
 - type
 
-SITES TO USE
-Only use these as starting points:
-- https://ustr.gov/about-us/policy-offices/press-office
-- https://www.whitehouse.gov/briefings-statements/
-- https://home.treasury.gov/news/press-releases
-- https://www.commerce.gov/news
-- https://www.bis.gov/press-room
-- https://www.energy.gov/newsroom
+CRITICAL: You MUST fetch from ALL agencies below, not just a few. Aim for 5-8 recent items per agency.
 
-TOPICS (last 60 days)
-Include only articles that clearly match at least one of:
-- Tariffs, Section 301, Section 232
-- Export controls, Entity List
-- Sanctions, trade restrictions
-- Anti-dumping or countervailing duties
-- Batteries, EVs, semiconductors, steel, aluminum, rare earths, critical minerals
+SITES TO SCRAPE (VISIT ALL)
+You must visit and scrape ALL of these sites:
+1. https://ustr.gov/about-us/policy-offices/press-office (USTR - get latest 8 items)
+2. https://www.whitehouse.gov/briefings-statements/ (White House - get latest 8 items)
+3. https://home.treasury.gov/news/press-releases (Treasury - get latest 8 items)
+4. https://www.commerce.gov/news (Commerce - get latest 8 items)
+5. https://www.bis.gov/press-room (BIS - get latest 8 items)
+6. https://www.energy.gov/newsroom (DOE - get latest 8 items)
+7. https://www.sec.gov/news/pressreleases (SEC - get latest 5 items)
+8. https://www.ferc.gov/news-events/news (FERC - get latest 5 items)
+
+TIMEFRAME: Last 60 days (prioritize last 30 days)
+
+TOPICS TO INCLUDE
+Include articles matching ANY of these:
+- Tariffs, Section 301, Section 232, reciprocal tariffs
+- Export controls, Entity List, foreign direct product rule
+- Sanctions, trade restrictions, embargoes
+- Anti-dumping or countervailing duties, unfair trade
+- Batteries, EVs, electric vehicles, automotive
+- Semiconductors, chips, CHIPS Act
+- Steel, aluminum, metals, critical minerals, rare earths
+- Solar, wind, renewable energy, IRA (Inflation Reduction Act)
+- Supply chain, reshoring, nearshoring
+- Trade agreements, USMCA, trade negotiations
+- China trade policy, decoupling, national security
 
 AGENCY IDS AND DOMAINS
 Every article must use one of these agency ids and matching domains:
@@ -138,8 +150,10 @@ Every article must use one of these agency ids and matching domains:
 - "whitehouse" => pages on whitehouse.gov
 - "treasury"   => pages on home.treasury.gov
 - "commerce"   => pages on commerce.gov
-- "bis"        => pages on bis.doc.gov
+- "bis"        => pages on bis.doc.gov or bis.gov
 - "doe"        => pages on energy.gov
+- "sec"        => pages on sec.gov
+- "ferc"       => pages on ferc.gov
 
 CRITICAL LINK LOGIC (THIS FIXES THE BUG)
 You must follow these rules for the "link" field:
@@ -192,11 +206,17 @@ For each update:
   "notice"
   "fact_sheet"
 
+DISTRIBUTION REQUIREMENT
+- You MUST include items from ALL 8 agencies listed above
+- Aim for 5-8 items per major agency (USTR, White House, Treasury, Commerce, BIS, DOE)
+- Aim for 3-5 items per smaller agency (SEC, FERC)
+- Total target: 40-60 updates across all agencies
+
 FILTERING
-- Only include articles from the last 60 days.
-- Every article must match at least one of the target topics.
-- If you are uncertain about relevance, skip the article.
-- Prioritize recent articles (last 30 days) over older ones.
+- Only include articles from the last 60 days (prioritize last 30 days)
+- Every article must match at least one of the target topics
+- If uncertain about relevance but it's trade/industrial policy related, include it
+- Sort by date descending (newest first)
 
 OUTPUT FORMAT
 Return ONLY this JSON structure, with no markdown and no extra text:
