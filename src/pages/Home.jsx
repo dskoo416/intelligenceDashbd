@@ -3,7 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { cn } from "@/lib/utils";
 import SectorSummaryTiles from '@/components/home/SectorSummaryTiles';
-import FeaturedSectorTiles from '@/components/home/FeaturedSectorTiles';
+import CommercialImpactPanel from '@/components/home/CommercialImpactPanel';
+import StructuralChangePanel from '@/components/home/StructuralChangePanel';
+import CompetitivePressurePanel from '@/components/home/CompetitivePressurePanel';
 import PolicyUpdatesCard from '@/components/home/PolicyUpdatesCard';
 import TickerCard from '@/components/home/TickerCard';
 import KeywordHeatmapCard from '@/components/home/KeywordHeatmapCard';
@@ -32,10 +34,16 @@ export default function Home({ sidebarOpen, activeSector }) {
           <SectorSummaryTiles theme={settings.theme} />
         </div>
 
-        {/* Top Row - 3 Featured Tiles + Policy Updates */}
+        {/* Middle Row - Decision-Oriented Intelligence Panels + Policy Updates */}
         <div className="grid grid-cols-4 gap-3 flex-shrink-0" style={{ height: '280px' }}>
-          <div className="col-span-3 h-full overflow-hidden">
-            <FeaturedSectorTiles theme={settings.theme} activeSector={activeSector} />
+          <div className="h-full overflow-hidden">
+            <CommercialImpactPanel theme={settings.theme} />
+          </div>
+          <div className="h-full overflow-hidden">
+            <StructuralChangePanel theme={settings.theme} />
+          </div>
+          <div className="h-full overflow-hidden">
+            <CompetitivePressurePanel theme={settings.theme} />
           </div>
           <div className="h-full overflow-hidden">
             <PolicyUpdatesCard theme={settings.theme} />
