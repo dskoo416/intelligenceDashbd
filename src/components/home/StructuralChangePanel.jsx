@@ -56,10 +56,19 @@ export default function StructuralChangePanel({ theme }) {
     }
   }, []);
 
+  const { data: settingsData = [] } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: () => base44.entities.AppSettings.list(),
+  });
+
+  const settings = settingsData[0] || {};
+  const featuredDays = settings?.featured_article_days || 14;
+
   const fetchArticles = async () => {
     setIsLoading(true);
     const allArticles = [];
-    const cutoffDate = new Date(Date.now() - 72 * 60 * 60 * 1000);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - featuredDays);
 
     for (const source of rssSources.filter(s => s.is_active !== false)) {
       const sourceArticles = await parseRSS(source.url);
@@ -73,10 +82,10 @@ export default function StructuralChangePanel({ theme }) {
     }
 
     const recentArticles = allArticles.filter(a => 
-      a.pubDate && new Date(a.pubDate) > cutoffDate
+      a.pubDate && new Date(a.pubDate) >= cutoffDate
     );
 
-    const prompt = `Analyze these recent news articles (last 72 hours) and identify those signaling STRUCTURAL changes - shifts in how the industry operates, not just short-term news.
+    const prompt = `Analyze these recent news articles (past ${featuredDays} days) and identify those signaling STRUCTURAL changes - shifts in how the industry operates, not just short-term news.
 
 INCLUDE articles about:
 - Supply chain reconfiguration, localization, reshoring

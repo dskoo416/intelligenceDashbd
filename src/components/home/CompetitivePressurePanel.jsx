@@ -56,9 +56,19 @@ export default function CompetitivePressurePanel({ theme }) {
     }
   }, []);
 
+  const { data: settingsData = [] } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: () => base44.entities.AppSettings.list(),
+  });
+
+  const settings = settingsData[0] || {};
+  const featuredDays = settings?.featured_article_days || 14;
+
   const fetchArticles = async () => {
     setIsLoading(true);
     const allArticles = [];
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - featuredDays);
 
     for (const source of rssSources.filter(s => s.is_active !== false)) {
       const sourceArticles = await parseRSS(source.url);
@@ -71,7 +81,12 @@ export default function CompetitivePressurePanel({ theme }) {
       })));
     }
 
-    const prompt = `Analyze these news articles and identify those signaling COMPETITIVE moves that could alter competitive positioning.
+    // Filter to only recent articles
+    const recentArticles = allArticles.filter(a => 
+      a.pubDate && new Date(a.pubDate) >= cutoffDate
+    );
+
+    const prompt = `Analyze these news articles from the past ${featuredDays} days and identify those signaling COMPETITIVE moves that could alter competitive positioning.
 
 INCLUDE articles about:
 - Competitor capacity announcements, expansions, or technology advances
@@ -91,7 +106,7 @@ EXCLUDE:
 For each selected article, extract the main company or competitor name mentioned.
 
 Articles:
-${allArticles.slice(0, 50).map((a, i) => `${i}. [${a.sector}${a.subsector ? ' - ' + a.subsector : ''}] ${a.title}: ${a.description}`).join('\n')}
+${recentArticles.slice(0, 50).map((a, i) => `${i}. [${a.sector}${a.subsector ? ' - ' + a.subsector : ''}] ${a.title}: ${a.description}`).join('\n')}
 
 Select 5-8 articles with strongest competitive implications. For each, identify the main company/competitor name.`;
 
@@ -117,7 +132,7 @@ Select 5-8 articles with strongest competitive implications. For each, identify 
     });
 
     const selected = result.articles?.map(item => ({
-      ...allArticles[item.index],
+      ...recentArticles[item.index],
       companyName: item.company_name
     })).filter(a => a.title) || [];
     

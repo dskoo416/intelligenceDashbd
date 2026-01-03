@@ -56,9 +56,19 @@ export default function CommercialImpactPanel({ theme }) {
     }
   }, []);
 
+  const { data: settingsData = [] } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: () => base44.entities.AppSettings.list(),
+  });
+
+  const settings = settingsData[0] || {};
+  const featuredDays = settings?.featured_article_days || 14;
+
   const fetchArticles = async () => {
     setIsLoading(true);
     const allArticles = [];
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - featuredDays);
 
     for (const source of rssSources.filter(s => s.is_active !== false)) {
       const sourceArticles = await parseRSS(source.url);
@@ -71,7 +81,12 @@ export default function CommercialImpactPanel({ theme }) {
       })));
     }
 
-    const prompt = `Analyze these news articles and identify those with DIRECT commercial impact - meaning concrete business, revenue, or customer implications.
+    // Filter to only recent articles
+    const recentArticles = allArticles.filter(a => 
+      a.pubDate && new Date(a.pubDate) >= cutoffDate
+    );
+
+    const prompt = `Analyze these news articles from the past ${featuredDays} days and identify those with DIRECT commercial impact - meaning concrete business, revenue, or customer implications.
 
 INCLUDE articles about:
 - New or cancelled contracts, offtake agreements, purchase orders
@@ -87,7 +102,7 @@ EXCLUDE:
 - General industry trends without specific company actions
 
 Articles:
-${allArticles.slice(0, 50).map((a, i) => `${i}. [${a.sector}${a.subsector ? ' - ' + a.subsector : ''}] ${a.title}: ${a.description}`).join('\n')}
+${recentArticles.slice(0, 50).map((a, i) => `${i}. [${a.sector}${a.subsector ? ' - ' + a.subsector : ''}] ${a.title}: ${a.description}`).join('\n')}
 
 Select 5-8 articles with the strongest commercial impact. Return only article indices.`;
 
@@ -106,7 +121,7 @@ Select 5-8 articles with the strongest commercial impact. Return only article in
       }
     });
 
-    const selected = result.article_indices?.map(i => allArticles[i]).filter(Boolean) || [];
+    const selected = result.article_indices?.map(i => recentArticles[i]).filter(Boolean) || [];
     selected.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
     
     setArticles(selected);
