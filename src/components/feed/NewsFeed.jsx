@@ -26,7 +26,19 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
   // This should come from a prop, but we'll derive it from sectorName for now
   const displayLevelId = sectorName || 'main';
 
-  const displayArticles = articles.length > 0 ? articles : cachedArticles;
+  // Reset pagination and filters when level changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setActiveKeyword('all');
+  }, [displayLevelId]);
+
+  // Reset to page 1 when keyword filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeKeyword]);
+
+  // Only use articles, no fallback cache (cache is handled in useFeedData)
+  const displayArticles = articles;
 
   // Apply keyword filtering
   const keywordFilteredArticles = activeKeyword === 'all' 
@@ -40,18 +52,6 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
   const startIndex = (currentPage - 1) * articlesPerPage;
   const endIndex = startIndex + articlesPerPage;
   const paginatedArticles = keywordFilteredArticles.slice(startIndex, endIndex);
-
-  // Reset pagination, filters, and cache when level changes
-  useEffect(() => {
-    setCurrentPage(1);
-    setActiveKeyword('all');
-    setCachedArticles([]);
-  }, [sectorName]);
-
-  // Reset to page 1 when keyword filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeKeyword]);
 
   return (
     <div className={cn(
@@ -377,17 +377,32 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
-                      <h4 className={cn("text-sm font-medium line-clamp-1", isDark ? "text-neutral-200" : "text-gray-800")}>
-                        {cleanTitle(article.title)}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className={cn("text-xs", isDark ? "text-neutral-500" : "text-gray-500")}>{article.source}</span>
-                        {article.pubDate && (
-                          <span className={cn("text-xs", isDark ? "text-neutral-600" : "text-gray-400")}>
-                            {format(new Date(article.pubDate), 'MMM d, h:mm a')}
-                          </span>
-                        )}
-                      </div>
+                     <div className="flex items-center gap-2">
+                       <h4 className={cn("text-sm font-medium line-clamp-1", 
+                         isPastel ? "text-[#E8E9F0]" :
+                         isDark ? "text-neutral-200" : "text-gray-800")}>
+                         {cleanTitle(article.title)}
+                       </h4>
+                       {article.originLevelId && article.displayLevelId && article.originLevelId !== article.displayLevelId && (
+                         <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-medium whitespace-nowrap flex-shrink-0",
+                           isPastel ? "bg-[#9B8B6B]/20 text-[#9B8B6B]" :
+                           "bg-orange-500/20 text-orange-500")}>
+                           {article.originLevelLabel}
+                         </span>
+                       )}
+                     </div>
+                     <div className="flex items-center gap-2 mt-0.5">
+                       <span className={cn("text-xs", 
+                         isPastel ? "text-[#9B9EBC]" :
+                         isDark ? "text-neutral-500" : "text-gray-500")}>{article.source}</span>
+                       {article.pubDate && (
+                         <span className={cn("text-xs", 
+                           isPastel ? "text-[#7B7E9C]" :
+                           isDark ? "text-neutral-600" : "text-gray-400")}>
+                           {format(new Date(article.pubDate), 'MMM d, h:mm a')}
+                         </span>
+                       )}
+                     </div>
                     </div>
                     <button
                       onClick={(e) => {
