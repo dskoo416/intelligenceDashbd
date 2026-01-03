@@ -17,7 +17,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   const [isLoadingGist, setIsLoadingGist] = useState(false);
   const [isLoadingCritical, setIsLoadingCritical] = useState(false);
 
-  const { articles, isLoadingArticles, fetchArticles, sectorKey, allowedLevelIds } = useFeedData(activeSector, activeSubsector);
+  const { articles, isLoadingArticles, fetchArticles, levelId, allowedLevelIds } = useFeedData(activeSector, activeSubsector);
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -37,7 +37,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   const settings = settingsData[0] || { theme: 'dark' };
 
   const { data: cacheData = [] } = useQuery({
-    queryKey: ['sectorCache', sectorKey],
+    queryKey: ['sectorCache', levelId],
     queryFn: async () => {
       if (!activeSector) return [];
       const subsectorName = activeSubsector?.name || '';
@@ -103,15 +103,8 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     
     setGist(result);
     
-    // Update Home cache for sync
-    const homeSummaries = JSON.parse(localStorage.getItem('sector_summaries') || '[]');
-    const updated = homeSummaries.map(s => 
-      s.sectorId === activeSector.id ? { ...s, summary: result } : s
-    );
-    if (!updated.some(s => s.sectorId === activeSector.id)) {
-      updated.push({ sectorId: activeSector.id, sectorName: activeSector.name, summary: result });
-    }
-    localStorage.setItem('sector_summaries', JSON.stringify(updated));
+    // Use level-safe cache key
+    localStorage.setItem(`summary_${levelId}`, result);
     
     if (activeSector) {
       const subsectorName = activeSubsector?.name || '';
@@ -125,7 +118,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
           critical_articles: criticalArticles
         });
       }
-      queryClient.invalidateQueries({ queryKey: ['sectorCache', sectorKey] });
+      queryClient.invalidateQueries({ queryKey: ['sectorCache', levelId] });
     }
     
     setIsLoadingGist(false);
@@ -178,6 +171,9 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
 
     setCriticalArticles(critical);
     
+    // Use level-safe cache key
+    localStorage.setItem(`featured_${levelId}`, JSON.stringify(critical));
+    
     if (activeSector) {
       const subsectorName = activeSubsector?.name || '';
       if (savedCache?.id) {
@@ -190,7 +186,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
           critical_articles: critical
         });
       }
-      queryClient.invalidateQueries({ queryKey: ['sectorCache', sectorKey] });
+      queryClient.invalidateQueries({ queryKey: ['sectorCache', levelId] });
     }
     
     setIsLoadingCritical(false);
@@ -206,7 +202,7 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
   const filteredArticles = articles.filter(a => {
     // Level filter: enforce allowed origin levels (selected + descendants only)
     if (allowedLevelIds !== null && a.originLevelId) {
-      if (!allowedLevelIds.includes(a.originLevelId)) {
+      if (!allowedLevelIds.has(a.originLevelId)) {
         return false; // Block siblings, parents, and unrelated levels
       }
     }

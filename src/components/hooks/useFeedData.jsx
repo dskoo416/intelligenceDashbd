@@ -43,9 +43,29 @@ export function useFeedData(activeSector, activeSubsector) {
     queryFn: () => base44.entities.RSSSource.list(),
   });
 
-  const sectorKey = activeSector?.id || 'main';
+  // Use unique levelId for cache keys
+  const levelId = activeSector?.id || 'main';
 
-  // Get all descendant sectors recursively
+  // Build allowed originLevelIds: selected + all descendants
+  const buildAllowedLevelIds = useCallback((sectorId) => {
+    if (!sectorId || sectorId === 'main') {
+      // Main view: all levels allowed
+      return null;
+    }
+    const children = sectors.filter(s => s.parent_id === sectorId);
+    const allowed = new Set([sectorId]);
+    const addDescendants = (id) => {
+      const childSectors = sectors.filter(s => s.parent_id === id);
+      childSectors.forEach(child => {
+        allowed.add(child.id);
+        addDescendants(child.id);
+      });
+    };
+    addDescendants(sectorId);
+    return allowed;
+  }, [sectors]);
+
+  // Get all descendant sectors recursively (for fetching sources)
   const getDescendantSectors = useCallback((sectorId) => {
     const children = sectors.filter(s => s.parent_id === sectorId);
     const descendants = [sectorId];
@@ -56,8 +76,9 @@ export function useFeedData(activeSector, activeSubsector) {
   }, [sectors]);
 
   const fetchArticles = useCallback(async (forceRefresh = false) => {
-    const key = activeSector?.id || 'main';
-    const cachedStr = localStorage.getItem(`articles_${key}`);
+    // Use strict levelId-based cache key
+    const cacheKey = `news_${levelId}`;
+    const cachedStr = localStorage.getItem(cacheKey);
     const cached = cachedStr ? JSON.parse(cachedStr) : null;
 
     if (cached?.articles?.length > 0 && !forceRefresh) {
@@ -114,75 +135,71 @@ export function useFeedData(activeSector, activeSubsector) {
     const existingArticles = forceRefresh && articles.length > 0 ? articles : (cached?.articles || []);
     const existingLinks = new Set(existingArticles.map(a => a.link));
     const uniqueNew = newArticles.filter(a => !existingLinks.has(a.link));
-    
+
     // Deduplicate by URL across all sources
     const combined = [...uniqueNew, ...existingArticles];
     const deduped = Array.from(new Map(combined.map(a => [a.link, a])).values());
-    
+
     deduped.sort((a, b) => {
       if (!a.pubDate || !b.pubDate) return 0;
       return new Date(b.pubDate) - new Date(a.pubDate);
     });
-    
+
     // Limit to 500 most recent articles to prevent quota issues
     const limited = deduped.slice(0, 500);
-    
+
     setArticles(limited);
-    
-    // Try to save to localStorage with error handling
+
+    // Try to save to levelId-specific cache
     try {
-      localStorage.setItem(`articles_${key}`, JSON.stringify({ articles: limited }));
+      localStorage.setItem(cacheKey, JSON.stringify({ articles: limited }));
     } catch (e) {
       if (e.name === 'QuotaExceededError') {
-        // Clear old caches and try again with fewer articles
+        // Clear old news caches only (not featured or summary)
         const allKeys = Object.keys(localStorage);
         allKeys.forEach(k => {
-          if (k.startsWith('articles_') && k !== `articles_${key}`) {
+          if (k.startsWith('news_') && k !== cacheKey) {
             localStorage.removeItem(k);
           }
         });
         try {
           // Try with only 300 articles
-          localStorage.setItem(`articles_${key}`, JSON.stringify({ articles: limited.slice(0, 300) }));
+          localStorage.setItem(cacheKey, JSON.stringify({ articles: limited.slice(0, 300) }));
         } catch (e2) {
           console.warn('Unable to cache articles:', e2);
         }
       }
     }
-    
+
     setIsLoadingArticles(false);
     return limited;
-  }, [activeSector, activeSubsector, rssSources, sectors]);
+    }, [activeSector, activeSubsector, rssSources, sectors, levelId]);
 
   const clearArticlesForLevel = useCallback((levelKey) => {
-    localStorage.removeItem(`articles_${levelKey}`);
-    if (levelKey === sectorKey) {
+    // Clear all cache types for this level
+    localStorage.removeItem(`news_${levelKey}`);
+    localStorage.removeItem(`featured_${levelKey}`);
+    localStorage.removeItem(`summary_${levelKey}`);
+    if (levelKey === levelId) {
       setArticles([]);
     }
-  }, [sectorKey]);
+  }, [levelId]);
 
   useEffect(() => {
-    // Clear cache when sector changes
+    // Clear articles immediately when level changes to prevent spillover
     setArticles([]);
     fetchArticles(false);
   }, [activeSector?.id, activeSubsector, fetchArticles]);
 
-  // Get allowed level IDs for filtering (selected + descendants only)
-  const getAllowedLevelIds = useCallback(() => {
-    if (!activeSector) {
-      // Main view: all levels allowed
-      return null;
-    }
-    // Selected level + all descendants
-    return getDescendantSectors(activeSector.id);
-  }, [activeSector, getDescendantSectors]);
+  // Get allowed level IDs for strict filtering
+  const allowedLevelIds = buildAllowedLevelIds(activeSector?.id);
 
   return {
     articles,
     isLoadingArticles,
     fetchArticles,
-    sectorKey,
+    levelId,
     clearArticlesForLevel,
-    allowedLevelIds: getAllowedLevelIds()
+    allowedLevelIds
   };
 }
