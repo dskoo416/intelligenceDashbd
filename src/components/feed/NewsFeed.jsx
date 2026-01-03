@@ -23,31 +23,37 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
   const [showKeywords, setShowKeywords] = useState(false);
   const [activeKeyword, setActiveKeyword] = useState('all');
 
+  // Generate level-specific cache key
+  const cacheKey = `news_feed_cache:${sectorName || 'main'}`;
+
+  // Load level-specific cache on mount and when sectorName changes
   useEffect(() => {
-    const cached = localStorage.getItem('news_feed_cache');
+    const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try {
         setCachedArticles(JSON.parse(cached));
       } catch (e) {
-        localStorage.removeItem('news_feed_cache');
+        localStorage.removeItem(cacheKey);
+        setCachedArticles([]);
       }
+    } else {
+      setCachedArticles([]);
     }
-  }, []);
+  }, [cacheKey]);
 
+  // Save to level-specific cache when articles update
   useEffect(() => {
     if (articles.length > 0) {
       try {
-        // Limit to 300 articles to prevent quota issues
         const limited = articles.slice(0, 300);
-        localStorage.setItem('news_feed_cache', JSON.stringify(limited));
+        localStorage.setItem(cacheKey, JSON.stringify(limited));
         setCachedArticles(limited);
       } catch (e) {
         if (e.name === 'QuotaExceededError') {
-          // Clear cache and try with fewer articles
-          localStorage.removeItem('news_feed_cache');
+          localStorage.removeItem(cacheKey);
           try {
             const limited = articles.slice(0, 150);
-            localStorage.setItem('news_feed_cache', JSON.stringify(limited));
+            localStorage.setItem(cacheKey, JSON.stringify(limited));
             setCachedArticles(limited);
           } catch (e2) {
             console.warn('Unable to cache news feed:', e2);
@@ -56,7 +62,7 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
         }
       }
     }
-  }, [articles]);
+  }, [articles, cacheKey]);
 
   const displayArticles = articles.length > 0 ? articles : cachedArticles;
 
@@ -72,6 +78,13 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
   const startIndex = (currentPage - 1) * articlesPerPage;
   const endIndex = startIndex + articlesPerPage;
   const paginatedArticles = keywordFilteredArticles.slice(startIndex, endIndex);
+
+  // Reset pagination, filters, and cache when level changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setActiveKeyword('all');
+    setCachedArticles([]);
+  }, [sectorName]);
 
   // Reset to page 1 when keyword filter changes
   useEffect(() => {
