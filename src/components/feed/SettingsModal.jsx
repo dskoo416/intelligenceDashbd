@@ -1237,6 +1237,24 @@ export default function SettingsModal({
                 </div>
               )}
 
+              <SectionHeader>FEATURED ARTICLE TIMEFRAME</SectionHeader>
+              <SettingRow label="DAYS TO SCAN">
+                <SegmentedControl
+                  options={[
+                    { value: 7, label: '7 DAYS' },
+                    { value: 14, label: '14 DAYS' },
+                    { value: 30, label: '30 DAYS' },
+                    { value: 45, label: '45 DAYS' }
+                  ]}
+                  value={localSettings?.featured_article_days || 14}
+                  onChange={(value) => {
+                    const newSettings = { ...localSettings, featured_article_days: value };
+                    setLocalSettings(newSettings);
+                    onUpdateSettings(newSettings);
+                  }}
+                />
+              </SettingRow>
+
               <SectionHeader>DEFAULT INSTRUCTIONS</SectionHeader>
               <div className="space-y-3">
                 <div>
