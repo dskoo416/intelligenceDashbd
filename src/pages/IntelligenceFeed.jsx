@@ -103,8 +103,13 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
     
     setGist(result);
     
-    // Use level-safe cache key
-    localStorage.setItem(`summary_${levelId}`, result);
+    // Use level-safe cache key with levelId validation
+    const cachePayload = {
+      levelId: levelId,
+      updatedAt: Date.now(),
+      summary: result
+    };
+    localStorage.setItem(`summary_${levelId}`, JSON.stringify(cachePayload));
     
     if (activeSector) {
       const subsectorName = activeSubsector?.name || '';
@@ -171,8 +176,13 @@ export default function IntelligenceFeed({ activeSector, activeSubsector }) {
 
     setCriticalArticles(critical);
     
-    // Use level-safe cache key
-    localStorage.setItem(`featured_${levelId}`, JSON.stringify(critical));
+    // Use level-safe cache key with levelId validation
+    const cachePayload = {
+      levelId: levelId,
+      updatedAt: Date.now(),
+      articles: critical
+    };
+    localStorage.setItem(`featured_${levelId}`, JSON.stringify(cachePayload));
     
     if (activeSector) {
       const subsectorName = activeSubsector?.name || '';

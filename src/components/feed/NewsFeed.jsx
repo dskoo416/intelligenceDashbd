@@ -19,50 +19,12 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
   const [currentPage, setCurrentPage] = useState(1);
   const [tempDateFilter, setTempDateFilter] = useState(null);
   const articlesPerPage = 20;
-  const [cachedArticles, setCachedArticles] = useState([]);
   const [showKeywords, setShowKeywords] = useState(false);
   const [activeKeyword, setActiveKeyword] = useState('all');
-
-  // Generate level-specific cache key
-  const cacheKey = `news_feed_cache:${sectorName || 'main'}`;
-
-  // Load level-specific cache on mount and when sectorName changes
-  useEffect(() => {
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      try {
-        setCachedArticles(JSON.parse(cached));
-      } catch (e) {
-        localStorage.removeItem(cacheKey);
-        setCachedArticles([]);
-      }
-    } else {
-      setCachedArticles([]);
-    }
-  }, [cacheKey]);
-
-  // Save to level-specific cache when articles update
-  useEffect(() => {
-    if (articles.length > 0) {
-      try {
-        const limited = articles.slice(0, 300);
-        localStorage.setItem(cacheKey, JSON.stringify(limited));
-        setCachedArticles(limited);
-      } catch (e) {
-        if (e.name === 'QuotaExceededError') {
-          localStorage.removeItem(cacheKey);
-          try {
-            const limited = articles.slice(0, 150);
-            localStorage.setItem(cacheKey, JSON.stringify(limited));
-            setCachedArticles(limited);
-          } catch (e2) {
-            console.warn('Unable to cache news feed:', e2);
-            setCachedArticles(articles.slice(0, 150));
-          }
-        }
-      }
-    }
-  }, [articles, cacheKey]);
+  
+  // displayLevelId is the stable unique identifier from the feed hook or sector
+  // This should come from a prop, but we'll derive it from sectorName for now
+  const displayLevelId = sectorName || 'main';
 
   const displayArticles = articles.length > 0 ? articles : cachedArticles;
 
@@ -361,11 +323,11 @@ export default function NewsFeed({ articles, isLoading, onSaveArticle, onDateFil
                         isDark ? "text-neutral-200" : "text-gray-800")}>
                         {cleanTitle(article.title)}
                       </h4>
-                      {article.originLevel && article.displayLevel && article.originLevel !== article.displayLevel && (
+                      {article.originLevelId && article.displayLevelId && article.originLevelId !== article.displayLevelId && (
                         <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-medium whitespace-nowrap",
                           isPastel ? "bg-[#9B8B6B]/20 text-[#9B8B6B]" :
                           "bg-orange-500/20 text-orange-500")}>
-                          {article.originLevel}
+                          {article.originLevelLabel}
                         </span>
                       )}
                       <span className={cn("text-xs whitespace-nowrap", 

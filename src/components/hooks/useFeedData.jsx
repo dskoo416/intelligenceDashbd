@@ -80,17 +80,22 @@ export function useFeedData(activeSector, activeSubsector) {
     const cacheKey = `news_${levelId}`;
     const cachedStr = localStorage.getItem(cacheKey);
     const cached = cachedStr ? JSON.parse(cachedStr) : null;
-
-    if (cached?.articles?.length > 0 && !forceRefresh) {
-      setArticles(cached.articles);
-      setIsLoadingArticles(false);
-      return cached.articles;
+    
+    // TTL: 30 minutes
+    const TTL = 30 * 60 * 1000;
+    const now = Date.now();
+    
+    // Only use cache if it matches current levelId and is not expired
+    if (cached?.levelId === levelId && cached?.articles?.length > 0 && !forceRefresh) {
+      const age = now - (cached.updatedAt || 0);
+      if (age < TTL) {
+        setArticles(cached.articles);
+        setIsLoadingArticles(false);
+        return cached.articles;
+      }
     }
     
-    // Don't clear existing articles when refreshing
-    if (!forceRefresh || articles.length === 0) {
-      setIsLoadingArticles(true);
-    }
+    setIsLoadingArticles(true);
 
     // HIERARCHICAL AGGREGATION: Roll-up only, no spillover
     let sectorSources;
@@ -125,9 +130,10 @@ export function useFeedData(activeSector, activeSubsector) {
         sectorId: source.sector_id,
         subsector: source.subsector || '',
         subsubsector: source.subsubsector || '',
-        originLevel: sector?.name || '',
         originLevelId: source.sector_id,
-        displayLevel: activeSector?.name || 'Main'
+        originLevelLabel: sector?.name || '',
+        displayLevelId: levelId,
+        displayLevelLabel: activeSector?.name || 'Main'
       })));
     }
     
@@ -150,9 +156,15 @@ export function useFeedData(activeSector, activeSubsector) {
 
     setArticles(limited);
 
-    // Try to save to levelId-specific cache
+    // Save to levelId-specific cache with timestamp and levelId
+    const cachePayload = {
+      levelId: levelId,
+      updatedAt: Date.now(),
+      articles: limited
+    };
+
     try {
-      localStorage.setItem(cacheKey, JSON.stringify({ articles: limited }));
+      localStorage.setItem(cacheKey, JSON.stringify(cachePayload));
     } catch (e) {
       if (e.name === 'QuotaExceededError') {
         // Clear old news caches only (not featured or summary)
@@ -164,7 +176,8 @@ export function useFeedData(activeSector, activeSubsector) {
         });
         try {
           // Try with only 300 articles
-          localStorage.setItem(cacheKey, JSON.stringify({ articles: limited.slice(0, 300) }));
+          cachePayload.articles = limited.slice(0, 300);
+          localStorage.setItem(cacheKey, JSON.stringify(cachePayload));
         } catch (e2) {
           console.warn('Unable to cache articles:', e2);
         }
