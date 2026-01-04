@@ -151,18 +151,11 @@ Select 5-8 articles that best signal structural industry changes. Return article
       <div className={cn("flex items-center justify-between px-3 py-2 border-b", 
         isPastel ? "border-[#4A4D6C]" :
         isDark ? "border-[#262629]" : "border-gray-300")}>
-        <div>
-          <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
-            isPastel ? "text-[#A5A8C0]" :
-            isDark ? "text-neutral-500" : "text-gray-700")}>
-            STRUCTURAL CHANGE
-          </h3>
-          <div className={cn("text-[9px] mt-0.5", 
-            isPastel ? "text-[#7B7E9C]" :
-            isDark ? "text-neutral-600" : "text-gray-500")}>
-            Last {daysToScan} days
-          </div>
-        </div>
+        <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
+          isPastel ? "text-[#A5A8C0]" :
+          isDark ? "text-neutral-500" : "text-gray-700")}>
+          STRUCTURAL CHANGE
+        </h3>
         <Button
           size="sm"
           variant="ghost"
