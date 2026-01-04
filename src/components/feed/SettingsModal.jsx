@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, ChevronUp, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from "@/lib/utils";
@@ -537,11 +536,22 @@ export default function SettingsModal({
                 />
               </SettingRow>
 
-              <SettingRow label="CACHE AI CONTENT" divider={false}>
+              <SettingRow label="CACHE AI CONTENT">
                 <Checkbox
                   checked={localSettings?.cache_ai_content !== false}
                   onCheckedChange={(checked) => {
                     const newSettings = { ...localSettings, cache_ai_content: checked };
+                    setLocalSettings(newSettings);
+                    onUpdateSettings(newSettings);
+                  }}
+                />
+              </SettingRow>
+
+              <SettingRow label="USE DAILY BRIEFINGS" divider={false}>
+                <Checkbox
+                  checked={localSettings?.use_daily_briefings || false}
+                  onCheckedChange={(checked) => {
+                    const newSettings = { ...localSettings, use_daily_briefings: checked };
                     setLocalSettings(newSettings);
                     onUpdateSettings(newSettings);
                   }}
@@ -1237,26 +1247,6 @@ export default function SettingsModal({
                   />
                 </div>
               )}
-
-              <SectionHeader>HOME SCREEN</SectionHeader>
-              <div className="py-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className={cn("text-[10px] uppercase tracking-wider",
-                      isPastel ? "text-[#A5A8C0]" : "text-neutral-500")}>USE DAILY BRIEFINGS</Label>
-                    <p className={cn("text-[9px] mt-0.5",
-                      isPastel ? "text-[#7B7E9C]" : "text-neutral-600")}>Replace rotating sector summaries with a single daily briefing on Home</p>
-                  </div>
-                  <Switch
-                    checked={localSettings?.use_daily_briefings || false}
-                    onCheckedChange={(checked) => {
-                      const newSettings = { ...localSettings, use_daily_briefings: checked };
-                      setLocalSettings(newSettings);
-                      onUpdateSettings(newSettings);
-                    }}
-                  />
-                </div>
-              </div>
 
               <SectionHeader>FEATURED ARTICLE TIMEFRAME</SectionHeader>
               <SettingRow label="DAYS TO SCAN">
