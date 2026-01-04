@@ -1,1 +1,1 @@
-# Base44 App
+# Dashboard for getting Market Intelligence
