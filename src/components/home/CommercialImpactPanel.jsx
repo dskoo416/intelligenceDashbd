@@ -50,26 +50,35 @@ export default function CommercialImpactPanel({ theme }) {
     queryFn: () => base44.entities.RSSSource.list(),
   });
 
-  useEffect(() => {
-    const cached = localStorage.getItem('commercial_impact');
-    if (cached) {
-      setArticles(JSON.parse(cached));
-    }
-  }, []);
-
   const { data: settingsData = [] } = useQuery({
     queryKey: ['appSettings'],
     queryFn: () => base44.entities.AppSettings.list(),
   });
 
   const settings = settingsData[0] || {};
-  const featuredDays = settings?.featured_article_days || 14;
+  const daysToScan = settings?.featured_article_days || 14;
+
+  useEffect(() => {
+    const cacheKey = `commercial_impact:${daysToScan}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed.daysToScan === daysToScan) {
+          setArticles(parsed.articles || []);
+        } else {
+          localStorage.removeItem(cacheKey);
+        }
+      } catch (e) {
+        localStorage.removeItem(cacheKey);
+      }
+    }
+  }, [daysToScan]);
 
   const fetchArticles = async () => {
     setIsLoading(true);
     const allArticles = [];
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - featuredDays);
+    const nowMs = Date.now();
 
     for (const source of rssSources.filter(s => s.is_active !== false)) {
       const sourceArticles = await parseRSS(source.url);
@@ -82,12 +91,10 @@ export default function CommercialImpactPanel({ theme }) {
       })));
     }
 
-    // Filter to only recent articles
-    const recentArticles = allArticles.filter(a => 
-      a.pubDate && new Date(a.pubDate) >= cutoffDate
-    );
+    // Filter to articles within timeframe
+    const recentArticles = allArticles.filter(a => withinDays(a.pubDate, daysToScan, nowMs));
 
-    const prompt = `Analyze these news articles from the past ${featuredDays} days and identify those with DIRECT commercial impact - meaning concrete business, revenue, or customer implications.
+    const prompt = `Analyze these news articles from the past ${daysToScan} days and identify those with DIRECT commercial impact - meaning concrete business, revenue, or customer implications.
 
 INCLUDE articles about:
 - New or cancelled contracts, offtake agreements, purchase orders
@@ -126,7 +133,13 @@ Select 5-8 articles with the strongest commercial impact. Return only article in
     selected.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
     
     setArticles(selected);
-    localStorage.setItem('commercial_impact', JSON.stringify(selected));
+    const cacheKey = `commercial_impact:${daysToScan}`;
+    const cachePayload = {
+      daysToScan,
+      articles: selected,
+      updatedAt: Date.now()
+    };
+    localStorage.setItem(cacheKey, JSON.stringify(cachePayload));
     setIsLoading(false);
   };
 
@@ -137,11 +150,18 @@ Select 5-8 articles with the strongest commercial impact. Return only article in
       <div className={cn("flex items-center justify-between px-3 py-2 border-b", 
         isPastel ? "border-[#4A4D6C]" :
         isDark ? "border-[#262629]" : "border-gray-300")}>
-        <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
-          isPastel ? "text-[#A5A8C0]" :
-          isDark ? "text-neutral-500" : "text-gray-700")}>
-          COMMERCIAL IMPACT
-        </h3>
+        <div>
+          <h3 className={cn("text-[11px] font-semibold uppercase tracking-wider", 
+            isPastel ? "text-[#A5A8C0]" :
+            isDark ? "text-neutral-500" : "text-gray-700")}>
+            COMMERCIAL IMPACT
+          </h3>
+          <div className={cn("text-[9px] mt-0.5", 
+            isPastel ? "text-[#7B7E9C]" :
+            isDark ? "text-neutral-600" : "text-gray-500")}>
+            Last {daysToScan} days
+          </div>
+        </div>
         <Button
           size="sm"
           variant="ghost"
@@ -156,10 +176,10 @@ Select 5-8 articles with the strongest commercial impact. Return only article in
       </div>
 
       {articles.length === 0 && !isLoading ? (
-        <div className={cn("flex-1 flex items-center justify-center text-[10px]", 
+        <div className={cn("flex-1 flex items-center justify-center text-[10px] text-center px-2", 
           isPastel ? "text-[#7B7E9C]" :
           isDark ? "text-neutral-600" : "text-gray-500")}>
-          No material signals detected
+          No items in the last {daysToScan} days
         </div>
       ) : (
         <div className={cn("flex-1 p-2 space-y-1 overflow-y-auto custom-scrollbar", 
