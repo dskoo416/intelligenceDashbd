@@ -225,6 +225,12 @@ Generate the report now:`,
           return savedArticles.filter(a => a.collection_ids?.includes(activeView));
         }
         
+        // Check if it's a level view
+        if (activeView.startsWith('level-')) {
+          const levelName = activeView.replace('level-', '');
+          return savedArticles.filter(article => article.sector === levelName);
+        }
+        
         // Otherwise it's a month string
         return savedArticles.filter(article => {
           if (!article.created_date) return false;

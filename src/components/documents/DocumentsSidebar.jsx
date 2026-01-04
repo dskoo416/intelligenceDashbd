@@ -94,35 +94,46 @@ export default function DocumentsSidebar({
     }
   });
 
+  // Group saved articles by sector (level)
+  const articlesByLevel = {};
+  savedArticles.forEach(article => {
+    const level = article.sector || 'Uncategorized';
+    if (!articlesByLevel[level]) articlesByLevel[level] = [];
+    articlesByLevel[level].push(article);
+  });
+
   return (
     <div className={cn("h-full flex flex-col border-r overflow-y-auto",
       isPastel ? "bg-[#3A3D5C] border-[#4A4D6C]" :
       isDark ? "bg-[#0D0D0D] border-[#1F1F1F]" : "bg-white border-gray-200")}>
       
       {/* Mode Switch */}
-      <div className={cn("p-2 border-b flex gap-1",
+      <div className={cn("p-2 border-b flex gap-2",
         isPastel ? "border-[#4A4D6C]" :
         isDark ? "border-[#1F1F1F]" : "border-gray-200")}>
         <button
           onClick={() => onModeChange('documents')}
-          className={cn("flex-1 px-2 py-1 text-[11px] font-medium transition-colors border",
+          className={cn("text-[11px] font-medium transition-colors",
             mode === 'documents'
-              ? (isPastel ? "bg-[#9B8B6B] text-white border-[#9B8B6B]" :
-                 isDark ? "bg-orange-600 text-white border-orange-600" : "bg-orange-600 text-white border-orange-600")
-              : (isPastel ? "text-[#D0D2E0] hover:bg-[#42456C] border-[#4A4D6C]" :
-                 isDark ? "text-neutral-400 hover:bg-neutral-800 border-neutral-700" : "text-gray-600 hover:bg-gray-100 border-gray-300")
+              ? (isPastel ? "text-[#9B8B6B] underline" :
+                 isDark ? "text-orange-400 underline" : "text-orange-600 underline")
+              : (isPastel ? "text-[#D0D2E0] hover:text-[#9B8B6B]" :
+                 isDark ? "text-neutral-500 hover:text-orange-400" : "text-gray-600 hover:text-orange-600")
           )}
         >
-          My Documents
+          My Analysis
         </button>
+        <span className={cn("text-[11px]",
+          isPastel ? "text-[#7B7E9C]" :
+          isDark ? "text-neutral-700" : "text-gray-400")}>|</span>
         <button
           onClick={() => onModeChange('saved')}
-          className={cn("flex-1 px-2 py-1 text-[11px] font-medium transition-colors border",
+          className={cn("text-[11px] font-medium transition-colors",
             mode === 'saved'
-              ? (isPastel ? "bg-[#9B8B6B] text-white border-[#9B8B6B]" :
-                 isDark ? "bg-orange-600 text-white border-orange-600" : "bg-orange-600 text-white border-orange-600")
-              : (isPastel ? "text-[#D0D2E0] hover:bg-[#42456C] border-[#4A4D6C]" :
-                 isDark ? "text-neutral-400 hover:bg-neutral-800 border-neutral-700" : "text-gray-600 hover:bg-gray-100 border-gray-300")
+              ? (isPastel ? "text-[#9B8B6B] underline" :
+                 isDark ? "text-orange-400 underline" : "text-orange-600 underline")
+              : (isPastel ? "text-[#D0D2E0] hover:text-[#9B8B6B]" :
+                 isDark ? "text-neutral-500 hover:text-orange-400" : "text-gray-600 hover:text-orange-600")
           )}
         >
           Saved
@@ -227,6 +238,32 @@ export default function DocumentsSidebar({
                   )}
                 >
                   {month} ({articlesByMonth[month].length})
+                </button>
+              ))}
+            </>
+          )}
+
+          {Object.keys(articlesByLevel).length > 0 && (
+            <>
+              <div className={cn("px-2 py-1 mt-2 text-[9px] uppercase tracking-wider font-semibold",
+                isPastel ? "text-[#7B7E9C]" :
+                isDark ? "text-neutral-600" : "text-gray-500")}>
+                By Level
+              </div>
+              {Object.keys(articlesByLevel).sort().map(level => (
+                <button
+                  key={`level-${level}`}
+                  onClick={() => onSelectView(`level-${level}`)}
+                  className={cn(
+                    "w-full text-left px-2 py-1 text-[11px] transition-colors",
+                    activeView === `level-${level}`
+                      ? (isPastel ? "bg-[#9B8B6B]/20 text-[#9B8B6B]" :
+                         isDark ? "bg-orange-500/20 text-orange-400" : "bg-orange-50 text-orange-600")
+                      : (isPastel ? "text-[#D0D2E0] hover:bg-[#42456C]" :
+                         isDark ? "text-neutral-400 hover:bg-neutral-800" : "text-gray-600 hover:bg-gray-100")
+                  )}
+                >
+                  {level} ({articlesByLevel[level].length})
                 </button>
               ))}
             </>
