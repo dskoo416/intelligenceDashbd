@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { cn } from "@/lib/utils";
 import SectorSummaryTiles from '@/components/home/SectorSummaryTiles';
+import DailyBriefing from '@/components/home/DailyBriefing';
 import CommercialImpactPanel from '@/components/home/CommercialImpactPanel';
 import StructuralChangePanel from '@/components/home/StructuralChangePanel';
 import CompetitivePressurePanel from '@/components/home/CompetitivePressurePanel';
@@ -29,9 +30,13 @@ export default function Home({ sidebarOpen, activeSector }) {
       isDark ? "bg-[#0A0A0A]" : "bg-gray-50"
     )}>
       <div className="flex flex-col gap-3 h-full">
-        {/* Top Strip - Level 1 Summary */}
+        {/* Top Strip - Level 1 Summary or Daily Briefing */}
         <div className="flex-shrink-0">
-          <SectorSummaryTiles theme={settings.theme} />
+          {settings.use_daily_briefings ? (
+            <DailyBriefing theme={settings.theme} />
+          ) : (
+            <SectorSummaryTiles theme={settings.theme} />
+          )}
         </div>
 
         {/* Middle Row - Decision-Oriented Intelligence Panels + Policy Updates */}
