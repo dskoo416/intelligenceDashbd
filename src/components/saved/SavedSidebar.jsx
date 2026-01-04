@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight, Folder } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
 
 export default function SavedSidebar({ 
   savedArticles, 
@@ -186,16 +186,31 @@ export default function SavedSidebar({
 
         {/* Collections */}
         <div>
-          <button
-            onClick={() => setExpandedCollections(!expandedCollections)}
-            className={cn(
-              "w-full flex items-center gap-2 px-3 py-2 rounded transition-all duration-150 text-xs font-semibold uppercase tracking-wider text-left",
-              isDark ? "text-neutral-500 hover:text-neutral-300" : "text-gray-500 hover:text-gray-700"
-            )}
-          >
-            {expandedCollections ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-            Collections
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setExpandedCollections(!expandedCollections)}
+              className={cn(
+                "flex-1 flex items-center gap-2 px-3 py-2 rounded transition-all duration-150 text-xs font-semibold uppercase tracking-wider text-left",
+                isDark ? "text-neutral-500 hover:text-neutral-300" : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              {expandedCollections ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+              Collections
+            </button>
+            <button
+              onClick={onOpenCollectionsModal}
+              className={cn(
+                "p-2 rounded transition-colors",
+                isPastel
+                  ? "text-[#9B9EBC] hover:text-white hover:bg-[#3A3D5C]/50"
+                  : isDark
+                    ? "text-neutral-500 hover:text-white hover:bg-neutral-800/50"
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              )}
+            >
+              <Plus className="w-3 h-3" />
+            </button>
+          </div>
           
           {expandedCollections && (
             <div className="ml-4 mt-1 space-y-0.5">
