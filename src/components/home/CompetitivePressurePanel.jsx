@@ -73,6 +73,14 @@ export default function CompetitivePressurePanel({ theme }) {
     },
   });
 
+  const unsaveArticleMutation = useMutation({
+    mutationFn: (id) => base44.entities.SavedArticle.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
+      toast.success('Article removed');
+    },
+  });
+
   useEffect(() => {
     const cacheKey = `competitive_pressure:${daysToScan}`;
     const cached = localStorage.getItem(cacheKey);
@@ -208,7 +216,8 @@ Select 5-8 articles with strongest competitive implications. For each, identify 
           isPastel ? "bg-[#32354C]" :
           isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
           {articles.map((article, idx) => {
-            const isSaved = savedArticles.some(saved => saved.link === article.link);
+            const savedArticle = savedArticles.find(saved => saved.link === article.link);
+            const isSaved = !!savedArticle;
             return (
               <div
                 key={idx}
@@ -238,15 +247,19 @@ Select 5-8 articles with strongest competitive implications. For each, identify 
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    saveArticleMutation.mutate({
-                      title: article.title,
-                      link: article.link,
-                      description: article.description,
-                      pubDate: article.pubDate,
-                      source: article.source,
-                      sector: article.sector,
-                      subsector: article.subsector
-                    });
+                    if (isSaved) {
+                      unsaveArticleMutation.mutate(savedArticle.id);
+                    } else {
+                      saveArticleMutation.mutate({
+                        title: article.title,
+                        link: article.link,
+                        description: article.description,
+                        pubDate: article.pubDate,
+                        source: article.source,
+                        sector: article.sector,
+                        subsector: article.subsector
+                      });
+                    }
                   }}
                   className={cn("absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all p-1", 
                     isSaved 
