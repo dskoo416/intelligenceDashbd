@@ -211,7 +211,6 @@ export function useFeedData(activeSector, activeSubsector) {
     }
 
     // Save to Base44 for persistence across browsers/incognito
-    const rssConfigHash = rssSources.map(s => s.id).sort().join(',');
     if (activeSector) {
       const subsectorName = activeSubsector?.name || '';
       if (savedCache?.id) {
