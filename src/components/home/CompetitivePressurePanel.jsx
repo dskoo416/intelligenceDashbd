@@ -214,14 +214,9 @@ Select 5-8 articles with strongest competitive implications. For each, identify 
                 isDark ? "text-neutral-400" : "text-gray-900")}>
                 {article.title}
               </h4>
-              <div className={cn("text-[9px] mt-0.5 flex items-center gap-1.5", 
+              <div className={cn("text-[9px] mt-0.5", 
                 isPastel ? "text-[#9B9EBC]" :
                 isDark ? "text-neutral-700" : "text-gray-500")}>
-                <span className={cn("px-1.5 py-0.5 rounded", 
-                  isPastel ? "bg-[#9B8B6B]/20 text-[#9B8B6B]" :
-                  "bg-orange-500/20 text-orange-500")}>
-                  {article.sector}{article.subsector ? ` - ${article.subsector}` : ''}
-                </span>
                 {article.pubDate && (
                   <span>{format(new Date(article.pubDate), 'MMM d')}</span>
                 )}
