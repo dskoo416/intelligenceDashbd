@@ -503,7 +503,7 @@ export default function SettingsModal({
 
 
               <SectionHeader>AUTO-REFRESH</SectionHeader>
-              <SettingRow label="AUTO-RELOAD GIST">
+              <SettingRow label="AUTO-RELOAD Summaries">
                 <Checkbox
                   checked={localSettings?.auto_reload_gist || false}
                   onCheckedChange={(checked) => {
