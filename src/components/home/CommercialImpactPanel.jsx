@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from "@/lib/utils";
-import { RefreshCw, ExternalLink } from 'lucide-react';
+import { RefreshCw, Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { withinDays } from '@/components/utils/dateFilters';
+import { toast } from 'sonner';
 
 const parseRSS = async (url) => {
   try {
@@ -39,6 +40,7 @@ export default function CommercialImpactPanel({ theme }) {
   const isPastel = theme === 'pastel';
   const [articles, setArticles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: sectors = [] } = useQuery({
     queryKey: ['sectors'],
@@ -57,6 +59,19 @@ export default function CommercialImpactPanel({ theme }) {
 
   const settings = settingsData[0] || {};
   const daysToScan = settings?.featured_article_days || 14;
+
+  const { data: savedArticles = [] } = useQuery({
+    queryKey: ['savedArticles'],
+    queryFn: () => base44.entities.SavedArticle.list(),
+  });
+
+  const saveArticleMutation = useMutation({
+    mutationFn: (article) => base44.entities.SavedArticle.create(article),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['savedArticles'] });
+      toast.success('Article saved');
+    },
+  });
 
   useEffect(() => {
     const cacheKey = `commercial_impact:${daysToScan}`;
@@ -178,30 +193,58 @@ Select 5-8 articles with the strongest commercial impact. Return only article in
         <div className={cn("flex-1 p-2 space-y-1 overflow-y-auto custom-scrollbar", 
           isPastel ? "bg-[#32354C]" :
           isDark ? "bg-[#0f0f10]" : "bg-gray-50")}>
-          {articles.map((article, idx) => (
-            <a
-              key={idx}
-              href={article.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn("block border p-2 transition-all", 
-                isPastel ? "bg-[#42456C] border-[#4A4D6C] hover:bg-[#4A4D7C] hover:border-[#5A5D8C]" :
-                isDark ? "bg-[#0A0A0A] border-[#1F1F1F] hover:bg-[#17181b] hover:border-[#2A2A2A]" : "bg-gray-50 border-gray-300 hover:border-gray-400")}
-            >
-              <h4 className={cn("text-[10px] font-medium line-clamp-2 leading-[1.3]", 
-                isPastel ? "text-[#E8E9F0]" :
-                isDark ? "text-neutral-400" : "text-gray-900")}>
-                {article.title}
-              </h4>
-              <div className={cn("text-[9px] mt-0.5", 
-                isPastel ? "text-[#9B9EBC]" :
-                isDark ? "text-neutral-700" : "text-gray-500")}>
-                {article.pubDate && (
-                  <span>{format(new Date(article.pubDate), 'MMM d')}</span>
+          {articles.map((article, idx) => {
+            const isSaved = savedArticles.some(saved => saved.link === article.link);
+            return (
+              <div
+                key={idx}
+                className={cn("border p-2 transition-all group relative", 
+                  isPastel ? "bg-[#42456C] border-[#4A4D6C] hover:bg-[#4A4D7C] hover:border-[#5A5D8C]" :
+                  isDark ? "bg-[#0A0A0A] border-[#1F1F1F] hover:bg-[#17181b] hover:border-[#2A2A2A]" : "bg-gray-50 border-gray-300 hover:border-gray-400")}
+              >
+                <a
+                  href={article.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <h4 className={cn("text-[10px] font-medium line-clamp-2 leading-[1.3] pr-6", 
+                    isPastel ? "text-[#E8E9F0]" :
+                    isDark ? "text-neutral-400" : "text-gray-900")}>
+                    {article.title}
+                  </h4>
+                  <div className={cn("text-[9px] mt-0.5", 
+                    isPastel ? "text-[#9B9EBC]" :
+                    isDark ? "text-neutral-700" : "text-gray-500")}>
+                    {article.pubDate && (
+                      <span>{format(new Date(article.pubDate), 'MMM d')}</span>
+                    )}
+                  </div>
+                </a>
+                {!isSaved && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      saveArticleMutation.mutate({
+                        title: article.title,
+                        link: article.link,
+                        description: article.description,
+                        pubDate: article.pubDate,
+                        source: article.source,
+                        sector: article.sector,
+                        subsector: article.subsector
+                      });
+                    }}
+                    className={cn("absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1", 
+                      isPastel ? "text-[#9B9EBC] hover:text-white" :
+                      isDark ? "text-neutral-600 hover:text-white" : "text-gray-500 hover:text-gray-900")}
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
                 )}
               </div>
-            </a>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
