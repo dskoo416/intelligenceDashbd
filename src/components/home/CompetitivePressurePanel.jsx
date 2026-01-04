@@ -235,27 +235,30 @@ Select 5-8 articles with strongest competitive implications. For each, identify 
                     )}
                   </div>
                 </a>
-                {!isSaved && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      saveArticleMutation.mutate({
-                        title: article.title,
-                        link: article.link,
-                        description: article.description,
-                        pubDate: article.pubDate,
-                        source: article.source,
-                        sector: article.sector,
-                        subsector: article.subsector
-                      });
-                    }}
-                    className={cn("absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1", 
-                      isPastel ? "text-[#9B9EBC] hover:text-white" :
-                      isDark ? "text-neutral-600 hover:text-white" : "text-gray-500 hover:text-gray-900")}
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
-                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    saveArticleMutation.mutate({
+                      title: article.title,
+                      link: article.link,
+                      description: article.description,
+                      pubDate: article.pubDate,
+                      source: article.source,
+                      sector: article.sector,
+                      subsector: article.subsector
+                    });
+                  }}
+                  className={cn("absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all p-1", 
+                    isSaved 
+                      ? "text-orange-500 rotate-45" 
+                      : isPastel 
+                        ? "text-[#9B9EBC] hover:text-orange-500" 
+                        : isDark 
+                          ? "text-neutral-600 hover:text-orange-500" 
+                          : "text-gray-500 hover:text-orange-500")}
+                >
+                  <Plus className="w-3 h-3 transition-transform" />
+                </button>
               </div>
             );
           })}
