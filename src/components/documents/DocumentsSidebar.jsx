@@ -121,7 +121,7 @@ export default function DocumentsSidebar({
                  isDark ? "text-neutral-500 hover:text-orange-400" : "text-gray-600 hover:text-orange-600")
           )}
         >
-          My Analysis
+          My Documents
         </button>
         <span className={cn("text-[11px]",
           isPastel ? "text-[#7B7E9C]" :
