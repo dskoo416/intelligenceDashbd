@@ -74,7 +74,7 @@ export default function TopBar({ onOpenSettings, onExport, onRefresh, isRefreshi
                   : "border-transparent text-gray-600 hover:text-gray-900"
           )}
         >
-          Documents
+          Analysis
         </Link>
       </div>
     </header>
