@@ -46,6 +46,22 @@ export function useFeedData(activeSector, activeSubsector) {
   // Use unique levelId for cache keys
   const levelId = activeSector?.id || 'main';
 
+  // Fetch Base44 cached news
+  const { data: cacheData = [] } = useQuery({
+    queryKey: ['sectorCache', levelId],
+    queryFn: async () => {
+      if (!activeSector) return [];
+      const subsectorName = activeSubsector?.name || '';
+      return base44.entities.SectorCache.filter({ 
+        sector_id: activeSector.id,
+        subsector_name: subsectorName
+      });
+    },
+    enabled: !!activeSector,
+  });
+
+  const savedCache = cacheData[0];
+
   // Build allowed originLevelIds: selected + all descendants
   const buildAllowedLevelIds = useCallback((sectorId) => {
     if (!sectorId || sectorId === 'main') {
@@ -76,18 +92,30 @@ export function useFeedData(activeSector, activeSubsector) {
   }, [sectors]);
 
   const fetchArticles = useCallback(async (forceRefresh = false) => {
-    // Use strict levelId-based cache key
+    // Generate RSS config hash for cache invalidation
+    const rssConfigHash = rssSources.map(s => s.id).sort().join(',');
+    
+    // Load from Base44 cache first (works in incognito)
+    if (!forceRefresh && savedCache?.news_articles?.length > 0) {
+      const TTL = 30 * 60 * 1000;
+      const age = Date.now() - (savedCache.news_updated_at || 0);
+      const hashMatch = savedCache.news_rss_hash === rssConfigHash;
+      
+      if (age < TTL && hashMatch) {
+        setArticles(savedCache.news_articles);
+        setIsLoadingArticles(false);
+        return savedCache.news_articles;
+      }
+    }
+    
+    // Also try localStorage as fast cache
     const cacheKey = `news_${levelId}`;
     const cachedStr = localStorage.getItem(cacheKey);
     const cached = cachedStr ? JSON.parse(cachedStr) : null;
     
-    // TTL: 30 minutes
-    const TTL = 30 * 60 * 1000;
-    const now = Date.now();
-    
-    // Only use cache if it matches current levelId and is not expired
     if (cached?.levelId === levelId && cached?.articles?.length > 0 && !forceRefresh) {
-      const age = now - (cached.updatedAt || 0);
+      const TTL = 30 * 60 * 1000;
+      const age = Date.now() - (cached.updatedAt || 0);
       if (age < TTL) {
         setArticles(cached.articles);
         setIsLoadingArticles(false);
@@ -156,7 +184,7 @@ export function useFeedData(activeSector, activeSubsector) {
 
     setArticles(limited);
 
-    // Save to levelId-specific cache with timestamp and levelId
+    // Save to localStorage as fast cache
     const cachePayload = {
       levelId: levelId,
       updatedAt: Date.now(),
@@ -167,7 +195,6 @@ export function useFeedData(activeSector, activeSubsector) {
       localStorage.setItem(cacheKey, JSON.stringify(cachePayload));
     } catch (e) {
       if (e.name === 'QuotaExceededError') {
-        // Clear old news caches only (not featured or summary)
         const allKeys = Object.keys(localStorage);
         allKeys.forEach(k => {
           if (k.startsWith('news_') && k !== cacheKey) {
@@ -175,7 +202,6 @@ export function useFeedData(activeSector, activeSubsector) {
           }
         });
         try {
-          // Try with only 300 articles
           cachePayload.articles = limited.slice(0, 300);
           localStorage.setItem(cacheKey, JSON.stringify(cachePayload));
         } catch (e2) {
@@ -184,9 +210,32 @@ export function useFeedData(activeSector, activeSubsector) {
       }
     }
 
+    // Save to Base44 for persistence across browsers/incognito
+    const rssConfigHash = rssSources.map(s => s.id).sort().join(',');
+    if (activeSector) {
+      const subsectorName = activeSubsector?.name || '';
+      if (savedCache?.id) {
+        await base44.entities.SectorCache.update(savedCache.id, { 
+          news_articles: limited,
+          news_updated_at: Date.now(),
+          news_rss_hash: rssConfigHash
+        });
+      } else {
+        await base44.entities.SectorCache.create({
+          sector_id: activeSector.id,
+          subsector_name: subsectorName,
+          gist: '',
+          critical_articles: [],
+          news_articles: limited,
+          news_updated_at: Date.now(),
+          news_rss_hash: rssConfigHash
+        });
+      }
+    }
+
     setIsLoadingArticles(false);
     return limited;
-    }, [activeSector, activeSubsector, rssSources, sectors, levelId]);
+    }, [activeSector, activeSubsector, rssSources, sectors, levelId, savedCache]);
 
   const clearArticlesForLevel = useCallback((levelKey) => {
     // Clear all cache types for this level
@@ -199,10 +248,15 @@ export function useFeedData(activeSector, activeSubsector) {
   }, [levelId]);
 
   useEffect(() => {
-    // Clear articles immediately when level changes to prevent spillover
-    setArticles([]);
+    // Load cached articles immediately from Base44 if available
+    if (savedCache?.news_articles?.length > 0) {
+      setArticles(savedCache.news_articles);
+    } else {
+      setArticles([]);
+    }
+    // Then fetch fresh data in background
     fetchArticles(false);
-  }, [activeSector?.id, activeSubsector, fetchArticles]);
+  }, [activeSector?.id, activeSubsector, fetchArticles, savedCache]);
 
   // Get allowed level IDs for strict filtering
   const allowedLevelIds = buildAllowedLevelIds(activeSector?.id);
